@@ -20,23 +20,17 @@ export default function GlobalSearchBar() {
   const searchParams = useSearchParams();
 
   const [locations, setLocations] = useState<Location[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  
+  // URL থেকে আগের সার্চ করা ডেটা নেওয়া
   const [selectedLocation, setSelectedLocation] = useState(searchParams.get("location") || "");
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
 
   useEffect(() => {
-    const loadLocations = async () => {
-      try {
-        const data = await fetchSearchLocations();
-        setLocations(data || []);
-      } catch (error) {
-        console.error("Failed to load locations", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadLocations();
+    fetchSearchLocations()
+      .then((data) => {
+        if (Array.isArray(data)) setLocations(data);
+      })
+      .catch((error) => console.error("Failed to load locations:", error));
   }, []);
 
   const getLocalizedName = (loc: Location) => {
@@ -55,25 +49,30 @@ export default function GlobalSearchBar() {
     if (searchQuery) params.set("q", searchQuery);
     else params.delete("q");
 
+    // সার্চ বাটন চাপলে URL আপডেট হবে এবং রেজাল্ট ফিল্টার হবে
     router.push(`${pathname}?${params.toString()}`);
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4">
+    <div className="w-full max-w-4xl mx-auto my-6 px-4">
+      {/* 
+        ডেস্কটপে (md) সবকিছু এক লাইনে (flex-row) থাকবে।
+        বর্ডার এবং শ্যাডো পুরো ফর্মটার চারপাশে থাকবে।
+      */}
       <form 
         onSubmit={handleSearch} 
-        className="flex flex-col md:flex-row items-center w-full border border-gray-200 rounded-2xl md:rounded-full bg-white shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent p-1.5"
+        className="flex flex-col md:flex-row items-center w-full bg-white rounded-2xl md:rounded-full border border-gray-200 shadow-lg p-1.5 md:p-2 gap-2 transition-all focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent"
       >
         
-        {/* 1. Location Dropdown (Left Side) */}
-        <div className="relative flex items-center w-full md:w-56 shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
-          <MapPin className="absolute left-4 text-gray-400" size={20} />
+        {/* ১. Location Choice Dropdown (বাম পাশে) */}
+        <div className="relative w-full md:w-1/3 flex items-center bg-gray-50 md:bg-transparent rounded-xl md:rounded-l-full px-3 py-2 border-b md:border-b-0 md:border-r border-gray-200 shrink-0">
+          <MapPin className="text-primary shrink-0" size={20} />
           
+          {/* <select> ব্যবহার করা হয়েছে যাতে ইউজার শুধু অ্যাডমিনের অ্যাড করা লোকেশনই সিলেক্ট করতে পারে */}
           <select
             value={selectedLocation}
             onChange={(e) => setSelectedLocation(e.target.value)}
-            disabled={isLoading}
-            className="w-full bg-transparent py-3 pl-11 pr-10 text-sm md:text-base outline-none cursor-pointer appearance-none text-gray-700 font-medium disabled:opacity-50"
+            className="w-full bg-transparent text-gray-700 font-semibold outline-none cursor-pointer appearance-none px-3 text-sm md:text-base"
           >
             <option value="">
               {locale === 'bn' ? 'সব লোকেশন' : locale === 'hi' ? 'सभी स्थान' : 'All Locations'}
@@ -85,32 +84,32 @@ export default function GlobalSearchBar() {
             ))}
           </select>
           
-          <ChevronDown className="absolute right-4 text-gray-400 pointer-events-none" size={16} />
+          <ChevronDown className="text-gray-400 shrink-0 pointer-events-none absolute right-3" size={16} />
         </div>
 
-        {/* 2. Main Search Input (Right Side) */}
-        <div className="flex flex-1 items-center w-full px-2 md:px-4 mt-2 md:mt-0">
+        {/* ২. Search Input (মাঝখানে) */}
+        <div className="flex-1 w-full flex items-center px-3 py-2">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
-              locale === "bn" ? "ডাক্তার, স্পেশালিটি বা ক্লিনিক খুঁজুন..." : 
-              locale === "hi" ? "डॉक्टर, क्लिनिक या विशेषज्ञता खोजें..." : 
+              locale === "bn" ? "ডাক্তার, স্পেশালিটি বা ক্লিনিক..." : 
+              locale === "hi" ? "डॉक्टर, क्लिनिक या विशेषज्ञता..." : 
               "Search doctors, clinics, specialties..."
             }
-            className="w-full py-3 outline-none text-gray-700 bg-transparent text-sm md:text-base"
+            className="w-full outline-none bg-transparent text-gray-700 text-sm md:text-base"
           />
-          
-          {/* Search Button */}
-          <button 
-            type="submit"
-            className="bg-primary text-white p-3 md:px-8 md:py-3 rounded-xl md:rounded-full hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 font-bold shrink-0 ml-2"
-          >
-            <Search size={20} />
-            <span className="hidden md:inline">Search</span>
-          </button>
         </div>
+
+        {/* ৩. Search Button (ডান পাশে) */}
+        <button 
+          type="submit" 
+          className="w-full md:w-auto bg-primary text-white font-bold py-3 px-8 rounded-xl md:rounded-full hover:bg-primary/90 transition flex justify-center items-center gap-2 shrink-0"
+        >
+          <Search size={18} />
+          <span className="md:hidden lg:inline">Search</span>
+        </button>
         
       </form>
     </div>

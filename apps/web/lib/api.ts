@@ -58,8 +58,14 @@ export const addSearchLocation = async (locationData: { nameEn: string; nameBn: 
 };
 
 // For Public Search Bar
+// For Public Search Bar
 export const fetchSearchLocations = async () => {
-  // Removed /api/v1 since it is already in the baseURL
-  const response = await api.get('/locations');
-  return response.data.data; 
+  try {
+    const response = await api.get('/locations');
+    // রেসপন্স থেকে সরাসরি ভেতরের ডেটা অ্যারেটি রিটার্ন করবে
+    return response.data?.data || []; 
+  } catch (error) {
+    console.error("Failed to fetch locations from API:", error);
+    return [];
+  }
 };
