@@ -8,9 +8,13 @@ import {
   Star,
   Heart,
   Clock,
-  DollarSign,
   ChevronRight,
-  CheckCircle2,
+  BadgeCheck,
+  Stethoscope,
+  Award,
+  Loader2,
+  CalendarCheck,
+  Sparkles,
 } from "lucide-react";
 
 import type { Doctor } from "@doctor-contract/shared";
@@ -22,7 +26,35 @@ import {
 } from "@/lib/hooks/useDoctorSearch";
 
 // ============================================================
-// Doctor Grid
+// INITIALS
+// ============================================================
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+// ============================================================
+// GRADIENT BORDER WRAPPER
+// ============================================================
+
+function GradientBorderCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`relative rounded-[28px] p-[3.5px] bg-gradient-to-br from-[#2563EB] via-[#0F766E] to-[#14B8A6] shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_16px_50px_rgba(37,99,235,0.15)] ${className}`}>
+      <div className="rounded-[calc(28px-1.5px)] bg-white dark:bg-slate-900 h-full">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// DOCTOR GRID MAIN
 // ============================================================
 
 export default function DoctorGrid({
@@ -36,13 +68,18 @@ export default function DoctorGrid({
   const { data: doctors, isLoading } = useDoctorSearch(query, city);
 
   return (
-    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
       {/* Loading */}
       {isLoading && (
-        <div className="col-span-full flex flex-col items-center justify-center py-16">
-          <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[var(--color-primary)] border-t-transparent" />
+        <div className="col-span-full flex flex-col items-center justify-center py-20">
+          <div className="relative">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#2563EB] border-t-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Stethoscope className="h-5 w-5 text-[#2563EB]" />
+            </div>
+          </div>
 
-          <p className="mt-4 text-sm font-medium text-gray-500">
+          <p className="mt-4 text-sm font-semibold text-slate-500">
             {t("loading") || "Finding the best doctors..."}
           </p>
         </div>
@@ -50,16 +87,16 @@ export default function DoctorGrid({
 
       {/* Empty State */}
       {!isLoading && doctors?.length === 0 && (
-        <div className="col-span-full rounded-3xl border border-dashed border-gray-200 bg-gray-50/70 p-14 text-center dark:border-soft-300 dark:bg-soft-50/70">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 dark:bg-surface dark:ring-soft-300">
-            <Clock className="h-7 w-7 text-gray-400 dark:text-ink-400" />
+        <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-16 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+            <Clock className="h-7 w-7" />
           </div>
 
-          <p className="text-lg font-bold text-gray-800 dark:text-ink-800">
+          <p className="mt-4 text-lg font-bold text-slate-800">
             {t("noResults")}
           </p>
 
-          <p className="mt-1.5 text-sm text-gray-500 dark:text-ink-500">
+          <p className="mt-1.5 text-sm text-slate-500">
             Try adjusting your search or filters
           </p>
         </div>
@@ -74,21 +111,7 @@ export default function DoctorGrid({
 }
 
 // ============================================================
-// Initials
-// ============================================================
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-// ============================================================
-// Doctor Card
+// DOCTOR CARD (PREMIUM CHINA-STYLE)
 // ============================================================
 
 function DoctorCard({ doctor }: { doctor: Doctor }) {
@@ -96,35 +119,21 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
   const { user } = useAuth();
   const router = useRouter();
 
-  // -----------------------------
-  // State
-  // -----------------------------
-
   const [showBooking, setShowBooking] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
-
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const bookMutation = useBookAppointment();
-
-  // -----------------------------
-  // Booking
-  // -----------------------------
 
   function handleBookClick() {
     if (!user) {
       router.push("/login?redirect=/doctors");
       return;
     }
-
     setMessage(null);
     setShowBooking((v) => !v);
-
     if (!showBooking) {
       setDate("");
       setTime("");
@@ -133,636 +142,211 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
 
   function handleConfirmBooking() {
     if (!date || !time) {
-      setMessage({
-        type: "error",
-        text:
-          t("pleaseSelectDateTime") ||
-          "Please select date and time",
-      });
-
+      setMessage({ type: "error", text: t("pleaseSelectDateTime") || "Please select date and time" });
       return;
     }
-
     const dateTime = new Date(`${date}T${time}`);
-
     if (dateTime < new Date()) {
-      setMessage({
-        type: "error",
-        text:
-          t("pastDateError") ||
-          "Please select a future date and time",
-      });
-
+      setMessage({ type: "error", text: t("pastDateError") || "Please select a future date and time" });
       return;
     }
-
     bookMutation.mutate(
-      {
-        doctorId: doctor.id,
-        clinicId: doctor.clinicId,
-        date: dateTime.toISOString(),
-      },
+      { doctorId: doctor.id, clinicId: doctor.clinicId, date: dateTime.toISOString() },
       {
         onSuccess: (appointment) => {
-          setMessage({
-            type: "success",
-            text: `${t("bookSuccess")} #${appointment.token}`,
-          });
-
+          setMessage({ type: "success", text: `${t("bookSuccess")} #${appointment.token}` });
           setDate("");
           setTime("");
-
           setTimeout(() => {
             setShowBooking(false);
             setMessage(null);
           }, 5000);
         },
-
-        onError: (error) => {
-          setMessage({
-            type: "error",
-            text: error.message || t("bookError"),
-          });
-        },
+        onError: (error) => setMessage({ type: "error", text: error.message || t("bookError") }),
       }
     );
   }
 
   function handleFavoriteToggle() {
     setIsFavorite(!isFavorite);
-    // Add API call here later if favorites are persisted.
   }
 
-  // -----------------------------
-  // Doctor Data
-  // -----------------------------
-
   const experienceYears = doctor.experience ?? 0;
-
-  const experienceDisplay =
-    experienceYears > 0
-      ? `${experienceYears}+ ${t("experienceShort")}`
-      : t("newDoctor") || "New";
+  const rating = (doctor as any).rating ?? 4.5;
+  const reviews = (doctor as any).reviewCount ?? 120;
+  const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
 
   return (
-    <div
-      className="
-        group relative overflow-hidden rounded-3xl
-        border border-gray-200/80
-        bg-white
-        shadow-[0_2px_12px_rgba(0,0,0,0.04)]
-        transition-all duration-300
-        hover:-translate-y-1
-        hover:border-gray-300
-        hover:shadow-[0_18px_45px_rgba(0,0,0,0.09)]
-        dark:border-soft-300
-        dark:bg-surface
-        dark:hover:border-soft-300
-      "
-      role="article"
-      aria-label={`Doctor profile: ${doctor.user.name}`}
-    >
-      {/* =====================================================
-          Top Accent
-      ====================================================== */}
+    <GradientBorderCard className="h-full">
+      {/* Inner Content */}
+      <div className="flex h-full flex-col p-6 relative overflow-hidden">
+        {/* Subtle decorative elements */}
+        <div className="pointer-events-none absolute -top-12 -right-12 h-24 w-24 rounded-full bg-gradient-to-br from-[#2563EB]/5 to-[#0F766E]/10 blur-2xl" />
 
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-secondary)] to-[var(--color-primary)] opacity-90" />
-
-      {/* =====================================================
-          Experience Badge
-      ====================================================== */}
-
-      {experienceYears > 0 && (
-        <div className="absolute left-4 top-5 z-10">
-          <div
-            className="
-              inline-flex items-center gap-1.5
-              rounded-full
-              border border-white/80
-              bg-white/95
-              px-3 py-1.5
-              text-[11px] font-bold
-              text-[var(--color-secondary-dark)]
-              shadow-sm
-              backdrop-blur
-              dark:border-soft-300
-              dark:bg-surface/95
-              dark:text-[var(--color-secondary-dark-text)]
-            "
-          >
-            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-
-            <span>{experienceDisplay}</span>
-          </div>
-        </div>
-      )}
-
-      {/* =====================================================
-          Favorite
-      ====================================================== */}
-
-      <button
-        type="button"
-        onClick={handleFavoriteToggle}
-        className="
-          absolute right-4 top-5 z-10
-          flex h-9 w-9 items-center justify-center
-          rounded-full
-          border border-gray-100
-          bg-white/95
-          shadow-sm
-          backdrop-blur
-          transition-all duration-200
-          hover:scale-105
-          hover:border-gray-200
-          hover:shadow-md
-          active:scale-95
-          dark:border-soft-300
-          dark:bg-surface/95
-        "
-        aria-label={
-          isFavorite
-            ? "Remove from favorites"
-            : "Add to favorites"
-        }
-      >
-        <Heart
-          className={`h-[17px] w-[17px] transition-colors ${
-            isFavorite
-              ? "fill-red-500 text-red-500"
-              : "text-gray-400 group-hover:text-gray-500 dark:text-ink-400 dark:group-hover:text-ink-500"
-          }`}
-        />
-      </button>
-
-      {/* =====================================================
-          Card Content
-      ====================================================== */}
-
-      <div className="flex flex-col p-5 pt-[4.5rem]">
-        {/* ===================================================
-            Doctor Profile
-        ==================================================== */}
-
-        <div className="flex items-center gap-4">
-          {/* Avatar */}
-
-          <div className="relative shrink-0">
-            <div
-              className="
-                flex h-[68px] w-[68px]
-                items-center justify-center
-                rounded-2xl
-                bg-gradient-to-br
-                from-[var(--color-bg-soft)]
-                to-[var(--color-primary)]/10
-                text-lg font-bold
-                text-[var(--color-primary-text)]
-                shadow-sm
-                ring-1 ring-gray-100
-                transition-transform duration-300
-                group-hover:scale-[1.03]
-                dark:ring-soft-300
-              "
-            >
-              {initials(doctor.user.name)}
-            </div>
-
-            {/* Online / Available */}
-
-            <span
-              className="
-                absolute -bottom-1 -right-1
-                flex h-5 w-5
-                items-center justify-center
-                rounded-full
-                border-[3px] border-white
-                bg-green-500
-                shadow-sm
-                dark:border-surface
-              "
-            >
-              <span className="sr-only">Available</span>
-            </span>
-          </div>
-
-          {/* Doctor Info */}
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <h3
-                className="
-                  truncate
-                  text-[17px]
-                  font-bold
-                  tracking-[-0.01em]
-                  text-[var(--color-primary-dark-text)]
-                  transition-colors
-                  group-hover:text-[var(--color-primary-text)]
-                "
-              >
-                {doctor.user.name}
-              </h3>
-
-              <CheckCircle2
-                className="
-                  h-4 w-4 shrink-0
-                  text-[var(--color-primary-text)]
-                "
-              />
-            </div>
-
-            {doctor.qualification && (
-              <p className="mt-0.5 truncate text-sm font-semibold text-gray-700 dark:text-ink-700">
-                {doctor.qualification}
-              </p>
-            )}
-
-            {doctor.specialization && (
-              <p className="mt-0.5 truncate text-xs font-medium text-gray-500 dark:text-ink-500">
-                {doctor.specialization}
-              </p>
-            )}
-
-            {/* Rating */}
-
-            <div className="mt-2 inline-flex items-center gap-1.5">
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="
-                      h-3.5 w-3.5
-                      fill-yellow-400
-                      text-yellow-400
-                    "
-                  />
-                ))}
+        {/* Top Profile Area */}
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-lg shadow-blue-500/20">
+                {initials(doctor.user.name)}
               </div>
+              {/* Verified badge */}
+              <BadgeCheck className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white text-[#2563EB] shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700" />
+            </div>
 
-              <span className="text-xs font-semibold text-gray-700 dark:text-ink-700">
-                4.5
-              </span>
-
-              <span className="text-[11px] text-gray-400 dark:text-ink-400">
-                Excellent
-              </span>
+            {/* Doctor info */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h3 className="truncate text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                  {doctor.user.name}
+                </h3>
+              </div>
+              {doctor.qualification && (
+                <p className="mt-0.5 truncate text-sm font-medium text-slate-600 dark:text-slate-300">
+                  {doctor.qualification}
+                </p>
+              )}
+              {doctor.specialization && (
+                <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-slate-500 dark:text-slate-400">
+                  <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#0F766E]" />
+                  {doctor.specialization}
+                </p>
+              )}
             </div>
           </div>
+
+          {/* Favorite */}
+          <button
+            type="button"
+            onClick={handleFavoriteToggle}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all hover:scale-105 hover:bg-slate-100 hover:text-red-500 active:scale-95 dark:hover:bg-slate-800"
+          >
+            <Heart className={`h-[18px] w-[18px] transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-slate-400"}`} />
+          </button>
         </div>
 
-        {/* ===================================================
-            Divider
-        ==================================================== */}
+        {/* Experience badge */}
+        {experienceYears > 0 && (
+          <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            {experienceYears}+ years experience
+          </div>
+        )}
 
-        <div className="my-5 h-px bg-gray-100 dark:bg-soft-100" />
+        {/* Rating row */}
+        <div className="mt-4 flex items-center gap-2">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star key={star} className={`h-4 w-4 ${star <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200"}`} />
+            ))}
+          </div>
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{rating}</span>
+          <span className="text-xs text-slate-400">· {reviews} reviews</span>
+        </div>
 
-        {/* ===================================================
-            Clinic / Fee
-        ==================================================== */}
+        {/* Divider */}
+        <div className="my-5 h-px bg-slate-100 dark:bg-slate-800" />
 
-        <div className="flex flex-wrap gap-2">
-          {/* Location */}
-
-          <span
-            className="
-              inline-flex min-w-0 max-w-full
-              items-center gap-1.5
-              rounded-xl
-              border border-gray-100
-              bg-gray-50
-              px-3 py-2
-              text-xs font-semibold
-              text-gray-600
-              dark:border-soft-300
-              dark:bg-soft-50
-              dark:text-ink-600
-            "
-          >
-            <MapPin
-              className="
-                h-3.5 w-3.5 shrink-0
-                text-[var(--color-primary-text)]
-              "
-            />
-
-            <span className="truncate">
-              {doctor.clinic.city ?? doctor.clinic.clinicName}
-            </span>
-          </span>
-
-          {/* Fee */}
-
+        {/* Info section */}
+        <div className="space-y-2.5">
+          {location && (
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <MapPin className="h-4 w-4 shrink-0 text-[#2563EB]" />
+              <span className="truncate">{location}</span>
+            </div>
+          )}
           {doctor.fee != null && (
-            <span
-              className="
-                inline-flex items-center gap-1.5
-                rounded-xl
-                border border-green-100
-                bg-green-50
-                px-3 py-2
-                text-xs font-bold
-                text-green-700
-                dark:border-green-500/20
-                dark:bg-green-500/10
-                dark:text-green-400
-              "
-            >
-              <DollarSign className="h-3.5 w-3.5" />
-
-              Rs. {doctor.fee}
-            </span>
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <span className="text-[#2563EB]">₹{doctor.fee}</span>
+              <span className="text-slate-400">consultation fee</span>
+            </div>
           )}
         </div>
 
-        {/* ===================================================
-            Availability
-        ==================================================== */}
-
-        <div
-          className="
-            mt-4 flex items-center justify-between
-            rounded-xl
-            border border-[var(--color-primary)]/10
-            bg-[var(--color-bg-soft)]/60
-            px-3.5 py-3
-            dark:border-soft-300
-            dark:bg-soft-50/60
-          "
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className="
-                flex h-8 w-8 items-center justify-center
-                rounded-lg
-                bg-white
-                shadow-sm
-                dark:bg-surface
-              "
-            >
-              <Clock
-                className="
-                  h-4 w-4
-                  text-[var(--color-primary-text)]
-                "
-              />
-            </div>
-
+        {/* Availability */}
+        <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-ink-400">
-                Next available
-              </p>
-
-              <p className="mt-0.5 text-xs font-bold text-gray-700 dark:text-ink-700">
-                Tomorrow, 10:00 AM
-              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Next available</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-700 dark:text-slate-200">Tomorrow · 10:00 AM</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Available</span>
             </div>
           </div>
-
-          <span
-            className="
-              hidden rounded-full
-              bg-green-100
-              px-2.5 py-1
-              text-[10px] font-bold
-              text-green-700
-              sm:inline-flex
-              dark:bg-green-500/20
-              dark:text-green-300
-            "
-          >
-            Available
-          </span>
         </div>
 
-        {/* ===================================================
-            Action Buttons
-        ==================================================== */}
-
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          {/* View Profile */}
-
+        {/* CTA area */}
+        <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={handleBookClick}
-            className="
-              flex items-center justify-center
-              rounded-xl
-              border border-gray-200
-              bg-white
-              px-4 py-2.5
-              text-xs font-bold
-              text-gray-700
-              transition-all duration-200
-              hover:border-[var(--color-primary)]/30
-              hover:bg-[var(--color-bg-soft)]
-              hover:text-[var(--color-primary-text)]
-              active:scale-[0.98]
-              dark:border-soft-300
-              dark:bg-surface
-              dark:text-ink-700
-              dark:hover:bg-soft-50
-            "
-            aria-label={`View full profile of ${doctor.user.name}`}
+            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:border-slate-300 hover:text-slate-800 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-slate-100"
           >
             View Profile
-
-            <ChevronRight className="ml-1 h-3.5 w-3.5" />
           </button>
-
-          {/* Book */}
-
           <button
             type="button"
             onClick={handleBookClick}
-            className="
-              flex items-center justify-center
-              rounded-xl
-              bg-gradient-to-r
-              from-[var(--color-primary)]
-              to-[var(--color-primary-dark)]
-              px-4 py-2.5
-              text-xs font-bold
-              text-white
-              shadow-sm
-              transition-all duration-200
-              hover:-translate-y-0.5
-              hover:shadow-lg
-              active:translate-y-0
-              active:scale-[0.98]
-              focus:outline-none
-              focus:ring-2
-              focus:ring-[var(--color-primary)]/30
-            "
-            aria-label={`Book appointment with ${doctor.user.name}`}
+            className="flex items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
           >
-            {showBooking
-              ? t("cancelBooking") || "Cancel"
-              : t("bookButton")}
+            {showBooking ? t("cancelBooking") || "Cancel" : t("bookButton")}
           </button>
         </div>
 
-        {/* ===================================================
-            Booking Section
-        ==================================================== */}
-
+        {/* Booking Panel */}
         {showBooking && user && (
-          <div className="animate-in slide-in-from-top-2 fade-in duration-200">
-            <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-soft-300 dark:bg-soft-50/80">
-              {/* Booking Header */}
-
+          <div className="mt-5 animate-in slide-in-from-top-2 fade-in duration-300">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
               <div className="mb-3">
-                <p className="text-sm font-bold text-gray-800 dark:text-ink-800">
-                  Book an appointment
-                </p>
-
-                <p className="mt-0.5 text-xs text-gray-500 dark:text-ink-500">
-                  Select your preferred date and time.
-                </p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Book an appointment</p>
+                <p className="mt-0.5 text-xs text-slate-500">Select your preferred date and time.</p>
               </div>
 
-              {/* Date + Time */}
-
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <div className="space-y-3">
                 {/* Date */}
-
-                <div
-                  className="
-                    flex items-center gap-2
-                    rounded-xl
-                    border border-gray-200
-                    bg-white
-                    px-3 py-2.5
-                    transition-all
-                    focus-within:border-[var(--color-primary)]
-                    focus-within:ring-2
-                    focus-within:ring-[var(--color-primary)]/10
-                    dark:border-soft-300
-                    dark:bg-surface
-                  "
-                >
-                  <Calendar
-                    className="
-                      h-4 w-4 shrink-0
-                      text-[var(--color-primary-text)]
-                    "
-                  />
-
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/20 dark:border-slate-700 dark:bg-slate-900">
+                  <Calendar className="h-4 w-4 shrink-0 text-[#2563EB]" />
                   <input
                     type="date"
                     value={date}
-                    onChange={(e) => {
-                      setDate(e.target.value);
-                      setMessage(null);
-                    }}
-                    min={new Date()
-                      .toISOString()
-                      .split("T")[0]}
-                    className="
-                      w-full
-                      bg-transparent
-                      text-xs font-medium
-                      text-gray-700
-                      outline-none
-                      dark:text-ink-700
-                    "
-                    aria-label="Select appointment date"
+                    onChange={(e) => { setDate(e.target.value); setMessage(null); }}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none dark:text-slate-200"
                   />
                 </div>
 
                 {/* Time */}
-
-                <div
-                  className="
-                    flex items-center gap-2
-                    rounded-xl
-                    border border-gray-200
-                    bg-white
-                    px-3 py-2.5
-                    transition-all
-                    focus-within:border-[var(--color-primary)]
-                    focus-within:ring-2
-                    focus-within:ring-[var(--color-primary)]/10
-                    dark:border-soft-300
-                    dark:bg-surface
-                  "
-                >
-                  <Clock
-                    className="
-                      h-4 w-4 shrink-0
-                      text-[var(--color-primary-text)]
-                    "
-                  />
-
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/20 dark:border-slate-700 dark:bg-slate-900">
+                  <Clock className="h-4 w-4 shrink-0 text-[#2563EB]" />
                   <input
                     type="time"
                     value={time}
-                    onChange={(e) => {
-                      setTime(e.target.value);
-                      setMessage(null);
-                    }}
+                    onChange={(e) => { setTime(e.target.value); setMessage(null); }}
                     min="08:00"
                     max="20:00"
                     step="1800"
-                    className="
-                      w-full
-                      bg-transparent
-                      text-xs font-medium
-                      text-gray-700
-                      outline-none
-                      dark:text-ink-700
-                    "
-                    aria-label="Select appointment time"
+                    className="w-full bg-transparent text-sm font-medium text-slate-700 outline-none dark:text-slate-200"
                   />
                 </div>
               </div>
 
               {/* Confirm */}
-
               <button
                 type="button"
                 onClick={handleConfirmBooking}
-                disabled={
-                  !date ||
-                  !time ||
-                  bookMutation.isPending
-                }
-                className="
-                  mt-3 flex w-full
-                  items-center justify-center
-                  rounded-xl
-                  bg-gradient-to-r
-                  from-[var(--color-secondary)]
-                  to-[var(--color-secondary-dark)]
-                  px-4 py-2.5
-                  text-xs font-bold
-                  text-white
-                  shadow-sm
-                  transition-all
-                  hover:-translate-y-0.5
-                  hover:shadow-md
-                  disabled:cursor-not-allowed
-                  disabled:opacity-50
-                  disabled:hover:translate-y-0
-                "
+                disabled={!date || !time || bookMutation.isPending}
+                className="mt-4 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#0F766E] to-[#14B8A6] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
               >
                 {bookMutation.isPending ? (
                   <>
-                    <span
-                      className="
-                        inline-block
-                        h-4 w-4
-                        animate-spin
-                        rounded-full
-                        border-2
-                        border-white
-                        border-t-transparent
-                      "
-                    />
-
-                    <span className="ml-2">
-                      {t("bookingLoading")}
-                    </span>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="ml-2">{t("bookingLoading")}</span>
                   </>
                 ) : (
                   t("confirmBooking")
@@ -770,31 +354,26 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
               </button>
 
               {/* Message */}
-
               {message && (
                 <div
-                  className={`mt-3 rounded-xl border p-3 text-xs ${
+                  className={`mt-3 flex items-start gap-2 rounded-xl border p-3 text-sm font-medium ${
                     message.type === "success"
-                      ? "border-green-200 bg-green-50 text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-400"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
                       : "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400"
                   }`}
-                  role="alert"
                 >
-                  <p className="flex items-start gap-2 font-medium">
-                    <span>
-                      {message.type === "success"
-                        ? "✅"
-                        : "❌"}
-                    </span>
-
-                    <span>{message.text}</span>
-                  </p>
+                  {message.type === "success" ? (
+                    <CalendarCheck className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <Clock className="h-4 w-4 shrink-0" />
+                  )}
+                  <span>{message.text}</span>
                 </div>
               )}
             </div>
           </div>
         )}
       </div>
-    </div>
+    </GradientBorderCard>
   );
 }

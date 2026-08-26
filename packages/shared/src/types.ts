@@ -66,6 +66,7 @@ export type Doctor = {
   experience: number | null;
   fee: number | null;
   clinicId: string;
+  isAvailable?: boolean;
   user: { id?: string; name: string; email?: string; phone?: string | null; isActive?: boolean };
   clinic: { id: string; clinicName: string; city: string | null; address: string | null };
 };
@@ -271,6 +272,8 @@ export type AdminClinicRecord = {
   state: string | null;
   pincode: string | null;
   isApproved: boolean;
+  isFeatured?: boolean;
+  featuredOrder?: number;
   latitude?: number | null;
   longitude?: number | null;
   logo?: string | null;
@@ -295,6 +298,7 @@ export type AdminDoctorRecord = {
   fee: number | null;
   isVerified: boolean;
   isFeatured?: boolean;
+  isAvailable?: boolean;
   featuredOrder?: number;
   queueMode?: string;
   startTime?: string | null;
@@ -402,16 +406,28 @@ export type CreateDiagnosticCenterInput = {
   state?: string;
   pincode?: string;
 };
-
 export type SetFeaturedDoctorInput = {
   doctorId: string;
   isFeatured: boolean;
   featuredOrder?: number;
 };
 
+export type SetFeaturedClinicInput = {
+  clinicId: string;
+  isFeatured: boolean;
+  featuredOrder?: number;
+};
+
+export type ToggleDoctorAvailabilityInput = {
+  doctorId: string;
+  isAvailable: boolean;
+};
+
 export type UpdatePlatformSettingsInput = {
   bookingWindowMinutes: number;
 };
+
+
 
 // ============================================================
 // PHASE 01 — DIAGNOSTIC CENTER PORTAL CONTRACT TYPES
@@ -503,3 +519,21 @@ export type DiagnosticCenterIncomingReferral = {
   } | null;
 };
 
+export type AdminReviewRecord = {
+  id: string;
+  appointmentId: string;
+  rating: number;
+  comment: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  isReported?: boolean;
+  reportReason?: string | null;
+  createdAt: string;
+  patient?: { name: string } | null;
+  doctor?: { user: { name: string } } | null;
+  clinic?: { clinicName: string } | null;
+};
+
+export type ModerateReviewInput = {
+  reviewId: string;
+  action: "APPROVE" | "REJECT";
+};

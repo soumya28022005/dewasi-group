@@ -16,6 +16,8 @@ import {
   Menu,
   X,
   Shield,
+  CalendarClock,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { LucideIcon } from "lucide-react";
@@ -34,23 +36,7 @@ interface NavSection {
 }
 
 const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
-  {
-    title: "MAIN OPERATIONS",
-    items: [
-      {
-        href: "/super_admin/dashboard",
-        label: "Dashboard",
-        icon: LayoutDashboard,
-        exact: true,
-      },
-      {
-        href: "/super_admin/users",
-        label: "Users & Accounts",
-        icon: Users,
-      },
-    ],
-  },
-  {
+    {
     title: "MEDICAL ECOSYSTEM",
     items: [
       {
@@ -64,24 +50,29 @@ const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
         icon: Stethoscope,
       },
       {
+        href: "/super_admin/doctor-availability",
+        label: "Doctor Availability",
+        icon: CalendarClock,
+      },
+      {
         href: "/super_admin/featured-doctors",
         label: "Featured Doctors",
         icon: Sparkles,
       },
       {
+        href: "/super_admin/featured-clinics",
+        label: "Featured Clinics",
+        icon: Sparkles,
+      },
+      {
+        href: "/super_admin/reviews",
+        label: "Reviews Moderation",
+        icon: Star,
+      },
+      {
         href: "/super_admin/diagnostic-centers",
         label: "Diagnostic Centers",
         icon: Activity,
-      },
-    ],
-  },
-  {
-    title: "SYSTEM & PLATFORM",
-    items: [
-      {
-        href: "/super_admin/settings",
-        label: "Platform Settings",
-        icon: Settings,
       },
     ],
   },

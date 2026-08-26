@@ -101,10 +101,18 @@ export default function Header() {
         <div className="hidden items-center gap-3 md:flex">
           {/* Available Doctors */}
           <Link
-            href="/doctors"
+            href="/doctors/available"
             className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             {nav("availableDoctors")}
+          </Link>
+
+          {/* Available Clinics */}
+          <Link
+            href="/clinics"
+            className="rounded-full border border-[var(--color-primary)]/25 px-4 py-2 text-sm font-semibold text-[var(--color-primary-text)] transition hover:bg-[var(--color-primary)]/5"
+          >
+            {nav("availableClinics")}
           </Link>
 
           {/* Apply for Listing */}
@@ -266,11 +274,20 @@ export default function Header() {
 
                 {/* ================= AVAILABLE DOCTORS ================= */}
                 <Link
-                  href="/doctors"
+                  href="/doctors/available"
                   onClick={() => setOpen(false)}
                   className="block rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
                   {nav("availableDoctors")}
+                </Link>
+
+                {/* ================= AVAILABLE CLINICS ================= */}
+                <Link
+                  href="/clinics"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg border border-[var(--color-primary)]/25 px-4 py-3 text-center text-sm font-semibold text-[var(--color-primary-text)] transition hover:bg-[var(--color-primary)]/5"
+                >
+                  {nav("availableClinics")}
                 </Link>
 
                 {/* ================= APPLY FOR LISTING ================= */}
@@ -321,11 +338,20 @@ export default function Header() {
 
                 {/* Available Doctors */}
                 <Link
-                  href="/doctors"
+                  href="/doctors/available"
                   onClick={() => setOpen(false)}
                   className="block rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
                   {nav("availableDoctors")}
+                </Link>
+
+                {/* Available Clinics */}
+                <Link
+                  href="/clinics"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg border border-[var(--color-primary)]/25 px-4 py-3 text-center text-sm font-semibold text-[var(--color-primary-text)] transition hover:bg-[var(--color-primary)]/5"
+                >
+                  {nav("availableClinics")}
                 </Link>
 
                 {/* Apply for Listing */}

@@ -10,10 +10,14 @@ import type { Clinic } from "@/lib/hooks/useClinic";
 // and the standalone /doctors and /clinics listing pages.
 //
 // Endpoints (public, unauthenticated):
-//   GET /doctors/featured  -> Featured Doctors
-//   GET /doctors           -> All Doctors
-//   GET /clinic/featured   -> Featured Clinics
-//   GET /clinic            -> All Clinics
+//   GET /doctors/featured          -> Featured Doctors
+//   GET /doctors                   -> All Doctors
+//   GET /doctors/doctors/available -> Available Doctors (NOT the same as
+//                                      All Doctors — this is a distinct,
+//                                      narrower list, e.g. doctors who are
+//                                      currently accepting bookings/online).
+//   GET /clinic/featured           -> Featured Clinics
+//   GET /clinic                    -> All Clinics
 //
 // Response envelope follows the same convention used everywhere
 // else in this codebase: { success, data: { doctors | clinics } }.
@@ -84,6 +88,20 @@ export function usePublicAllDoctors() {
   });
 }
 
+/** Distinct from `usePublicAllDoctors` — this hits the dedicated
+ *  "available doctors" endpoint (e.g. currently accepting bookings),
+ *  not just every doctor in the directory. */
+export function usePublicAvailableDoctors() {
+  return useQuery<Doctor[]>({
+    queryKey: ["public", "doctors", "available"],
+    queryFn: async () => {
+      const res = await api.get("/doctors/available");
+      return unwrapDoctors(res);
+    },
+    staleTime: 30_000,
+  });
+}
+
 // ------------------------------------------------------------
 // Clinics
 // ------------------------------------------------------------
@@ -109,3 +127,4 @@ export function usePublicAllClinics() {
     staleTime: 60_000,
   });
 }
+

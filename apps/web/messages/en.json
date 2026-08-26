@@ -291,6 +291,7 @@
     "unsavedWarning": "You have unsaved changes.",
     "updateSuccess": "Clinic profile updated successfully!"
   },
+
   "ClinicDoctors": {
     "tagline": "Doctors",
     "heading": "Doctor Management",
@@ -1034,5 +1035,64 @@
     "searchPlaceholder": "Search clinics by name or city...",
     "noResults": "No clinics found. Try a different search.",
     "loadError": "Could not load clinics right now. Please try again shortly."
-  }
+  },
+  "AvailableDoctors": {
+  "heading": "Available Doctors",
+  "subheading": "Doctors who are currently open for consultation.",
+  "noResults": "No doctors are available right now.",
+  "loadError": "Could not load available doctors right now. Please try again shortly."
+},
+"AdminDoctorAvailability": {
+  "title": "Doctor Availability",
+  "subtitle": "Mark doctors as available or unavailable for bookings across the platform.",
+  "searchPlaceholder": "Search doctors by name, specialty, or clinic...",
+  "retry": "Refresh",
+  "dismiss": "Dismiss",
+  "errorTitle": "Could not load doctors",
+  "emptyTitle": "No doctors found",
+  "available": "Available",
+  "unavailable": "Unavailable",
+  "markAvailable": "Mark Available",
+  "markUnavailable": "Mark Unavailable",
+  "updating": "Updating...",
+  "successUpdated": "Availability updated."
+},
+"AdminFeaturedClinics": {
+  "title": "Featured Clinics",
+  "subtitle": "Choose which approved clinics appear in the homepage spotlight.",
+  "addClinic": "Add Clinic",
+  "retry": "Refresh",
+  "searchPlaceholder": "Search approved clinics by name or city...",
+  "noAddable": "No more approved clinics to add.",
+  "add": "Add",
+  "dismiss": "Dismiss",
+  "errorTitle": "Could not load featured clinics",
+  "emptyTitle": "No featured clinics yet",
+  "emptyDesc": "Use \"Add Clinic\" above to feature one.",
+  "featuredOrder": "Order",
+  "setOrder": "Set Order",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "updating": "Updating...",
+  "removeFeatured": "Remove",
+  "successFeatured": "Clinic added to featured.",
+  "successRemoved": "Clinic removed from featured."
+},
+"AdminReviews": {
+  "title": "Reviews Moderation",
+  "subtitle": "Approve, reject, or handle reported patient reviews.",
+  "retry": "Refresh",
+  "dismiss": "Dismiss",
+  "errorTitle": "Could not load reviews",
+  "tabPending": "Pending Approval",
+  "tabReported": "Reported",
+  "emptyPending": "No reviews awaiting approval",
+  "emptyReported": "No reported reviews",
+  "reported": "Reported",
+  "reportReason": "Report reason",
+  "approve": "Approve",
+  "reject": "Reject",
+  "successApproved": "Review approved.",
+  "successRejected": "Review rejected."
+}
 }

@@ -13,6 +13,8 @@ import type {
   CreateClinicInput,
   CreateDiagnosticCenterInput,
   SetFeaturedDoctorInput,
+  SetFeaturedClinicInput,
+  ToggleDoctorAvailabilityInput,
   UpdatePlatformSettingsInput,
 } from "@doctor-contract/shared";
 
@@ -148,6 +150,43 @@ export function useRevokeClinic() {
 }
 
 // ============================================================
+// 3b. Featured Clinics
+//
+// Matches clinic.routes.js exactly:
+//   GET   /clinic/featured          -> currently featured clinics
+//   PATCH /clinic/:clinicId/featured (ADMIN, SUPER_ADMIN) -> toggle
+// ============================================================
+
+export function useAdminFeaturedClinics() {
+  return useQuery<AdminClinicRecord[]>({
+    queryKey: ["admin", "clinics", "featured"],
+    queryFn: async () => {
+      const res = await api.get("/clinic/featured");
+      const data = res.data?.data;
+      return (data?.clinics ?? data ?? []) as AdminClinicRecord[];
+    },
+  });
+}
+
+export function useSetFeaturedClinic() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ clinicId, isFeatured, featuredOrder }: SetFeaturedClinicInput) => {
+      const res = await api.patch(`/clinic/${clinicId}/featured`, {
+        isFeatured,
+        featuredOrder,
+      });
+      return res.data.data.clinic as AdminClinicRecord;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "clinics", "featured"] });
+      qc.invalidateQueries({ queryKey: ["admin", "clinics"] });
+      qc.invalidateQueries({ queryKey: ["public", "clinics"] });
+    },
+  });
+}
+
+// ============================================================
 // 4. Doctor Verification & Featured Doctors
 // ============================================================
 
@@ -197,6 +236,29 @@ export function useSetFeaturedDoctor() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "doctors", "featured"] });
+    },
+  });
+}
+
+// ============================================================
+// 4b. Doctor Availability
+//
+// Matches doctor.routes.js exactly:
+//   PATCH /doctors/:doctorId/available (ADMIN, SUPER_ADMIN, CLINIC, DOCTOR)
+// ============================================================
+
+export function useToggleDoctorAvailability() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ doctorId, isAvailable }: ToggleDoctorAvailabilityInput) => {
+      const res = await api.patch(`/doctors/${doctorId}/available`, {
+        isAvailable,
+      });
+      return res.data.data.doctor as AdminDoctorRecord;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "doctors"] });
+      qc.invalidateQueries({ queryKey: ["public", "doctors", "available"] });
     },
   });
 }
