@@ -51,7 +51,7 @@ api.interceptors.response.use(
 // === Location API Calls ===
 
 // For Super Admin
-export const addSearchLocation = async (locationData: { nameEn: string; nameBn: string; nameHi: string }) => {
+export const addSearchLocation = async (locationData: { nameEn: string; nameBn: string; nameHi: string; isActive?: boolean }) => {
   // Removed /api/v1 since it is already in the baseURL
   const response = await api.post('/locations', locationData);
   return response.data;
@@ -68,4 +68,22 @@ export const fetchSearchLocations = async () => {
     console.error("Failed to fetch locations from API:", error);
     return [];
   }
+};
+
+// For Admin Panel - Get All (Active + Paused)
+export const fetchAdminLocations = async () => {
+  const response = await api.get('/locations/admin');
+  return response.data?.data || [];
+};
+
+// For Admin Panel - Toggle Status
+export const toggleSearchLocation = async (id: string, isActive: boolean) => {
+  const response = await api.patch(`/locations/${id}/toggle`, { isActive });
+  return response.data;
+};
+
+// For Admin Panel - Delete
+export const deleteSearchLocation = async (id: string) => {
+  const response = await api.delete(`/locations/${id}`);
+  return response.data;
 };

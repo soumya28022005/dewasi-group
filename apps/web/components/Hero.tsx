@@ -12,6 +12,7 @@ interface Location {
   nameEn: string;
   nameBn: string;
   nameHi: string;
+  isActive?: boolean;
 }
 
 export default function Hero() {

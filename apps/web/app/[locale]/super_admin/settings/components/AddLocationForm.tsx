@@ -1,18 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
-import { useTranslations } from "next-intl";
-import { addSearchLocation } from "@/lib/api";
+import React, { useState, useEffect } from "react";
+import { addSearchLocation, fetchAdminLocations, toggleSearchLocation, deleteSearchLocation } from "@/lib/api";
 import { toast } from "react-hot-toast";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, Trash2, Power } from "lucide-react";
 
 export default function AddLocationForm() {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    nameEn: "",
-    nameBn: "",
-    nameHi: "",
-  });
+  const [locations, setLocations] = useState<any[]>([]);
+  const [formData, setFormData] = useState({ nameEn: "", nameBn: "", nameHi: "" });
+
+  const loadLocations = async () => {
+    try {
+      const data = await fetchAdminLocations();
+      setLocations(data);
+    } catch (error) {
+      console.error("Failed to load locations");
+    }
+  };
+
+  useEffect(() => {
+    loadLocations();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,91 +30,77 @@ export default function AddLocationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      await addSearchLocation(formData);
-      toast.success("Search location added successfully!");
+      await addSearchLocation({ ...formData, isActive: true });
+      toast.success("Location added!");
       setFormData({ nameEn: "", nameBn: "", nameHi: "" });
+      loadLocations(); // রিফ্রেশ লিস্ট
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to add search location."
-      );
+      toast.error("Failed to add location.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleToggle = async (id: string, currentStatus: boolean) => {
+    try {
+      await toggleSearchLocation(id, !currentStatus);
+      toast.success(currentStatus ? "Location paused" : "Location activated");
+      loadLocations();
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this location?")) return;
+    try {
+      await deleteSearchLocation(id);
+      toast.success("Location deleted");
+      loadLocations();
+    } catch (error) {
+      toast.error("Failed to delete");
+    }
+  };
+
   return (
-    <div className="h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+    <div className="h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-          <MapPin className="h-4 w-4" />
-        </div>
-        <h2 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-          Manage Search Locations
-        </h2>
+        <MapPin className="h-5 w-5 text-indigo-600" />
+        <h2 className="text-sm font-bold text-slate-900">Manage Locations</h2>
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
-        Add custom locations in English, Bengali, and Hindi for the public search bar filters.
-      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            English Name
-          </label>
-          <input
-            name="nameEn"
-            type="text"
-            required
-            value={formData.nameEn}
-            onChange={handleChange}
-            placeholder="e.g. Durgapur"
-            className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 shadow-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          />
+      <form onSubmit={handleSubmit} className="space-y-4 mb-8">
+        {/* আপনার আগের ইনপুট ফিল্ডগুলো (nameEn, nameBn, nameHi) এখানে থাকবে... */}
+        <div className="flex gap-2">
+           <input name="nameEn" value={formData.nameEn} onChange={handleChange} placeholder="English Name" required className="border p-2 rounded text-sm w-full" />
+           <input name="nameBn" value={formData.nameBn} onChange={handleChange} placeholder="Bengali Name" required className="border p-2 rounded text-sm w-full" />
+           <input name="nameHi" value={formData.nameHi} onChange={handleChange} placeholder="Hindi Name" required className="border p-2 rounded text-sm w-full" />
         </div>
-
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            Bengali Name (বাংলা)
-          </label>
-          <input
-            name="nameBn"
-            type="text"
-            required
-            value={formData.nameBn}
-            onChange={handleChange}
-            placeholder="উদাঃ দুর্গাপুর"
-            className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 shadow-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            Hindi Name (हिन्दी)
-          </label>
-          <input
-            name="nameHi"
-            type="text"
-            required
-            value={formData.nameHi}
-            onChange={handleChange}
-            placeholder="उदा: दुर्गापुर"
-            className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 shadow-xs outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          />
-        </div>
-
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:scale-105 active:scale-95 disabled:opacity-50"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>{loading ? "Adding..." : "Add Location"}</span>
-          </button>
-        </div>
+        <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition">
+          <Plus className="h-4 w-4 inline mr-1" /> Add
+        </button>
       </form>
+
+      {/* Location List with Toggle & Delete */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-slate-500 mb-3">EXISTING LOCATIONS</h3>
+        {locations.map((loc) => (
+          <div key={loc.id} className="flex items-center justify-between p-3 border rounded-xl bg-slate-50">
+            <span className={`text-sm font-semibold ${!loc.isActive ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+              {loc.nameEn}
+            </span>
+            <div className="flex gap-2">
+              <button onClick={() => handleToggle(loc.id, loc.isActive)} className={`p-1.5 rounded-lg text-white ${loc.isActive ? 'bg-amber-500' : 'bg-emerald-500'}`} title={loc.isActive ? "Pause" : "Activate"}>
+                <Power className="h-4 w-4" />
+              </button>
+              <button onClick={() => handleDelete(loc.id)} className="p-1.5 rounded-lg bg-rose-500 text-white" title="Delete">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
