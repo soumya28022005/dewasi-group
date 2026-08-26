@@ -37,8 +37,19 @@ interface NavSection {
 }
 
 const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
-    {
-    title: "MEDICAL ECOSYSTEM",
+  {
+    title: "Overview",
+    items: [
+      {
+        href: "/super_admin/dashboard",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        exact: true, // Dashboard-এর জন্য exact true রাখা জরুরি
+      },
+    ],
+  },
+  {
+    title: "Medical Ecosystem",
     items: [
       {
         href: "/super_admin/clinics",
@@ -51,10 +62,20 @@ const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
         icon: Stethoscope,
       },
       {
+        href: "/super_admin/diagnostic-centers",
+        label: "Diagnostic Centers",
+        icon: Activity,
+      },
+      {
         href: "/super_admin/doctor-availability",
         label: "Doctor Availability",
         icon: CalendarClock,
       },
+    ],
+  },
+  {
+    title: "Engagement & Moderation",
+    items: [
       {
         href: "/super_admin/featured-doctors",
         label: "Featured Doctors",
@@ -71,22 +92,25 @@ const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
         icon: Star,
       },
       {
-        href: "/super_admin/diagnostic-centers",
-        label: "Diagnostic Centers",
-        icon: Activity,
-      },
-
-      {
         href: "/super_admin/announcements",
         label: "Announcements",
         icon: Megaphone,
+      },
+    ],
+  },
+  {
+    title: "System & Access",
+    items: [
+      {
+        href: "/super_admin/users",
+        label: "User Management",
+        icon: Users,
       },
       {
         href: "/super_admin/settings",
         label: "Platform Settings",
         icon: Settings,
       },
-      
     ],
   },
 ];
@@ -126,7 +150,7 @@ export default function SuperAdminLayout({
       {/* Mobile Floating Action Button (FAB) */}
       <MobileFabButton onClick={() => setIsMobileMenuOpen(true)} />
 
-      {/* Mobile Drawer Menu (Opens from LEFT side, exactly like Clinic & Doctor portals) */}
+      {/* Mobile Drawer Menu */}
       <MobileDrawer
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
@@ -226,7 +250,7 @@ function MobileDrawer({
         />
       )}
 
-      {/* Drawer (Sliding from LEFT) */}
+      {/* Drawer */}
       <div
         className={`fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] transform bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-slate-900 md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -239,7 +263,7 @@ function MobileDrawer({
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">Super Admin Portal</p>
+              <p className="text-sm font-bold text-white">Super Admin</p>
               <p className="text-xs text-amber-100">{userName}</p>
             </div>
           </div>
@@ -253,10 +277,10 @@ function MobileDrawer({
 
         {/* Navigation Items */}
         <div className="flex h-[calc(100vh-140px)] flex-col overflow-y-auto p-3">
-          <div className="space-y-1">
+          <div className="space-y-4">
             {sections.map((section, sIdx) => (
               <div key={sIdx} className="space-y-1">
-                <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-600/70 dark:text-amber-400 pt-3">
+                <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-600/70 dark:text-amber-400">
                   {section.title}
                 </p>
                 {section.items.map((item) => {
@@ -306,7 +330,9 @@ function MobileDrawer({
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {userName}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{userEmail || userRole}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  {userEmail || userRole}
+                </p>
               </div>
             </div>
           </div>
@@ -339,7 +365,7 @@ function DesktopSidebar({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                  {userRole}
+                  {userRole?.replace("_", " ")}
                 </span>
               </div>
               <p className="truncate text-sm font-bold text-slate-900 dark:text-white mt-0.5">
@@ -354,15 +380,16 @@ function DesktopSidebar({
 
         {/* Categorized Navigation Container */}
         <GradientCard variant="slate">
-          <nav className="p-2 space-y-1">
+          <nav className="p-2 space-y-4">
             {sections.map((section, sIdx) => (
               <div key={sIdx} className="space-y-1">
-                <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wider text-amber-600/70 dark:text-amber-400">
+                <p className="px-3 pb-1 pt-1 text-[10px] font-bold uppercase tracking-wider text-amber-600/70 dark:text-amber-400">
                   {section.title}
                 </p>
                 <div className="space-y-0.5">
                   {section.items.map((item) => {
                     const Icon = item.icon;
+                    // Exact match checking for Dashboard, loose matching for others
                     const active = item.exact
                       ? pathname === item.href
                       : pathname.startsWith(item.href);

@@ -1,288 +1,296 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import {
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
-  Building2,
-  MapPin,
-  XCircle,
-  Hash,
-} from "lucide-react";
-import { useFeaturedDoctors, useSetFeaturedDoctor } from "@/lib/hooks/useAdmin";
-import type { AdminDoctorRecord } from "@doctor-contract/shared";
-import { GradientCard } from "@/components/ui/GradientCard";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Star, Trash2, Loader2, User, Search, ChevronDown, Check } from "lucide-react";
+import { api, setFeaturedDoctor, fetchFeaturedDoctors } from "@/lib/api";
 
-export default function AdminFeaturedDoctorsPage() {
-  const t = useTranslations("AdminFeatured");
-  const { data: doctors, isLoading, isError, isFetching, refetch } = useFeaturedDoctors();
-  const setFeatured = useSetFeaturedDoctor();
+export default function FeaturedDoctorsPage() {
+  const [featuredDoctors, setFeaturedDoctors] = useState<any[]>([]);
+  const [allDoctors, setAllDoctors] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [featuredOrder, setFeaturedOrder] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [editingDoctorId, setEditingDoctorId] = useState<string | null>(null);
-  const [orderInput, setOrderInput] = useState<number>(1);
+  // Searchable Dropdown States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  async function handleToggleFeatured(doc: AdminDoctorRecord) {
-    setActionError(null);
-    setActionSuccess(null);
-    try {
-      await setFeatured.mutateAsync({
-        doctorId: doc.id,
-        isFeatured: !doc.isFeatured,
-        featuredOrder: doc.featuredOrder || 1,
-      });
-      setActionSuccess(t("successFeatured"));
-    } catch (err: any) {
-      setActionError(
-        err?.response?.data?.message || "Failed to update featured status"
-      );
+  // Initial Data Fetch
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Close dropdown when clicked outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
     }
-  }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  async function handleSaveOrder(doctorId: string) {
-    setActionError(null);
-    setActionSuccess(null);
+  const fetchData = async () => {
+    setIsLoading(true);
     try {
-      await setFeatured.mutateAsync({
-        doctorId,
-        isFeatured: true,
-        featuredOrder: Number(orderInput) || 1,
-      });
-      setEditingDoctorId(null);
-      setActionSuccess(t("successFeatured"));
-    } catch (err: any) {
-      setActionError(
-        err?.response?.data?.message || "Failed to update featured order"
-      );
+      const [featuredRes, allDoctorsRes] = await Promise.all([
+        fetchFeaturedDoctors(),
+        // Update this line to fetch from the doctors endpoint directly
+        api.get('/doctors?limit=100').then(res => res.data?.data?.doctors || res.data?.data || [])
+      ]);
+      setFeaturedDoctors(featuredRes);
+      setAllDoctors(allDoctorsRes);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Sort by featuredOrder (lower values appear first)
-  const featuredList = [...(doctors || [])].sort((a, b) => {
-    const orderA = a.featuredOrder ?? 999;
-    const orderB = b.featuredOrder ?? 999;
-    return orderA - orderB;
-  });
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    setSelectedDoctorId("");
+    setSearchQuery("");
+    setFeaturedOrder(0);
+  };
+
+  // Filter doctors based on search query
+  const filteredDoctors = allDoctors.filter(doc => 
+    doc.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    doc.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSelectDoctor = (doc: any) => {
+    // doc.id is now strictly the DoctorId
+    setSelectedDoctorId(doc.id); 
+    setSearchQuery(doc.user?.name || "Unknown"); 
+    setIsDropdownOpen(false);
+  };
+
+  // Add to Featured
+  const handleAddFeatured = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDoctorId) return alert("Please search and select a doctor from the list");
+
+    setIsSubmitting(true);
+    try {
+      await setFeaturedDoctor(selectedDoctorId, true, Number(featuredOrder));
+      setIsModalOpen(false);
+      fetchData(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to add featured doctor", error);
+      alert("Failed to add. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Remove from Featured
+  const handleRemoveFeatured = async (doctorId: string) => {
+    if (!confirm("Are you sure you want to remove this doctor from the featured list?")) return;
+
+    try {
+      await setFeaturedDoctor(doctorId, false, 0);
+      fetchData(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to remove", error);
+      alert("Failed to remove doctor");
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header - Amber */}
-      <GradientCard variant="amber">
-        <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-                {t("title")}
-              </h1>
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                Featured Spotlight
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {t("subtitle")}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-            className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 sm:self-auto"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-amber-600" : ""}`}
-            />
-            <span>{t("retry")}</span>
-          </button>
+    <div className="p-6">
+      {/* Page Header */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Featured Doctors</h1>
+          <p className="text-sm text-slate-500">Manage doctors highlighted on the home page</p>
         </div>
-      </GradientCard>
-
-      {/* Action Error Alert */}
-      {actionError && (
-        <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
-            <span>{actionError}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActionError(null)}
-            className="text-[11px] font-bold underline"
-          >
-            {t("dismiss")}
-          </button>
-        </div>
-      )}
-
-      {/* Action Success Alert */}
-      {actionSuccess && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <span>{actionSuccess}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActionSuccess(null)}
-            className="text-[11px] font-bold underline"
-          >
-            {t("dismiss")}
-          </button>
-        </div>
-      )}
-
-      {/* Error State */}
-      {isError && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
-            <div className="flex-1">
-              <h3 className="text-xs font-semibold">{t("errorTitle")}</h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-700"
-            >
-              {t("retry")}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Loading Skeleton */}
-      {isLoading && (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-20 animate-pulse rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-            />
-          ))}
-        </div>
-      )}
+        <button
+          onClick={handleOpenModal}
+          className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-700 active:scale-95"
+        >
+          <Plus className="h-4 w-4" />
+          Add Featured Doctor
+        </button>
+      </div>
 
       {/* Featured Doctors List */}
-      {!isLoading && !isError && (
-        <div className="space-y-4">
-          {featuredList.length === 0 ? (
-            <GradientCard variant="amber">
-              <div className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 shadow-xs">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <h3 className="mt-3 text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {t("emptyTitle")}
-                </h3>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {t("emptyDesc")}
-                </p>
-              </div>
-            </GradientCard>
-          ) : (
-            featuredList.map((doc) => (
-              <GradientCard key={doc.id} variant="amber">
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 shadow-xs">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                          {doc.user?.name || "Doctor"}
-                        </h3>
-                        {doc.specialization && (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            {doc.specialization}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-slate-500 dark:text-slate-400">
-                        {doc.clinic?.clinicName && (
-                          <span className="flex items-center gap-1 font-medium">
-                            <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                            <span>{doc.clinic.clinicName}</span>
-                          </span>
-                        )}
-                        {doc.clinic?.city && (
-                          <span className="flex items-center gap-1 font-medium">
-                            <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                            <span>{doc.clinic.city}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                    {editingDoctorId === doc.id ? (
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex items-center rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800 shadow-xs">
-                          <Hash className="h-3.5 w-3.5 text-slate-400" />
-                          <input
-                            type="number"
-                            min={1}
-                            max={999}
-                            value={orderInput}
-                            onChange={(e) => setOrderInput(Number(e.target.value))}
-                            className="w-12 bg-transparent text-xs font-bold text-slate-900 outline-none dark:text-slate-100"
-                          />
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        {isLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+          </div>
+        ) : featuredDoctors.length === 0 ? (
+          <div className="flex h-40 flex-col items-center justify-center text-slate-500">
+            <Star className="mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
+            <p>No featured doctors added yet.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+                <tr>
+                  <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Display Order</th>
+                  <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Doctor Info</th>
+                  <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Clinic</th>
+                  <th className="p-4 text-right font-semibold text-slate-600 dark:text-slate-300">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {featuredDoctors.map((doc) => (
+                  <tr key={doc.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="p-4">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 font-bold text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+                        {doc.featuredOrder}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                          <User className="h-5 w-5 text-slate-500" />
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleSaveOrder(doc.id)}
-                          disabled={setFeatured.isPending}
-                          className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:scale-105 active:scale-95 disabled:opacity-50"
-                        >
-                          {setFeatured.isPending ? t("updating") : t("confirm")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingDoctorId(null)}
-                          className="rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                        >
-                          {t("cancel")}
-                        </button>
+                        <div>
+                          <p className="font-semibold text-slate-900 dark:text-slate-100">
+                            {doc.user?.name || "Unknown"}
+                          </p>
+                          <p className="text-xs text-slate-500">{doc.user?.email}</p>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                          <Hash className="h-3 w-3" />
-                          <span>
-                            {t("featuredOrder")}: {doc.featuredOrder || 1}
-                          </span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingDoctorId(doc.id);
-                            setOrderInput(doc.featuredOrder || 1);
-                          }}
-                          className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          {t("setOrder")}
-                        </button>
-                      </div>
-                    )}
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        {doc.clinic?.clinicName || "N/A"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleRemoveFeatured(doc.id)}
+                        className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
+                        title="Remove from featured"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleToggleFeatured(doc)}
-                      disabled={setFeatured.isPending}
-                      className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-bold text-rose-700 transition hover:bg-rose-100 hover:scale-105 active:scale-95 disabled:opacity-50 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
-                    >
-                      <XCircle className="h-3.5 w-3.5" />
-                      <span>{t("removeFeatured")}</span>
-                    </button>
-                  </div>
+      {/* Add Doctor Modal with Searchable Dropdown */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 animate-in zoom-in-95 duration-200">
+            <h2 className="mb-5 text-xl font-bold text-slate-900 dark:text-white">Add Featured Doctor</h2>
+            
+            <form onSubmit={handleAddFeatured} className="space-y-5">
+              
+              {/* Searchable Custom Dropdown */}
+              <div ref={dropdownRef} className="relative">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Search & Select Doctor
+                </label>
+                
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setIsDropdownOpen(true);
+                      if (selectedDoctorId) setSelectedDoctorId(""); // Clear selection if typing
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    placeholder="Search by name or email..."
+                    className="w-full rounded-xl border border-slate-300 bg-transparent pl-10 pr-10 py-2.5 text-sm outline-none transition-colors focus:border-amber-600 focus:ring-1 focus:ring-amber-600 dark:border-slate-700 dark:text-white"
+                  />
+                  <ChevronDown className={`absolute right-3 top-3 h-4 w-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </div>
-              </GradientCard>
-            ))
-          )}
+
+                {/* Dropdown Options */}
+                {isDropdownOpen && (
+                  <div className="absolute z-10 mt-1.5 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                    {filteredDoctors.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-slate-500">No doctors found matching "{searchQuery}"</div>
+                    ) : (
+                      filteredDoctors.map((doc) => {
+                        // Directly use doc.id since we are fetching from doctors API
+                        const isSelected = selectedDoctorId === doc.id;
+                        
+                        return (
+                          <button
+                            key={doc.id}
+                            type="button"
+                            onClick={() => handleSelectDoctor(doc)}
+                            className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
+                              isSelected 
+                                ? "bg-amber-50 dark:bg-amber-500/10" 
+                                : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1 pr-4">
+                              {/* Use doc.user.name and doc.user.email */}
+                              <p className={`truncate font-medium ${isSelected ? "text-amber-700 dark:text-amber-400" : "text-slate-900 dark:text-slate-100"}`}>
+                                {doc.user?.name}
+                              </p>
+                              <p className="truncate text-xs text-slate-500">{doc.user?.email}</p>
+                            </div>
+                            {isSelected && <Check className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Display Order */}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Display Order
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={featuredOrder}
+                  onChange={(e) => setFeaturedOrder(Number(e.target.value))}
+                  required
+                  className="w-full rounded-xl border border-slate-300 bg-transparent px-4 py-2.5 text-sm outline-none transition-colors focus:border-amber-600 focus:ring-1 focus:ring-amber-600 dark:border-slate-700 dark:text-white"
+                  placeholder="e.g., 1"
+                />
+                <p className="mt-1.5 text-xs text-slate-500">Lower numbers appear first on the platform.</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !selectedDoctorId}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-700 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                >
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Save Featured Doctor
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
