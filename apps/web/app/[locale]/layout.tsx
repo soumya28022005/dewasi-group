@@ -10,7 +10,6 @@ import QueryProvider from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -43,12 +42,10 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <Script
-          id="theme-script"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeScript }}
-        />
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <QueryProvider>

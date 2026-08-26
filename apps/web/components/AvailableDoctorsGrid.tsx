@@ -17,11 +17,8 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// ============================================================
-// Available Doctor Card
-// ============================================================
-
 function AvailableDoctorCard({ doctor }: { doctor: Doctor }) {
+  const t = useTranslations("AvailableDoctors");
   const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
 
   return (
@@ -74,16 +71,12 @@ function AvailableDoctorCard({ doctor }: { doctor: Doctor }) {
 
         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-[11px] font-bold text-green-700 dark:bg-green-500/10 dark:text-green-400">
           <Clock className="h-3.5 w-3.5" />
-          Available Now
+          {t("availableNow") || "Available Now"}
         </span>
       </div>
     </Link>
   );
 }
-
-// ============================================================
-// Available Doctors Grid
-// ============================================================
 
 export default function AvailableDoctorsGrid() {
   const t = useTranslations("AvailableDoctors");
@@ -123,13 +116,13 @@ export default function AvailableDoctorsGrid() {
           {t("noResults") || "No doctors are available right now."}
         </p>
         <p className="mt-1.5 text-sm text-gray-500 dark:text-ink-500">
-          Check back shortly, or browse the full doctor directory.
+          {t("checkBack") || "Check back shortly, or browse the full doctor directory."}
         </p>
         <Link
           href="/doctors"
           className="mt-4 inline-flex rounded-full bg-[var(--color-primary)] px-4 py-2 text-xs font-bold text-white hover:bg-[var(--color-primary-dark)]"
         >
-          Browse All Doctors
+          {t("browseAllDoctors") || "Browse All Doctors"}
         </Link>
       </div>
     );

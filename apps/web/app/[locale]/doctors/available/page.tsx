@@ -2,24 +2,20 @@
 
 import { useTranslations } from "next-intl";
 import AvailableDoctorsGrid from "@/components/AvailableDoctorsGrid";
-import { Activity, Clock, CheckCircle2, Sparkles, Users, Stethoscope } from "lucide-react";
-
-// ============================================================
-// GRADIENT BORDER CARD COMPONENT
-// ============================================================
+import { Building2, Sparkles } from "lucide-react";
 
 function GradientCard({
   children,
   className = "",
-  gradient = "from-[#1e3a8a] via-[#3b82f6] to-[#059669]",
+  gradient = "from-[#2563EB] to-[#14B8A6]",
 }: {
   children: React.ReactNode;
   className?: string;
   gradient?: string;
 }) {
   return (
-    <div className={`relative rounded-[28px] p-[2.5px] bg-gradient-to-r ${gradient} shadow-xl transition-all duration-300 hover:shadow-2xl ${className}`}>
-      <div className="rounded-[calc(28px-2.5px)] bg-white dark:bg-slate-900 h-full">
+    <div className={`relative rounded-[24px] p-[2px] bg-gradient-to-r ${gradient} shadow-sm transition-all duration-300 hover:shadow-md ${className}`}>
+      <div className="rounded-[calc(24px-2px)] bg-white dark:bg-slate-900 h-full">
         {children}
       </div>
     </div>
@@ -31,40 +27,34 @@ export default function AvailableDoctorsPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* =====================================================
-          PAGE HEADER - Gradient Border
-      ====================================================== */}
-      <GradientCard gradient="from-[#1e3a8a] via-[#3b82f6] to-[#059669]">
+      
+      <GradientCard gradient="from-[#2563EB] to-[#14B8A6]">
         <div className="relative overflow-hidden p-6 sm:p-8">
-          {/* Decorative gradient blobs */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3b82f6]/10 to-[#059669]/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-gradient-to-br from-[#1e3a8a]/5 to-[#3b82f6]/10 blur-2xl" />
-
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#059669] to-[#10b981] text-white shadow-lg shadow-green-500/30">
-                  <Activity className="h-5 w-5" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563EB] text-white">
+                  <Building2 className="h-4 w-4" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#059669]">
-                  {t("heading")}
+                <p className="text-sm font-bold uppercase tracking-[0.15em] text-[#1e40af] dark:text-blue-400">
+                  {t("findDoctors") || "Find Doctors"}
                 </p>
               </div>
 
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                {t("heading")}
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                {t("heading") || "Available Doctors"}
               </h1>
 
-              <p className="mt-2 text-sm text-slate-500 sm:text-base">
-                {t("subheading") || "Doctors who are currently open for consultation."}
+              <p className="mt-2 text-base text-slate-500 dark:text-slate-400">
+                {t("subheading") || "Doctors who are currently open for immediate consultation"}
               </p>
             </div>
 
             <div className="hidden shrink-0 sm:block">
-              <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1e3a8a]/5 to-[#059669]/5 px-4 py-2">
-                <Clock className="h-4 w-4 text-[#059669]" />
-                <span className="text-xs font-semibold text-[#1e40af]">
-                  Live Availability
+              <div className="flex items-center gap-2 rounded-full bg-slate-50 dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700">
+                <Sparkles className="h-4 w-4 text-[#0F766E]" />
+                <span className="text-sm font-semibold text-[#1e40af] dark:text-blue-300">
+                  {t("trustedNetwork") || "Trusted Healthcare Network"}
                 </span>
               </div>
             </div>
@@ -72,9 +62,6 @@ export default function AvailableDoctorsPage() {
         </div>
       </GradientCard>
 
-      {/* =====================================================
-          AVAILABLE DOCTORS GRID
-      ====================================================== */}
       <div className="mt-8">
         <AvailableDoctorsGrid />
       </div>

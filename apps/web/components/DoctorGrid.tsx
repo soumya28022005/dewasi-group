@@ -25,10 +25,6 @@ import {
   useBookAppointment,
 } from "@/lib/hooks/useDoctorSearch";
 
-// ============================================================
-// INITIALS
-// ============================================================
-
 function initials(name: string) {
   return name
     .split(" ")
@@ -39,10 +35,6 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// ============================================================
-// GRADIENT BORDER WRAPPER
-// ============================================================
-
 function GradientBorderCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`relative rounded-[28px] p-[3.5px] bg-gradient-to-br from-[#2563EB] via-[#0F766E] to-[#14B8A6] shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_16px_50px_rgba(37,99,235,0.15)] ${className}`}>
@@ -52,10 +44,6 @@ function GradientBorderCard({ children, className }: { children: React.ReactNode
     </div>
   );
 }
-
-// ============================================================
-// DOCTOR GRID MAIN
-// ============================================================
 
 export default function DoctorGrid({
   query,
@@ -69,7 +57,6 @@ export default function DoctorGrid({
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-      {/* Loading */}
       {isLoading && (
         <div className="col-span-full flex flex-col items-center justify-center py-20">
           <div className="relative">
@@ -78,41 +65,32 @@ export default function DoctorGrid({
               <Stethoscope className="h-5 w-5 text-[#2563EB]" />
             </div>
           </div>
-
           <p className="mt-4 text-sm font-semibold text-slate-500">
             {t("loading") || "Finding the best doctors..."}
           </p>
         </div>
       )}
 
-      {/* Empty State */}
       {!isLoading && doctors?.length === 0 && (
         <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-16 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
             <Clock className="h-7 w-7" />
           </div>
-
           <p className="mt-4 text-lg font-bold text-slate-800">
             {t("noResults")}
           </p>
-
           <p className="mt-1.5 text-sm text-slate-500">
-            Try adjusting your search or filters
+            {t("adjustFilters") || "Try adjusting your search or filters"}
           </p>
         </div>
       )}
 
-      {/* Doctors */}
       {doctors?.map((doctor) => (
         <DoctorCard key={doctor.id} doctor={doctor} />
       ))}
     </div>
   );
 }
-
-// ============================================================
-// DOCTOR CARD (PREMIUM CHINA-STYLE)
-// ============================================================
 
 function DoctorCard({ doctor }: { doctor: Doctor }) {
   const t = useTranslations("DoctorSearch");
@@ -175,27 +153,22 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
   const rating = (doctor as any).rating ?? 4.5;
   const reviews = (doctor as any).reviewCount ?? 120;
   const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
+  const isAvailable = doctor.isAvailable;
 
   return (
     <GradientBorderCard className="h-full">
-      {/* Inner Content */}
       <div className="flex h-full flex-col p-6 relative overflow-hidden">
-        {/* Subtle decorative elements */}
         <div className="pointer-events-none absolute -top-12 -right-12 h-24 w-24 rounded-full bg-gradient-to-br from-[#2563EB]/5 to-[#0F766E]/10 blur-2xl" />
 
-        {/* Top Profile Area */}
         <div className="relative flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-4">
-            {/* Avatar */}
             <div className="relative shrink-0">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-lg shadow-blue-500/20">
                 {initials(doctor.user.name)}
               </div>
-              {/* Verified badge */}
               <BadgeCheck className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white text-[#2563EB] shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700" />
             </div>
 
-            {/* Doctor info */}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h3 className="truncate text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
@@ -216,7 +189,6 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
             </div>
           </div>
 
-          {/* Favorite */}
           <button
             type="button"
             onClick={handleFavoriteToggle}
@@ -226,15 +198,13 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
           </button>
         </div>
 
-        {/* Experience badge */}
         {experienceYears > 0 && (
           <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-slate-500">
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            {experienceYears}+ years experience
+            {experienceYears}+ {t("yearsExperience") || "years experience"}
           </div>
         )}
 
-        {/* Rating row */}
         <div className="mt-4 flex items-center gap-2">
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -242,13 +212,11 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
             ))}
           </div>
           <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{rating}</span>
-          <span className="text-xs text-slate-400">· {reviews} reviews</span>
+          <span className="text-xs text-slate-400">· {reviews} {t("reviews") || "reviews"}</span>
         </div>
 
-        {/* Divider */}
         <div className="my-5 h-px bg-slate-100 dark:bg-slate-800" />
 
-        {/* Info section */}
         <div className="space-y-2.5">
           {location && (
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
@@ -259,57 +227,66 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
           {doctor.fee != null && (
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
               <span className="text-[#2563EB]">₹{doctor.fee}</span>
-              <span className="text-slate-400">consultation fee</span>
+              <span className="text-slate-400">{t("consultationFee") || "consultation fee"}</span>
             </div>
           )}
         </div>
 
-        {/* Availability */}
         <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/40">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Next available</p>
-              <p className="mt-0.5 text-sm font-semibold text-slate-700 dark:text-slate-200">Tomorrow · 10:00 AM</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{t("status") || "Status"}</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                {isAvailable ? (t("availableNow") || "Available Now") : (t("currentlyUnavailable") || "Currently Unavailable")}
+              </p>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              </span>
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Available</span>
+              {isAvailable ? (
+                <>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  </span>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("available") || "Available"}</span>
+                </>
+              ) : (
+                <>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-slate-400" />
+                  </span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("unavailable") || "Unavailable"}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* CTA area */}
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={handleBookClick}
             className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:border-slate-300 hover:text-slate-800 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-slate-100"
           >
-            View Profile
+            {t("viewProfile") || "View Profile"}
           </button>
           <button
             type="button"
             onClick={handleBookClick}
             className="flex items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
           >
-            {showBooking ? t("cancelBooking") || "Cancel" : t("bookButton")}
+            {showBooking ? t("cancel") || "Cancel" : t("bookButton")}
           </button>
         </div>
 
-        {/* Booking Panel */}
         {showBooking && user && (
           <div className="mt-5 animate-in slide-in-from-top-2 fade-in duration-300">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
               <div className="mb-3">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Book an appointment</p>
-                <p className="mt-0.5 text-xs text-slate-500">Select your preferred date and time.</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t("bookAppointment") || "Book an appointment"}</p>
+                <p className="mt-0.5 text-xs text-slate-500">{t("selectDatePrompt") || "Select your preferred date and time."}</p>
               </div>
 
               <div className="space-y-3">
-                {/* Date */}
                 <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/20 dark:border-slate-700 dark:bg-slate-900">
                   <Calendar className="h-4 w-4 shrink-0 text-[#2563EB]" />
                   <input
@@ -321,7 +298,6 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
                   />
                 </div>
 
-                {/* Time */}
                 <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/20 dark:border-slate-700 dark:bg-slate-900">
                   <Clock className="h-4 w-4 shrink-0 text-[#2563EB]" />
                   <input
@@ -336,7 +312,6 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
                 </div>
               </div>
 
-              {/* Confirm */}
               <button
                 type="button"
                 onClick={handleConfirmBooking}
@@ -349,11 +324,10 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
                     <span className="ml-2">{t("bookingLoading")}</span>
                   </>
                 ) : (
-                  t("confirmBooking")
+                  t("confirmBooking") || "Confirm Booking"
                 )}
               </button>
 
-              {/* Message */}
               {message && (
                 <div
                   className={`mt-3 flex items-start gap-2 rounded-xl border p-3 text-sm font-medium ${

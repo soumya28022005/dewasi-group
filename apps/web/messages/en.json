@@ -157,10 +157,24 @@
   "profile": "Profile"
 },
 
-  "DoctorSearch": {
-    "heading": "Available Doctors",
-    "noResults": "No doctors found. Try a different search.",
+ "DoctorSearch": {
+    "heading": "All Doctors",
+    "subheading": "Search for trusted doctors near you",
+    "findDoctors": "Find Doctors",
+    "trustedNetwork": "Trusted Healthcare Network",
+    "noResults": "No doctors found.",
+    "adjustFilters": "Try adjusting your search or filters",
     "experience": "years experience",
+    "yearsExperience": "years experience",
+    "reviews": "reviews",
+    "status": "Status",
+    "availableNow": "Available Now",
+    "currentlyUnavailable": "Currently Unavailable",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "viewProfile": "View Profile",
+    "bookAppointment": "Book an appointment",
+    "selectDatePrompt": "Select your preferred date and time.",
     "consultationFee": "Consultation Fee",
     "bookButton": "Book Appointment",
     "selectDate": "Select date",
@@ -177,12 +191,14 @@
     "locationInputPlaceholder": "Enter your city",
     "locationApply": "Apply",
     "locationShowAll": "Show all",
-    "loading": "Loading doctors...",
+    "active": "Active",
+    "clear": "Clear",
+    "loading": "Finding the best doctors...",
     "newDoctor": "New",
     "cancelBooking": "Cancel",
     "pleaseSelectDateTime": "Please select both date and time",
     "pastDateError": "Please select a future date and time",
-    "cancel": "cancel"
+    "cancel": "Cancel"
   },
   "Notifications": {
     "heading": "Notifications",
@@ -1036,12 +1052,17 @@
     "noResults": "No clinics found. Try a different search.",
     "loadError": "Could not load clinics right now. Please try again shortly."
   },
-  "AvailableDoctors": {
-  "heading": "Available Doctors",
-  "subheading": "Doctors who are currently open for consultation.",
-  "noResults": "No doctors are available right now.",
-  "loadError": "Could not load available doctors right now. Please try again shortly."
-},
+ "AvailableDoctors": {
+    "findDoctors": "Find Doctors",
+    "trustedNetwork": "Trusted Healthcare Network",
+    "heading": "Available Doctors",
+    "subheading": "Doctors who are currently open for immediate consultation",
+    "noResults": "No doctors are available right now.",
+    "loadError": "Could not load available doctors right now. Please try again shortly.",
+    "checkBack": "Check back shortly, or browse the full doctor directory.",
+    "browseAllDoctors": "Browse All Doctors",
+    "availableNow": "Available Now"
+  },
 "AdminDoctorAvailability": {
   "title": "Doctor Availability",
   "subtitle": "Mark doctors as available or unavailable for bookings across the platform.",
