@@ -537,3 +537,55 @@ export type ModerateReviewInput = {
   reviewId: string;
   action: "APPROVE" | "REJECT";
 };
+
+export type CreateGuestPatientInput = {
+  name: string;
+  age: number;
+  phone?: string;
+  gender?: Gender;
+};
+
+export type BookReceptionAppointmentInput = {
+  doctorId: string;
+  clinicId: string;
+  date: string;
+  bookingSource?: "RECEPTION" | "WALK_IN" | "PHONE";
+  patientId?: string;
+  newPatient?: { name: string; age: number; phone?: string };
+};
+
+export type PatientSearchResult = {
+  id: string;
+  userId: string | null;
+  user?: { name: string; phone: string | null } | null;
+  name?: string;
+  phone?: string | null;
+  age?: number | null;
+};
+
+export type AnnouncementType =
+  | "DOCTOR_ABSENT"
+  | "CLINIC_CLOSED"
+  | "HOLIDAY"
+  | "EMERGENCY"
+  | "MAINTENANCE"
+  | "GENERAL";
+
+export type AdminAnnouncementRecord = {
+  id: string;
+  type: AnnouncementType;
+  title: string;
+  message: string;
+  isActive: boolean;
+  createdAt: string;
+  clinicId?: string | null;
+  doctorId?: string | null;
+};
+
+export type PublishAnnouncementInput = {
+  type: AnnouncementType;
+  title: string;
+  message: string;
+};
+
+

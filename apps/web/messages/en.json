@@ -1115,5 +1115,33 @@
   "reject": "Reject",
   "successApproved": "Review approved.",
   "successRejected": "Review rejected."
+},
+"AdminAnnouncements": {
+  "title": "Platform Announcements",
+  "subtitle": "Broadcast a notice to every user on the platform, live via Socket.io.",
+  "retry": "Refresh",
+  "dismiss": "Dismiss",
+  "errorTitle": "Could not load announcements",
+  "typeLabel": "Type",
+  "type_GENERAL": "General",
+  "type_EMERGENCY": "Emergency",
+  "type_MAINTENANCE": "Maintenance",
+  "type_HOLIDAY": "Holiday",
+  "type_CLINIC_CLOSED": "Clinic Closed",
+  "type_DOCTOR_ABSENT": "Doctor Absent",
+  "titleLabel": "Title",
+  "titlePlaceholder": "e.g. Scheduled maintenance tonight",
+  "messageLabel": "Message",
+  "messagePlaceholder": "Details for the announcement...",
+  "publish": "Publish Announcement",
+  "publishing": "Publishing...",
+  "validationRequired": "Title and message are required.",
+  "successPublished": "Announcement published.",
+  "successDeactivated": "Announcement deactivated.",
+  "emptyTitle": "No announcements published yet",
+  "active": "Active",
+  "inactive": "Inactive",
+  "deactivate": "Deactivate",
+  "deactivating": "Deactivating..."
 }
 }

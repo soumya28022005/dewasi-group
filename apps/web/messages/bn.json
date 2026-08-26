@@ -1169,6 +1169,34 @@
   "reject": "প্রত্যাখ্যান করুন",
   "successApproved": "রিভিউ অনুমোদিত হয়েছে।",
   "successRejected": "রিভিউ প্রত্যাখ্যাত হয়েছে।"
+},
+"AdminAnnouncements": {
+  "title": "প্ল্যাটফর্ম ঘোষণা",
+  "subtitle": "সোশ্যাল.আইও-এর মাধ্যমে সরাসরি প্ল্যাটফর্মের সব ব্যবহারকারীর কাছে একটি নোটিশ পাঠান।",
+  "retry": "রিফ্রেশ",
+  "dismiss": "বাতিল",
+  "errorTitle": "ঘোষণা লোড করা যায়নি",
+  "typeLabel": "ধরন",
+  "type_GENERAL": "সাধারণ",
+  "type_EMERGENCY": "জরুরি",
+  "type_MAINTENANCE": "রক্ষণাবেক্ষণ",
+  "type_HOLIDAY": "ছুটি",
+  "type_CLINIC_CLOSED": "ক্লিনিক বন্ধ",
+  "type_DOCTOR_ABSENT": "ডাক্তার অনুপস্থিত",
+  "titleLabel": "শিরোনাম",
+  "titlePlaceholder": "যেমন: আজ রাতে নির্ধারিত রক্ষণাবেক্ষণ",
+  "messageLabel": "বার্তা",
+  "messagePlaceholder": "ঘোষণার বিস্তারিত তথ্য...",
+  "publish": "ঘোষণা প্রকাশ করুন",
+  "publishing": "প্রকাশ করা হচ্ছে...",
+  "validationRequired": "শিরোনাম এবং বার্তা আবশ্যক।",
+  "successPublished": "ঘোষণা প্রকাশিত হয়েছে।",
+  "successDeactivated": "ঘোষণা নিষ্ক্রিয় করা হয়েছে।",
+  "emptyTitle": "এখনো কোনো ঘোষণা প্রকাশিত হয়নি",
+  "active": "সক্রিয়",
+  "inactive": "নিষ্ক্রিয়",
+  "deactivate": "নিষ্ক্রিয় করুন",
+  "deactivating": "নিষ্ক্রিয় করা হচ্ছে..."
 }
 
 }

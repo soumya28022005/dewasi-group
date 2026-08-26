@@ -47,3 +47,19 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// === Location API Calls ===
+
+// For Super Admin
+export const addSearchLocation = async (locationData: { nameEn: string; nameBn: string; nameHi: string }) => {
+  // Removed /api/v1 since it is already in the baseURL
+  const response = await api.post('/locations', locationData);
+  return response.data;
+};
+
+// For Public Search Bar
+export const fetchSearchLocations = async () => {
+  // Removed /api/v1 since it is already in the baseURL
+  const response = await api.get('/locations');
+  return response.data.data; 
+};

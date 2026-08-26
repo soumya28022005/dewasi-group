@@ -58,6 +58,9 @@ export default function LoginPage() {
         case "DOCTOR":
           router.push("/doctor/dashboard");
           break;
+        case "RECEPTIONIST":
+          router.push("/receptionist/dashboard");
+          break;
         case "DIAGNOSTIC_CENTER":
           router.push("/diagnosticCenter/dashboard");
           break;

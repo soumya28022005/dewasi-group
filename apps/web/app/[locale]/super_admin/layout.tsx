@@ -18,6 +18,7 @@ import {
   Shield,
   CalendarClock,
   Star,
+  Megaphone,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { LucideIcon } from "lucide-react";
@@ -74,6 +75,18 @@ const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
         label: "Diagnostic Centers",
         icon: Activity,
       },
+
+      {
+        href: "/super_admin/announcements",
+        label: "Announcements",
+        icon: Megaphone,
+      },
+      {
+        href: "/super_admin/settings",
+        label: "Platform Settings",
+        icon: Settings,
+      },
+      
     ],
   },
 ];

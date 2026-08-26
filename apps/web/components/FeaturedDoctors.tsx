@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, Award, ShieldCheck, Stethoscope, Star, BadgeCheck, ArrowRight } from "lucide-react";
+import { MapPin, Award, Stethoscope, Star, BadgeCheck, ArrowRight } from "lucide-react";
 
 import type { Doctor } from "@doctor-contract/shared";
 import { Link } from "@/i18n/routing";
@@ -24,12 +24,12 @@ function initials(name: string) {
 }
 
 // ============================================================
-// GRADIENT BORDER WRAPPER (CHINA BEST - BLUE TEAL)
+// GRADIENT BORDER WRAPPER (CLEAN & PREMIUM)
 // ============================================================
 
 function GradientBorderCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative rounded-[28px] p-[2px] bg-gradient-to-br from-[#2563EB] via-[#0F766E] to-[#14B8A6] shadow-[0_8px_30px_rgba(37,99,235,0.12)] transition-all duration-300 hover:shadow-[0_20px_60px_rgba(37,99,235,0.2)]">
+    <div className="relative rounded-[28px] p-[2px] bg-gradient-to-br from-[#2563EB] via-[#0F766E] to-[#14B8A6] shadow-[0_4px_20px_-4px_rgba(37,99,235,0.15)] transition-all duration-300 hover:shadow-[0_12px_40px_-8px_rgba(37,99,235,0.25)]">
       <div className="rounded-[calc(28px-2px)] bg-white dark:bg-slate-900 h-full">
         {children}
       </div>
@@ -38,7 +38,7 @@ function GradientBorderCard({ children }: { children: React.ReactNode }) {
 }
 
 // ============================================================
-// FEATURED DOCTOR CARD (BLUE TEAL GRADIENT BORDER)
+// FEATURED DOCTOR CARD (REFINED & CLEAN)
 // ============================================================
 
 function FeaturedDoctorCard({
@@ -60,15 +60,12 @@ function FeaturedDoctorCard({
       className="group block h-full w-full"
     >
       <GradientBorderCard>
-        <div className="relative flex h-full flex-col p-6 overflow-hidden">
-          {/* Subtle decorative blob */}
-          <div className="pointer-events-none absolute -top-12 -right-12 h-24 w-24 rounded-full bg-gradient-to-br from-[#2563EB]/5 to-[#0F766E]/10 blur-2xl" />
-
+        <div className="flex h-full flex-col p-6">
           {/* Profile Area */}
-          <div className="relative flex items-start gap-4">
+          <div className="flex items-start gap-4">
             {/* Avatar */}
             <div className="relative shrink-0">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-105">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-md transition-transform duration-300 group-hover:scale-105">
                 {initials(doctor.user.name)}
               </div>
               <BadgeCheck className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white text-[#2563EB] shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700" />
@@ -85,7 +82,8 @@ function FeaturedDoctorCard({
                 </p>
               )}
               {doctor.specialization && (
-                <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                  <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#0F766E]" />
                   {doctor.specialization}
                 </p>
               )}
@@ -93,26 +91,26 @@ function FeaturedDoctorCard({
           </div>
 
           {/* Experience & Rating */}
-          <div className="mt-4 flex items-center gap-4">
+          <div className="mt-4 flex items-center gap-3">
             {experience > 0 && (
-              <div className="flex items-center gap-1 text-xs text-slate-500">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
                 <Award className="h-3.5 w-3.5 text-amber-500" />
                 {experience}+ yrs
-              </div>
+              </span>
             )}
-            <div className="flex items-center gap-1">
-              <div className="flex items-center gap-0.5">
+            <span className="flex items-center gap-1">
+              <span className="flex items-center gap-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} className={`h-3.5 w-3.5 ${star <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200"}`} />
                 ))}
-              </div>
+              </span>
               <span className="text-xs font-semibold text-slate-700">{rating}</span>
-              <span className="text-xs text-slate-400">({reviews})</span>
-            </div>
+              <span className="text-[11px] text-slate-400">({reviews})</span>
+            </span>
           </div>
 
           {/* Divider */}
-          <div className="my-5 h-px bg-slate-50 dark:bg-slate-800" />
+          <div className="my-5 h-px bg-slate-100 dark:bg-slate-800" />
 
           {/* Location & Fee */}
           <div className="space-y-2">
@@ -225,7 +223,7 @@ export default function FeaturedDoctors() {
     return (
       <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
         <SectionHeader eyebrow="Trusted Healthcare" title={t("featuredDoctors")} />
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
