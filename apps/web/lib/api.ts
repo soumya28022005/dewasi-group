@@ -24,19 +24,31 @@ api.interceptors.response.use(
     // যদি 401 Unauthorized এরর আসে (যেমন: Refresh token invalid)
     if (error.response && error.response.status === 401) {
       
-      // লোকাল স্টোরেজ থেকে ইনভ্যালিড টোকেন মুছে ফেলুন
+      // ১. Local Storage থেকে টোকেন ক্লিয়ার করুন
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
 
-      // ব্রাউজার যদি পাবলিক পেজে থাকে, তবে রিডাইরেক্ট করবেন না
+      // ২. Cookie থেকেও টোকেন ক্লিয়ার করুন (এটাই লুপ তৈরি করছিল)
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+      // ৩. ব্রাউজার চেক করে রিডাইরেক্ট করুন
       if (typeof window !== "undefined") {
-        const publicRoutes = ["/en", "/bn", "/hi", "/login", "/register"]; // আপনার পাবলিক পেজগুলো
         const currentPath = window.location.pathname;
 
-        const isPublicRoute = publicRoutes.some(route => currentPath === route || currentPath.startsWith(route + "/doctors") || currentPath.startsWith(route + "/clinics"));
+        // যেসব পেজে 401 আসলেও লগইনে পাঠাবে না (Public Pages)
+        const isPublicRoute = 
+          currentPath === "/" ||
+          currentPath.match(/^\/(en|bn|hi)\/?$/) ||
+          currentPath.includes("/login") || 
+          currentPath.includes("/register") || 
+          currentPath.includes("/announcements") || 
+          currentPath.includes("/doctors") || 
+          currentPath.includes("/clinics");
 
         if (!isPublicRoute) {
-          // শুধুমাত্র প্রোটেক্টেড পেজ (Admin/Doctor/Patient) হলেই লগইনে পাঠাবে
+          // শুধুমাত্র প্রোটেক্টেড পেজ (Admin/Doctor/Patient/Receptionist) হলেই লগইনে পাঠাবে
           window.location.href = "/login";
         }
       }
