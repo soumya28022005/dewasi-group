@@ -131,7 +131,7 @@ export const fetchAdminAnnouncements = async () => {
   }
 };
 
-export const updateAnnouncement = async (id: string, updateData: { title?: string; message?: string; type?: string }) => {
+export const updateAnnouncement = async (id: string, updateData: { title?: string; message?: string; type?: string, isActive?: boolean }) => {
   const response = await api.patch(`/announcements/admin/${id}`, updateData);
   return response.data;
 };
