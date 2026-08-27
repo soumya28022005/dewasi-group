@@ -15,6 +15,12 @@ import {
   DoorClosed,
   UserX,
   Info,
+  Edit2,
+  Trash2,
+  PauseCircle,
+  PlayCircle,
+  X,
+  Loader2
 } from "lucide-react";
 
 import {
@@ -24,6 +30,9 @@ import {
 } from "@/lib/hooks/useAnnouncements";
 import type { AnnouncementType } from "@doctor-contract/shared";
 import { GradientCard } from "@/components/ui/GradientCard";
+
+// API imports for Edit and Permanent Delete
+import { deleteAnnouncement, updateAnnouncement, deactivateAnnouncement } from "@/lib/api";
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (
@@ -69,14 +78,22 @@ export default function AdminAnnouncementsPage() {
 
   const announcements = data ?? [];
 
+  // Create States
   const [type, setType] = useState<AnnouncementType>("GENERAL");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
 
+  // Edit Modal States
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingData, setEditingData] = useState<any>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Action States
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
+  // --- Publish Logic ---
   async function handlePublish(e: React.FormEvent) {
     e.preventDefault();
     setActionError(null);
@@ -93,19 +110,24 @@ export default function AdminAnnouncementsPage() {
       setTitle("");
       setMessage("");
       setType("GENERAL");
+      refetch(); // Reload list after publishing
     } catch (err: unknown) {
       setActionError(getErrorMessage(err, "Failed to publish announcement"));
     }
   }
 
+  // --- Deactivate / Pause Logic ---
   async function handleDeactivate(announcementId: string) {
+    if (!confirm("Are you sure you want to pause this announcement? It will be hidden from users.")) return;
+    
     setActionError(null);
     setActionSuccess(null);
     setPendingId(announcementId);
 
     try {
       await deactivate.mutateAsync(announcementId);
-      setActionSuccess(t("successDeactivated") || "Announcement deactivated.");
+      setActionSuccess(t("successDeactivated") || "Announcement paused.");
+      refetch(); // Refetch to update status UI
     } catch (err: unknown) {
       setActionError(getErrorMessage(err, "Failed to deactivate announcement"));
     } finally {
@@ -113,8 +135,59 @@ export default function AdminAnnouncementsPage() {
     }
   }
 
+  
+
+  // --- Permanent Delete Logic ---
+  async function handleDelete(announcementId: string) {
+    if (!confirm("Are you sure you want to PERMANENTLY delete this announcement? This action cannot be undone.")) return;
+
+    setActionError(null);
+    setActionSuccess(null);
+    setPendingId(announcementId);
+
+    try {
+      await deleteAnnouncement(announcementId);
+      setActionSuccess("Announcement permanently deleted.");
+      refetch(); // Refetch to remove from list instantly
+    } catch (err: unknown) {
+      setActionError(getErrorMessage(err, "Failed to delete announcement"));
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  // --- Edit Logic ---
+  const handleEditClick = (announcement: any) => {
+    setEditingData(announcement);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingData) return;
+
+    setActionError(null);
+    setActionSuccess(null);
+    setIsSavingEdit(true);
+
+    try {
+      await updateAnnouncement(editingData.id, {
+        title: editingData.title,
+        message: editingData.message,
+      });
+      
+      setActionSuccess("Announcement updated successfully.");
+      setIsEditModalOpen(false);
+      refetch(); // Instantly update the list
+    } catch (err: unknown) {
+      setActionError(getErrorMessage(err, "Failed to update announcement"));
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       {/* Header - Indigo */}
       <GradientCard variant="indigo">
         <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -204,7 +277,7 @@ export default function AdminAnnouncementsPage() {
 
       {/* Alerts */}
       {actionError && (
-        <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
+        <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300 animate-in fade-in">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
             <span>{actionError}</span>
@@ -216,7 +289,7 @@ export default function AdminAnnouncementsPage() {
       )}
 
       {actionSuccess && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300">
+        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300 animate-in fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>{actionSuccess}</span>
@@ -227,38 +300,19 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
-      {/* Error state */}
-      {isError && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-300">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
-            <div className="flex-1">
-              <h3 className="text-xs font-semibold">{t("errorTitle") || "Could not load announcements"}</h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-700"
-            >
-              {t("retry") || "Retry"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Loading */}
+      {/* Loading State */}
       {isLoading && (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="h-20 animate-pulse rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900"
+              className="h-24 animate-pulse rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900"
             />
           ))}
         </div>
       )}
 
-      {/* List */}
+      {/* Announcement List */}
       {!isLoading && !isError && (
         <div className="space-y-3">
           {announcements.length === 0 ? (
@@ -275,43 +329,142 @@ export default function AdminAnnouncementsPage() {
           ) : (
             announcements.map((a) => (
               <GradientCard key={a.id} variant="indigo">
-                <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+                  
+                  {/* Left Side: Content */}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${TYPE_STYLES[a.type]}`}
-                      >
-                        {t(`type_${a.type}`) || a.type.replace("_", " ")}
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${TYPE_STYLES[a.type]}`}>
+                        {t(`type_${a.type}`) || a.type?.replace("_", " ") || "GENERAL"}
                       </span>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                          a.isActive
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                          a.isActive !== false // Assuming undefined means active
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-                            : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
                         }`}
                       >
-                        {a.isActive ? t("active") || "Active" : t("inactive") || "Inactive"}
+                        {a.isActive !== false ? t("active") || "Live" : t("inactive") || "Paused"}
                       </span>
                     </div>
-                    <h3 className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-100">{a.title}</h3>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{a.message}</p>
+                    <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-slate-100">{a.title}</h3>
+                    <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl">{a.message}</p>
                   </div>
 
-                  {a.isActive && (
+                  {/* Right Side: Action Buttons (Pause, Edit, Delete) */}
+                  <div className="flex items-center gap-2 self-start">
+                    
+                    {/* 1. Pause / Activate Button */}
                     <button
-                      type="button"
                       onClick={() => handleDeactivate(a.id)}
                       disabled={pendingId === a.id}
-                      className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100 hover:scale-105 active:scale-95 disabled:opacity-50 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/50"
+                      className={`inline-flex items-center justify-center p-2 rounded-lg border transition-all disabled:opacity-50 active:scale-95 ${
+                        a.isActive !== false 
+                        ? "border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                        : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
+                      }`}
+                      title={a.isActive !== false ? "Pause this announcement" : "Re-activate this announcement"}
                     >
-                      <XCircle className="h-3.5 w-3.5" />
-                      {pendingId === a.id ? t("deactivating") || "Deactivating..." : t("deactivate") || "Deactivate"}
+                      {pendingId === a.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : a.isActive !== false ? (
+                        <PauseCircle className="h-4 w-4" />
+                      ) : (
+                        <PlayCircle className="h-4 w-4" />
+                      )}
                     </button>
-                  )}
+
+                    {/* 2. Edit Button */}
+                    <button
+                      onClick={() => handleEditClick(a)}
+                      disabled={pendingId === a.id}
+                      className="inline-flex items-center justify-center p-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-600 transition-all hover:bg-indigo-100 hover:scale-105 active:scale-95 disabled:opacity-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+                      title="Edit Announcement"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+
+                    {/* 3. Permanent Delete Button */}
+                    <button
+                      onClick={() => handleDelete(a.id)}
+                      disabled={pendingId === a.id}
+                      className="inline-flex items-center justify-center p-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition-all hover:bg-rose-100 hover:scale-105 active:scale-95 disabled:opacity-50 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-900/50"
+                      title="Permanently Delete"
+                    >
+                      {pendingId === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    </button>
+
+                  </div>
                 </div>
               </GradientCard>
             ))
           )}
+        </div>
+      )}
+
+      {/* Edit Modal / Popup */}
+      {isEditModalOpen && editingData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in zoom-in-95 duration-200">
+            
+            <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                Edit Announcement
+              </h2>
+              <button 
+                onClick={() => setIsEditModalOpen(false)} 
+                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditSave} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Announcement Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingData.title}
+                  onChange={(e) => setEditingData({ ...editingData, title: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:border-indigo-500 focus:bg-white dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Detailed Message
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={editingData.message}
+                  onChange={(e) => setEditingData({ ...editingData, message: e.target.value })}
+                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:border-indigo-500 focus:bg-white dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-105 active:scale-95 disabled:opacity-50"
+                >
+                  {isSavingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

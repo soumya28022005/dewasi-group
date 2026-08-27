@@ -9,15 +9,19 @@ import {
   CheckCircle2,
   Phone,
   User,
+  FlaskConical,
+  X,
 } from "lucide-react";
 
-import type { Gender, PatientSearchResult } from "@doctor-contract/shared";
-import { useMyAssignedDoctors } from "@/lib/hooks/useReceptionist";
+import type { Gender } from "@doctor-contract/shared";
+import { useMyAssignedDoctors, useCreateGuestPatient, useBookReceptionAppointment } from "@/lib/hooks/useReceptionist";
 import {
   useSearchPatientByPhone,
-  useCreateGuestPatient,
-  useBookReceptionAppointment,
-} from "@/lib/hooks/useReceptionist";
+  useSearchDiagnosticCenters,
+  useCreateReferral,
+  type PatientLookup,
+  type DiagnosticCenterLookup,
+} from "@/lib/hooks/useReferrals";
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (
@@ -44,9 +48,12 @@ export default function ReceptionistPatientsPage() {
   const createGuest = useCreateGuestPatient();
   const bookAppointment = useBookReceptionAppointment();
 
+  const searchCenters = useSearchDiagnosticCenters();
+  const createReferral = useCreateReferral();
+
   const [phone, setPhone] = useState("");
   const [searched, setSearched] = useState(false);
-  const [foundPatient, setFoundPatient] = useState<PatientSearchResult | null>(null);
+  const [foundPatient, setFoundPatient] = useState<PatientLookup | null>(null);
 
   const [guestName, setGuestName] = useState("");
   const [guestAge, setGuestAge] = useState("");
@@ -54,6 +61,14 @@ export default function ReceptionistPatientsPage() {
 
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [bookingDate, setBookingDate] = useState(() => new Date().toISOString().split("T")[0]);
+
+  // Refer flow
+  const [showReferPanel, setShowReferPanel] = useState(false);
+  const [centerQuery, setCenterQuery] = useState("");
+  const [centerResults, setCenterResults] = useState<DiagnosticCenterLookup[]>([]);
+  const [selectedCenter, setSelectedCenter] = useState<DiagnosticCenterLookup | null>(null);
+  const [testNamesInput, setTestNamesInput] = useState("");
+  const [referralNotes, setReferralNotes] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -100,7 +115,7 @@ export default function ReceptionistPatientsPage() {
         phone: phone.trim() || undefined,
         gender: guestGender,
       });
-      setFoundPatient(patient);
+      setFoundPatient(patient as unknown as PatientLookup);
       setSuccess("Guest patient registered.");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Failed to register guest patient"));
@@ -131,6 +146,59 @@ export default function ReceptionistPatientsPage() {
     }
   }
 
+  async function handleCenterSearch(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!centerQuery.trim()) return;
+
+    try {
+      const centers = await searchCenters.mutateAsync(centerQuery.trim());
+      setCenterResults(centers);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to search diagnostic centers"));
+    }
+  }
+
+  async function handleCreateReferral(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!foundPatient || !selectedCenter) {
+      setError("Select a patient and a diagnostic center first.");
+      return;
+    }
+
+    const testNames = testNamesInput
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    if (testNames.length === 0) {
+      setError("Enter at least one test name.");
+      return;
+    }
+
+    try {
+      await createReferral.mutateAsync({
+        patientId: foundPatient.id,
+        diagnosticCenterId: selectedCenter.id,
+        testNames,
+        notes: referralNotes.trim() || undefined,
+      });
+      setSuccess("Referral sent to diagnostic center.");
+      setShowReferPanel(false);
+      setSelectedCenter(null);
+      setCenterQuery("");
+      setCenterResults([]);
+      setTestNamesInput("");
+      setReferralNotes("");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to create referral"));
+    }
+  }
+
   function resetFlow() {
     setPhone("");
     setSearched(false);
@@ -138,6 +206,12 @@ export default function ReceptionistPatientsPage() {
     setGuestName("");
     setGuestAge("");
     setSelectedDoctorId("");
+    setShowReferPanel(false);
+    setSelectedCenter(null);
+    setCenterQuery("");
+    setCenterResults([]);
+    setTestNamesInput("");
+    setReferralNotes("");
     setError(null);
     setSuccess(null);
   }
@@ -147,7 +221,8 @@ export default function ReceptionistPatientsPage() {
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-primary-dark-text)]">Patients</h1>
         <p className="mt-0.5 text-sm text-gray-500 dark:text-ink-500">
-          Search a patient by phone, register a walk-in guest, and book an appointment.
+          Search a patient by phone, register a walk-in guest, book an appointment, or refer to a
+          diagnostic center.
         </p>
       </div>
 
@@ -211,10 +286,11 @@ export default function ReceptionistPatientsPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-gray-800 dark:text-ink-800">
-                  {foundPatient.user?.name || foundPatient.name || "Patient"}
+                  {foundPatient.name || "Patient"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-ink-500">
-                  {foundPatient.user?.phone || foundPatient.phone || phone}
+                  {foundPatient.phone || phone}
+                  {foundPatient.email ? ` · ${foundPatient.email}` : ""}
                 </p>
               </div>
             </div>
@@ -265,42 +341,161 @@ export default function ReceptionistPatientsPage() {
         </div>
       )}
 
-      {/* Step 3: Book */}
+      {/* Step 3: Actions for the found/created patient */}
       {foundPatient && (
-        <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-soft-300 dark:bg-surface">
-          <h2 className="mb-3 text-sm font-bold text-gray-800 dark:text-ink-800">
-            2. Book an appointment
-          </h2>
-          <form onSubmit={handleBook} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <select
-              value={selectedDoctorId}
-              onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
-            >
-              <option value="">Select doctor</option>
-              {(doctors ?? []).map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.user.name}
-                  {d.clinic?.clinicName ? ` — ${d.clinic.clinicName}` : ""}
-                </option>
-              ))}
-            </select>
-            <input
-              type="date"
-              value={bookingDate}
-              onChange={(e) => setBookingDate(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
-            />
-            <button
-              type="submit"
-              disabled={bookAppointment.isPending || !selectedDoctorId}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02] disabled:opacity-50 sm:col-span-2"
-            >
-              <CalendarCheck className="h-3.5 w-3.5" />
-              {bookAppointment.isPending ? "Booking..." : "Book Appointment"}
-            </button>
-          </form>
-        </div>
+        <>
+          {/* Book Appointment */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-soft-300 dark:bg-surface">
+            <h2 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-gray-800 dark:text-ink-800">
+              <CalendarCheck className="h-4 w-4 text-[var(--color-primary-text)]" />
+              Book an appointment
+            </h2>
+            <form onSubmit={handleBook} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <select
+                value={selectedDoctorId}
+                onChange={(e) => setSelectedDoctorId(e.target.value)}
+                className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
+              >
+                <option value="">Select doctor</option>
+                {(doctors ?? []).map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.user.name}
+                    {d.clinic?.clinicName ? ` — ${d.clinic.clinicName}` : ""}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={bookingDate}
+                onChange={(e) => setBookingDate(e.target.value)}
+                className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
+              />
+              <button
+                type="submit"
+                disabled={bookAppointment.isPending || !selectedDoctorId}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02] disabled:opacity-50 sm:col-span-2"
+              >
+                <CalendarCheck className="h-3.5 w-3.5" />
+                {bookAppointment.isPending ? "Booking..." : "Book Appointment"}
+              </button>
+            </form>
+          </div>
+
+          {/* Refer to Diagnostic Center */}
+          <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-soft-300 dark:bg-surface">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-800 dark:text-ink-800">
+                <FlaskConical className="h-4 w-4 text-[var(--color-primary-text)]" />
+                Refer to a diagnostic center
+              </h2>
+              {!showReferPanel && (
+                <button
+                  type="button"
+                  onClick={() => setShowReferPanel(true)}
+                  className="rounded-lg border border-[var(--color-primary)]/25 px-3 py-1.5 text-xs font-bold text-[var(--color-primary-text)] transition hover:bg-[var(--color-primary)]/5"
+                >
+                  Create Referral
+                </button>
+              )}
+            </div>
+
+            {showReferPanel && (
+              <div className="space-y-4">
+                {/* Center search */}
+                               <form onSubmit={handleCenterSearch} className="flex gap-2">
+                  <input
+                    value={centerQuery}
+                    onChange={(e) => setCenterQuery(e.target.value)}
+                    placeholder="Search diagnostic center by name..."
+                    className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
+                  />
+                  <button
+                    type="submit"
+                    disabled={searchCenters.isPending}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-3 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[var(--color-primary-dark)] disabled:opacity-50 sm:px-4"
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">
+                      {searchCenters.isPending ? "Searching..." : "Search"}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowReferPanel(false)}
+                    className="shrink-0 rounded-xl border border-gray-200 px-3 py-2.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 dark:border-soft-300 dark:text-ink-500 dark:hover:bg-soft-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </form>
+
+                {/* Center results */}
+                {centerResults.length > 0 && !selectedCenter && (
+                  <div className="space-y-2">
+                    {centerResults.map((center) => (
+                      <button
+                        key={center.id}
+                        type="button"
+                        onClick={() => setSelectedCenter(center)}
+                        className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-left transition hover:border-[var(--color-primary)]/40 dark:border-soft-300 dark:bg-soft-50"
+                      >
+                        <div>
+                          <p className="text-xs font-bold text-gray-800 dark:text-ink-800">
+                            {center.centerName}
+                          </p>
+                          {center.city && (
+                            <p className="text-[11px] text-gray-500 dark:text-ink-500">{center.city}</p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Selected center + referral form */}
+                {selectedCenter && (
+                  <form onSubmit={handleCreateReferral} className="space-y-3">
+                    <div className="flex items-center justify-between rounded-xl border border-[var(--color-primary)]/20 bg-[var(--color-bg-soft)] px-3.5 py-2.5">
+                      <p className="text-xs font-bold text-[var(--color-primary-text)]">
+                        {selectedCenter.centerName}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCenter(null)}
+                        className="text-[11px] font-bold text-gray-500 underline dark:text-ink-500"
+                      >
+                        Change
+                      </button>
+                    </div>
+
+                    <input
+                      value={testNamesInput}
+                      onChange={(e) => setTestNamesInput(e.target.value)}
+                      placeholder="Test names, comma separated (e.g. CBC, X-Ray)"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
+                    />
+
+                    <textarea
+                      value={referralNotes}
+                      onChange={(e) => setReferralNotes(e.target.value)}
+                      placeholder="Notes (optional)"
+                      rows={2}
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 dark:border-soft-300 dark:bg-soft-50 dark:text-ink-800"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={createReferral.isPending}
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      <FlaskConical className="h-3.5 w-3.5" />
+                      {createReferral.isPending ? "Sending referral..." : "Send Referral"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

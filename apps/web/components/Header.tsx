@@ -30,13 +30,14 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // Clinics land on /clinic, Doctors on /doctor/dashboard, Diagnostic Centers on /diagnosticCenter/dashboard, Staff on /diagnosticCenter/referrals, Admins on /admin/dashboard.
+    // Clinics land on /clinic, Doctors on /doctor/dashboard, Diagnostic Centers on /diagnosticCenter/dashboard, Staff on /diagnosticCenter/referrals, Admins on /admin/dashboard, Receptionists on /receptionist/dashboard, Patients on /patient.
   const isClinic = user?.role === "CLINIC";
   const isDoctor = user?.role === "DOCTOR";
   const isDiagnosticCenter = user?.role === "DIAGNOSTIC_CENTER";
   const isDiagnosticStaff = user?.role === "DIAGNOSTIC_STAFF";
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const isAdmin = user?.role === "ADMIN";
+  const isReceptionist = user?.role === "RECEPTIONIST";
   const dashboardHref = isClinic
     ? "/clinic"
     : isDoctor
@@ -49,7 +50,9 @@ export default function Header() {
             ? "/super_admin/dashboard"
             : isAdmin
               ? "/admin/dashboard"
-              : "/dashboard";
+              : isReceptionist
+                ? "/receptionist/dashboard"
+                : "/patient";
   const dashboardLabel = isClinic
     ? dash("clinicPanel")
     : isDoctor
@@ -62,7 +65,9 @@ export default function Header() {
             ? "Super Admin"
             : isAdmin
               ? "Admin Portal"
-              : dash("dashboard");
+              : isReceptionist
+                ? "Receptionist Portal"
+                : dash("dashboard");
 
   async function handleLogout() {
     await logout();

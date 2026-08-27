@@ -105,3 +105,55 @@ export const fetchAllDoctorsForAdmin = async () => {
   const response = await api.get('/admin/users?role=DOCTOR&limit=100');
   return response.data?.data?.users || [];
 };
+
+
+// --- Announcements (Public / Global) ---
+export const fetchAnnouncements = async () => {
+  try {
+    const response = await api.get('/announcements/global');
+    const data = response.data?.data?.announcements || response.data?.data || [];
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    return []; 
+  }
+};
+
+// --- Admin Announcements Management ---
+
+export const fetchAdminAnnouncements = async () => {
+  try {
+    const response = await api.get('/announcements/admin');
+    const data = response.data?.data?.announcements || response.data?.data || [];
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Failed to fetch admin announcements:", error);
+    return [];
+  }
+};
+
+export const updateAnnouncement = async (id: string, updateData: { title?: string; message?: string; type?: string }) => {
+  const response = await api.patch(`/announcements/admin/${id}`, updateData);
+  return response.data;
+};
+
+export const deleteAnnouncement = async (id: string) => {
+  const response = await api.delete(`/announcements/${id}`);
+  return response.data;
+};
+
+export const deactivateAnnouncement = async (id: string) => {
+  const response = await api.patch(`/announcements/${id}/deactivate`);
+  return response.data;
+};
+
+
+// --- Notifications ---
+export const fetchMyNotifications = async () => {
+  try {
+    const response = await api.get('/notifications/me');
+    const notifs = response.data?.data?.notifications || response.data?.data || [];
+    return Array.isArray(notifs) ? notifs : [];
+  } catch (error) {
+    return []; 
+  }
+};

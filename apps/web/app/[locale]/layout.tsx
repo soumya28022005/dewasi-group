@@ -10,10 +10,11 @@ import QueryProvider from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import GlobalAnnouncement from "@/components/GlobalAnnouncement";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Doctor contract",
+  title: "MedConnect | Medical Ecosystem",
   description: "Doctor Appointment & Clinic Management System",
 };
 
@@ -50,9 +51,15 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <QueryProvider>
               <AuthProvider>
+                
+                
                 <Header />
+
+                {/* Global Announcement Banner injected here */}
+                <GlobalAnnouncement />
                 <div className="flex-1">{children}</div>
                 <Footer />
+                
                 <Toaster
                   position="top-right"
                   toastOptions={{
