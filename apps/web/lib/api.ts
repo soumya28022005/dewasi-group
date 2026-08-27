@@ -19,28 +19,26 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (res) => res,
+  (response) => response,
   async (error) => {
-    const original = error.config;
-    
-    // Refresh token loop prevention
-    if (
-      error.response?.status === 401 && 
-      !original._retry && 
-      original.url !== "/auth/refresh"
-    ) {
-      original._retry = true;
-      try {
-        const { data } = await api.post("/auth/refresh");
-        setAccessToken(data.data.accessToken);
-        original.headers.Authorization = "Bearer " + data.data.accessToken;
-        return api(original);
-      } catch (refreshError) {
-        setAccessToken(null);
-        if (typeof window !== "undefined") {
+    // যদি 401 Unauthorized এরর আসে (যেমন: Refresh token invalid)
+    if (error.response && error.response.status === 401) {
+      
+      // লোকাল স্টোরেজ থেকে ইনভ্যালিড টোকেন মুছে ফেলুন
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+
+      // ব্রাউজার যদি পাবলিক পেজে থাকে, তবে রিডাইরেক্ট করবেন না
+      if (typeof window !== "undefined") {
+        const publicRoutes = ["/en", "/bn", "/hi", "/login", "/register"]; // আপনার পাবলিক পেজগুলো
+        const currentPath = window.location.pathname;
+
+        const isPublicRoute = publicRoutes.some(route => currentPath === route || currentPath.startsWith(route + "/doctors") || currentPath.startsWith(route + "/clinics"));
+
+        if (!isPublicRoute) {
+          // শুধুমাত্র প্রোটেক্টেড পেজ (Admin/Doctor/Patient) হলেই লগইনে পাঠাবে
           window.location.href = "/login";
         }
-        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
