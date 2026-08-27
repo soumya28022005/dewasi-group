@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Dewasi Group",
+    "slug": "dewasi-group",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "dewasigroup",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#1B3A8C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dewasigroup.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1B3A8C"
+      },
+      "package": "com.dewasigroup.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

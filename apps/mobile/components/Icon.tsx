@@ -1,0 +1,195 @@
+import React from 'react';
+import {
+  Feather,
+  MaterialCommunityIcons,
+  Ionicons,
+} from '@expo/vector-icons';
+
+export type IconName =
+  | 'mail'
+  | 'lock'
+  | 'eye'
+  | 'eye-off'
+  | 'shield'
+  | 'shield-check'
+  | 'stethoscope'
+  | 'clock'
+  | 'arrow-right'
+  | 'arrow-left'
+  | 'alert-circle'
+  | 'phone'
+  | 'message-circle'
+  | 'sparkles'
+  | 'log-out'
+  | 'check-circle'
+  | 'user'
+  | 'building'
+  | 'pulse'
+  | 'calendar'
+  | 'layout-dashboard'
+  | 'map-pin'
+  | 'users'
+  | 'chevron-right'
+  | 'chevron-left'
+  | 'award'
+  | 'activity'
+  | 'heart'
+  | 'save'
+  | 'refresh-cw'
+  | 'star'
+  | 'dollar-sign'
+  | 'search'
+  | 'filter'
+  | 'x'
+  | 'check'
+  | 'list-ordered'
+  | 'skip-forward'
+  | 'skip-back'
+  | 'pause'
+  | 'play'
+  | 'lock-closed'
+  | 'lock-open'
+  | 'alert-triangle'
+  | 'sliders'
+  | 'inbox'
+  | 'trending-up'
+  | 'file-text'
+  | 'calendar-days'
+  | 'plus'
+  | 'bell'
+  | 'trash-2';
+
+interface IconProps {
+  name: IconName;
+  size?: number;
+  color?: string;
+}
+
+const FeatherIcon = Feather as unknown as React.ComponentType<{
+  name: string;
+  size?: number;
+  color?: string;
+}>;
+
+const MaterialCommunityIcon = MaterialCommunityIcons as unknown as React.ComponentType<{
+  name: string;
+  size?: number;
+  color?: string;
+}>;
+
+const Ionicon = Ionicons as unknown as React.ComponentType<{
+  name: string;
+  size?: number;
+  color?: string;
+}>;
+
+export function Icon({ name, size = 20, color = '#111827' }: IconProps) {
+  switch (name) {
+    case 'mail':
+      return <FeatherIcon name="mail" size={size} color={color} />;
+    case 'lock':
+      return <FeatherIcon name="lock" size={size} color={color} />;
+    case 'eye':
+      return <FeatherIcon name="eye" size={size} color={color} />;
+    case 'eye-off':
+      return <FeatherIcon name="eye-off" size={size} color={color} />;
+    case 'shield':
+      return <FeatherIcon name="shield" size={size} color={color} />;
+    case 'shield-check':
+      return <MaterialCommunityIcon name="shield-check-outline" size={size} color={color} />;
+    case 'stethoscope':
+      return <MaterialCommunityIcon name="stethoscope" size={size} color={color} />;
+    case 'clock':
+      return <FeatherIcon name="clock" size={size} color={color} />;
+    case 'arrow-right':
+      return <FeatherIcon name="arrow-right" size={size} color={color} />;
+    case 'arrow-left':
+      return <FeatherIcon name="arrow-left" size={size} color={color} />;
+    case 'alert-circle':
+      return <FeatherIcon name="alert-circle" size={size} color={color} />;
+    case 'phone':
+      return <FeatherIcon name="phone" size={size} color={color} />;
+    case 'message-circle':
+      return <Ionicon name="chatbubble-ellipses-outline" size={size} color={color} />;
+    case 'sparkles':
+      return <MaterialCommunityIcon name="sparkles" size={size} color={color} />;
+    case 'log-out':
+      return <FeatherIcon name="log-out" size={size} color={color} />;
+    case 'check-circle':
+      return <FeatherIcon name="check-circle" size={size} color={color} />;
+    case 'user':
+      return <FeatherIcon name="user" size={size} color={color} />;
+    case 'building':
+      return <MaterialCommunityIcon name="hospital-building" size={size} color={color} />;
+    case 'pulse':
+      return <MaterialCommunityIcon name="heart-pulse" size={size} color={color} />;
+    case 'calendar':
+      return <FeatherIcon name="calendar" size={size} color={color} />;
+    case 'layout-dashboard':
+      return <MaterialCommunityIcon name="view-dashboard-outline" size={size} color={color} />;
+    case 'map-pin':
+      return <FeatherIcon name="map-pin" size={size} color={color} />;
+    case 'users':
+      return <FeatherIcon name="users" size={size} color={color} />;
+    case 'chevron-right':
+      return <FeatherIcon name="chevron-right" size={size} color={color} />;
+    case 'chevron-left':
+      return <FeatherIcon name="chevron-left" size={size} color={color} />;
+    case 'award':
+      return <FeatherIcon name="award" size={size} color={color} />;
+    case 'activity':
+      return <FeatherIcon name="activity" size={size} color={color} />;
+    case 'heart':
+      return <FeatherIcon name="heart" size={size} color={color} />;
+    case 'save':
+      return <FeatherIcon name="save" size={size} color={color} />;
+    case 'refresh-cw':
+      return <FeatherIcon name="refresh-cw" size={size} color={color} />;
+    case 'star':
+      return <FeatherIcon name="star" size={size} color={color} />;
+    case 'dollar-sign':
+      return <FeatherIcon name="dollar-sign" size={size} color={color} />;
+    case 'search':
+      return <FeatherIcon name="search" size={size} color={color} />;
+    case 'filter':
+      return <FeatherIcon name="filter" size={size} color={color} />;
+    case 'x':
+      return <FeatherIcon name="x" size={size} color={color} />;
+    case 'check':
+      return <FeatherIcon name="check" size={size} color={color} />;
+    case 'list-ordered':
+      return <FeatherIcon name="list" size={size} color={color} />;
+    case 'skip-forward':
+      return <FeatherIcon name="skip-forward" size={size} color={color} />;
+    case 'skip-back':
+      return <FeatherIcon name="skip-back" size={size} color={color} />;
+    case 'pause':
+      return <FeatherIcon name="pause" size={size} color={color} />;
+    case 'play':
+      return <FeatherIcon name="play" size={size} color={color} />;
+    case 'lock-closed':
+      return <FeatherIcon name="lock" size={size} color={color} />;
+    case 'lock-open':
+      return <FeatherIcon name="unlock" size={size} color={color} />;
+    case 'alert-triangle':
+      return <FeatherIcon name="alert-triangle" size={size} color={color} />;
+    case 'sliders':
+      return <FeatherIcon name="sliders" size={size} color={color} />;
+    case 'inbox':
+      return <FeatherIcon name="inbox" size={size} color={color} />;
+    case 'trending-up':
+      return <FeatherIcon name="trending-up" size={size} color={color} />;
+    case 'file-text':
+      return <FeatherIcon name="file-text" size={size} color={color} />;
+    case 'calendar-days':
+      return <FeatherIcon name="calendar" size={size} color={color} />;
+    case 'plus':
+      return <FeatherIcon name="plus" size={size} color={color} />;
+    case 'bell':
+      return <FeatherIcon name="bell" size={size} color={color} />;
+    case 'trash-2':
+      return <FeatherIcon name="trash-2" size={size} color={color} />;
+    default:
+      return <FeatherIcon name="help-circle" size={size} color={color} />;
+  }
+}
