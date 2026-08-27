@@ -31,7 +31,7 @@ import {
 import type { AnnouncementType } from "@doctor-contract/shared";
 import { GradientCard } from "@/components/ui/GradientCard";
 
-// API imports for Edit and Permanent Delete
+// API imports for Edit, Toggle, and Permanent Delete
 import { deleteAnnouncement, updateAnnouncement, deactivateAnnouncement } from "@/lib/api";
 
 function getErrorMessage(err: unknown, fallback: string): string {
@@ -116,26 +116,34 @@ export default function AdminAnnouncementsPage() {
     }
   }
 
-  // --- Deactivate / Pause Logic ---
-  async function handleDeactivate(announcementId: string) {
-    if (!confirm("Are you sure you want to pause this announcement? It will be hidden from users.")) return;
+  // --- Deactivate / Reactivate (Toggle) Logic ---
+  async function handleToggleStatus(announcement: any) {
+    const isCurrentlyActive = announcement.isActive !== false;
+    const actionWord = isCurrentlyActive ? "pause" : "re-activate";
+
+    if (!confirm(`Are you sure you want to ${actionWord} this announcement?`)) return;
     
     setActionError(null);
     setActionSuccess(null);
-    setPendingId(announcementId);
+    setPendingId(announcement.id);
 
     try {
-      await deactivate.mutateAsync(announcementId);
-      setActionSuccess(t("successDeactivated") || "Announcement paused.");
-      refetch(); // Refetch to update status UI
+      if (isCurrentlyActive) {
+        // Pause it using your existing hook
+        await deactivate.mutateAsync(announcement.id);
+        setActionSuccess(t("successDeactivated") || "Announcement paused.");
+      } else {
+        // Re-activate it by updating the isActive flag to true
+        await updateAnnouncement(announcement.id, { isActive: true });
+        setActionSuccess("Announcement re-activated successfully.");
+      }
+      refetch(); // Refetch to update status UI instantly
     } catch (err: unknown) {
-      setActionError(getErrorMessage(err, "Failed to deactivate announcement"));
+      setActionError(getErrorMessage(err, `Failed to ${actionWord} announcement`));
     } finally {
       setPendingId(null);
     }
   }
-
-  
 
   // --- Permanent Delete Logic ---
   async function handleDelete(announcementId: string) {
@@ -355,7 +363,7 @@ export default function AdminAnnouncementsPage() {
                     
                     {/* 1. Pause / Activate Button */}
                     <button
-                      onClick={() => handleDeactivate(a.id)}
+                      onClick={() => handleToggleStatus(a)}
                       disabled={pendingId === a.id}
                       className={`inline-flex items-center justify-center p-2 rounded-lg border transition-all disabled:opacity-50 active:scale-95 ${
                         a.isActive !== false 
