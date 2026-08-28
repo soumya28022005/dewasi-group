@@ -6,18 +6,18 @@ import { useAuth } from '../../lib/auth-context';
 import { Icon } from '../../components/Icon';
 import { Colors } from '../../theme';
 
-export default function PatientTabsLayout() {
+export default function ClinicTabsLayout() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, loading, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!loading && (!isAuthenticated || user?.role !== 'PATIENT')) {
+    if (!loading && (!isAuthenticated || user?.role !== 'CLINIC')) {
       router.replace('/(auth)');
     }
   }, [loading, isAuthenticated, user, router]);
 
-  if (loading || !user || user.role !== 'PATIENT') {
+  if (loading || !user || user.role !== 'CLINIC') {
     return (
       <View
         style={{
@@ -47,48 +47,101 @@ export default function PatientTabsLayout() {
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '700',
         },
       }}
     >
+      {/* 1. Dashboard */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Overview',
+          title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="layout-dashboard" size={size || 22} color={color} />
+            <Icon name="layout-dashboard" size={size || 20} color={color} />
           ),
         }}
       />
+
+      {/* 2. Live Queue */}
+      <Tabs.Screen
+        name="queue"
+        options={{
+          title: 'Queue',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="list-ordered" size={size || 20} color={color} />
+          ),
+        }}
+      />
+
+      {/* 3. Doctors */}
       <Tabs.Screen
         name="doctors"
         options={{
-          href: null,
-          title: 'Find Doctor',
+          title: 'Doctors',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="stethoscope" size={size || 20} color={color} />
+          ),
         }}
       />
+
+      {/* 4. Schedule */}
       <Tabs.Screen
-        name="book"
+        name="schedule"
         options={{
-          href: null,
-          title: 'Book Appointment',
+          title: 'Schedule',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="calendar-days" size={size || 20} color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="appointment/[id]"
-        options={{
-          href: null,
-          title: 'Appointment Details',
-        }}
-      />
+
+      {/* 5. Profile */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <Icon name="user" size={size || 22} color={color} />
+            <Icon name="building" size={size || 20} color={color} />
           ),
+        }}
+      />
+
+      {/* Auxiliary Hidden Stack Screens */}
+      <Tabs.Screen
+        name="appointments"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="requests"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="receptionists"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="referrals"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
