@@ -47,7 +47,7 @@ export function ProfileSkeleton() {
       {/* Profile Information Skeleton */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
         <div className="h-4 w-44 rounded-md bg-slate-200 dark:bg-slate-800" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800/60" />
           ))}

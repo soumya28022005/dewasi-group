@@ -331,7 +331,7 @@ export default function ClinicReceptionistsPage() {
           </div>
 
           {/* ✅ 1 column mobile, 2 tablet, 3 desktop */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
             {receptionists.map((r, index) => (
               <ReceptionistRow
                 key={r.id}

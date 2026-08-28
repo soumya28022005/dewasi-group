@@ -106,7 +106,8 @@ export default function DoctorProfilePage() {
       {/* 2. Avatar & Identity Banner */}
       <ProfileAvatar
         name={user?.name || "Doctor"}
-        photoUrl={null}
+        // 🔴 FIX: (user as any) ব্যবহার করুন
+        photoUrl={(user as any)?.avatar || null} 
         onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
       />
 

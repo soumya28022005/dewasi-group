@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, ShieldCheck, Wifi, Users, Building2 } from "lucide-react";
 
@@ -22,7 +22,30 @@ function initials(name: string) {
 }
 
 // ============================================================
-// Featured Clinic Card (large / prominent)
+// VERIFIED BADGE (same treatment as the Doctor card's
+// ExperienceBadge — top-left chip on the photo)
+// ============================================================
+
+function VerifiedBadge() {
+  return (
+    <div className="absolute bottom-0 left-0 z-0">
+      <div className="flex items-center gap-1.5 rounded-full border border-white/80 bg-[#252a67]/95 px-3 py-1.5 shadow-[0_5px_14px_rgba(37,42,103,0.35)] backdrop-blur-sm">
+        <ShieldCheck
+          className="h-3.5 w-3.5 text-amber-300"
+          strokeWidth={2.5}
+        />
+
+        <span className="whitespace-nowrap text-[11px] font-extrabold tracking-wide text-white md:text-xs">
+          Verified Clinic
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Featured Clinic Card — same layout as FeaturedDoctorCard:
+// full-size photo left, gradient border, details right
 // ============================================================
 
 function FeaturedClinicCard({
@@ -39,107 +62,167 @@ function FeaturedClinicCard({
     <Link
       href="/clinics"
       style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
-      className="
-        animate-in fade-in slide-in-from-top-3
-        group relative block h-full w-full overflow-hidden
-        rounded-3xl border border-gray-200/80 bg-white p-6
-        shadow-[0_2px_16px_rgba(0,0,0,0.05)]
-        transition-all duration-300
-        hover:-translate-y-1.5 hover:border-gray-300 hover:shadow-[0_22px_50px_rgba(0,0,0,0.10)]
-        dark:border-soft-300 dark:bg-surface
-      "
+      className="group block h-full w-full"
     >
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-secondary)] to-[var(--color-primary)]" />
+      {/* 3px Gradient Border Wrapper */}
+      <div className="rounded-2xl p-[3px] bg-gradient-to-br from-[#252a67] via-[#3b4a8f] to-[#14B8A6] shadow-[0_4px_20px_-6px_rgba(37,42,103,0.4)] transition-all duration-300 hover:shadow-[0_12px_40px_-8px_rgba(20,184,166,0.3)]">
+        {/* Inner Card */}
+        <div className="doctor-card h-full rounded-[calc(1rem-3px)] bg-white overflow-hidden">
+          <div className="pt-3 md:p-4">
+            <div className="flex flex-col px-2 pb-2 items-center md:flex-row">
+              {/* ================= CLINIC PHOTO ================= */}
+              <div className="relative flex md:mb-0 w-[12rem] h-[16rem] md:w-[10rem] md:h-[14rem] flex-shrink-0">
 
-      {clinic.isApproved && (
-        <div className="absolute left-5 top-6 z-10">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/95 px-3 py-1.5 text-[10px] font-bold text-[var(--color-secondary-dark-text)] shadow-sm backdrop-blur dark:border-soft-300 dark:bg-surface/95">
-            <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-secondary)]" />
-            Verified Clinic
-          </div>
-        </div>
-      )}
+                {/* Verified Badge (top-left, matches doctor card) */}
+                {clinic.isApproved && <VerifiedBadge />}
 
-      <div className="flex flex-col items-center gap-5 pt-14 text-center md:flex-row md:items-center md:pt-14 md:text-left">
-        <div className="relative shrink-0">
-          {clinic.logo && !logoFailed ? (
-            <div className="relative h-24 w-24 overflow-hidden rounded-2xl ring-1 ring-gray-100 shadow-sm dark:ring-soft-300">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={clinic.logo}
-                alt={clinic.clinicName}
-                onError={() => setLogoFailed(true)}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-              />
+                {/* Photo */}
+                {clinic.logo && !logoFailed ? (
+                  <img
+                    src={clinic.logo}
+                    alt={clinic.clinicName}
+                    onError={() => setLogoFailed(true)}
+                    className="w-full h-full rounded-2xl object-cover border-2 border-[#252a67]"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-2xl object-cover border-2 border-[#252a67] bg-gradient-to-br from-[#2563EB] to-[#6a7583] flex items-center justify-center text-white text-4xl font-bold">
+                    {initials(clinic.clinicName)}
+                  </div>
+                )}
+
+                {/* Small check badge (bottom-right, matches doctor card) */}
+                <Building2 className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-white p-1.5 text-[#2563EB] shadow-md ring-2 ring-white dark:bg-slate-800 dark:ring-slate-700" />
+              </div>
+
+              {/* ================= CLINIC DETAILS ================= */}
+              <div className="flex flex-col md:p-3 text-center md:text-left mt-3 md:mt-0">
+                {/* Clinic Name - with gradient style */}
+                <h3 className="text-[1.3rem] md:text-2xl font-extrabold tracking-tight">
+                  <span className="bg-gradient-to-r from-[#422995] to-[#4a9860] bg-clip-text text-transparent">
+                    {clinic.clinicName}
+                  </span>
+                </h3>
+
+                {clinic.specialties && clinic.specialties.length > 0 && (
+                  <p className="text-black font-semibold text-sm md:text-sm mt-0.5">
+                    {clinic.specialties.slice(0, 3).join(" · ")}
+                  </p>
+                )}
+
+                {typeof clinic.doctorsCount === "number" && (
+                  <p className="text-gray-700 text-sm md:text-lg">
+                    {clinic.doctorsCount} doctor{clinic.doctorsCount === 1 ? "" : "s"}
+                  </p>
+                )}
+
+                {location && (
+                  <div className="text-black flex flex-wrap gap-1 items-center text-sm md:text-lg justify-center md:justify-start mt-1">
+                    <MapPin className="h-4 w-4 text-gray-600" />
+                    <span
+                      style={{
+                        background: "#eef2ff",
+                        color: "#252a67",
+                        padding: "1px 10px",
+                        borderRadius: "8px",
+                        fontSize: "0.75rem",
+                        border: "1px solid #c7d2fe",
+                      }}
+                    >
+                      {location}
+                    </span>
+                  </div>
+                )}
+
+                {/* Online consultation */}
+                {clinic.onlineConsultationEnabled && (
+                  <div className="mt-2 flex justify-center md:justify-start">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#14B8A6]/25 bg-[#14B8A6]/10 px-3 py-1 text-xs font-bold text-[#0f766e]">
+                      <Wifi className="h-3.5 w-3.5" />
+                      Online consultation
+                    </span>
+                  </div>
+                )}
+
+                {/* View Clinic */}
+                <div className="mt-2">
+                  <span className="text-sm font-bold text-[#252a67]">View Clinic</span>
+                  <span className="ml-1 text-xs text-gray-400">→</span>
+                </div>
+              </div>
             </div>
-          ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-bg-soft)] to-[var(--color-primary)]/10 text-2xl font-bold text-[var(--color-primary-text)] shadow-sm ring-1 ring-gray-100 transition-transform duration-300 group-hover:scale-[1.03] dark:ring-soft-300">
-              {initials(clinic.clinicName)}
-            </div>
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-bold tracking-[-0.01em] text-[var(--color-primary-dark-text)] transition-colors group-hover:text-[var(--color-primary-text)] md:text-xl">
-            {clinic.clinicName}
-          </h3>
-
-          {clinic.specialties && clinic.specialties.length > 0 && (
-            <p className="mt-1 flex items-center justify-center gap-1.5 truncate text-xs font-medium text-gray-500 md:justify-start dark:text-ink-500">
-              <Building2 className="h-3.5 w-3.5 shrink-0 text-[var(--color-primary-text)]" />
-              {clinic.specialties.slice(0, 3).join(" · ")}
-            </p>
-          )}
-
-          {typeof clinic.doctorsCount === "number" && (
-            <p className="mt-1 flex items-center justify-center gap-1.5 truncate text-xs font-medium text-gray-500 md:justify-start dark:text-ink-500">
-              <Users className="h-3.5 w-3.5 shrink-0 text-[var(--color-primary-text)]" />
-              {clinic.doctorsCount} doctor{clinic.doctorsCount === 1 ? "" : "s"}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="my-5 h-px bg-gray-100 dark:bg-soft-100" />
-
-      <div className="flex flex-wrap items-center gap-2.5">
-        {location && (
-          <div className="flex min-w-0 flex-1 items-center rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2.5 dark:border-soft-300 dark:bg-soft-50">
-            <MapPin className="mr-2 h-4 w-4 shrink-0 text-[var(--color-primary-text)]" />
-            <span className="truncate text-xs font-semibold text-gray-600 dark:text-ink-600">
-              {location}
-            </span>
           </div>
-        )}
-
-        {clinic.onlineConsultationEnabled && (
-          <div className="shrink-0 rounded-xl border border-[var(--color-secondary)]/20 bg-[var(--color-secondary-light)] px-3.5 py-2.5 dark:border-[var(--color-secondary)]/25">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--color-secondary-dark-text)]">
-              <Wifi className="h-3.5 w-3.5" />
-              Online
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-[var(--color-bg-soft)]/60 px-3.5 py-2.5 transition-colors group-hover:bg-[var(--color-bg-soft)]">
-        <span className="text-xs font-bold text-[var(--color-primary-text)]">
-          View Clinic
-        </span>
-        <span className="text-xs font-semibold text-gray-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[var(--color-primary-text)] dark:text-ink-400">
-          →
-        </span>
+        </div>
       </div>
     </Link>
   );
 }
 
 // ============================================================
+// MAIN SECTION — desktop grid + mobile swipe carousel,
+// matching the FeaturedDoctors layout/behavior
+// ============================================================
 
 export default function FeaturedClinics() {
   const t = useTranslations("HomePage");
   const { data, isLoading } = usePublicFeaturedClinics();
   const featured = data ?? [];
+
+  const [index, setIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    function checkMobile() {
+      setIsMobile(window.innerWidth < 768);
+    }
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile || featured.length < 2) return;
+    autoSlideRef.current = setInterval(() => {
+      setIndex((i) => (i + 1) % featured.length);
+    }, 4500);
+    return () => {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    };
+  }, [isMobile, featured.length]);
+
+  function restartAutoSlide() {
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    if (!isMobile || featured.length < 2) return;
+    autoSlideRef.current = setInterval(() => {
+      setIndex((i) => (i + 1) % featured.length);
+    }, 4500);
+  }
+
+  function goTo(i: number) {
+    setIndex(i);
+    restartAutoSlide();
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    const threshold = 50;
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        setIndex((i) => (i + 1) % featured.length);
+      } else {
+        setIndex((i) => (i - 1 + featured.length) % featured.length);
+      }
+    }
+    touchStartX.current = null;
+    restartAutoSlide();
+  }
 
   if (isLoading) {
     return (
@@ -161,6 +244,10 @@ export default function FeaturedClinics() {
     return null;
   }
 
+  const total = featured.length;
+  const prevIndex = (index - 1 + total) % total;
+  const nextIndex = (index + 1) % total;
+
   return (
     <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
       <SectionHeader
@@ -170,10 +257,58 @@ export default function FeaturedClinics() {
         viewAllLabel={t("viewAll")}
       />
 
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {/* Tablet / Desktop Grid */}
+      <div className="hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-3">
         {featured.map((clinic, i) => (
           <FeaturedClinicCard key={clinic.id} clinic={clinic} index={i} />
         ))}
+      </div>
+
+      {/* Mobile - Swipe Carousel */}
+      <div
+        className="relative h-[29rem] overflow-hidden pb-9 md:hidden"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {featured.map((clinic, i) => {
+          let position: "center" | "left" | "right" | "hidden" = "hidden";
+          if (i === index) position = "center";
+          else if (i === prevIndex) position = "left";
+          else if (i === nextIndex) position = "right";
+
+          const styles: Record<typeof position, string> = {
+            center: "left-1/2 -translate-x-1/2 scale-100 opacity-100 blur-0 z-30 drop-shadow-[0_18px_30px_rgba(37,42,103,0.22)]",
+            left: "left-0 -translate-x-[4%] scale-[0.86] opacity-45 blur-[1.5px] z-20",
+            right: "left-full -translate-x-[104%] scale-[0.86] opacity-45 blur-[1.5px] z-20",
+            hidden: "opacity-0 pointer-events-none",
+          };
+
+          return (
+            <div
+              key={clinic.id}
+              className={`absolute top-1 w-[78%] max-w-[300px] transition-all duration-500 ease-out ${styles[position]}`}
+            >
+              <FeaturedClinicCard clinic={clinic} index={i} />
+            </div>
+          );
+        })}
+
+        {/* Progress Dots */}
+        <div className="absolute bottom-1 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
+          {featured.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Go to slide ${i + 1}`}
+              onClick={() => goTo(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === index
+                  ? "h-2 w-6 bg-gradient-to-r from-[#252a67] to-[#14B8A6]"
+                  : "h-2 w-2 bg-slate-300 hover:bg-slate-400"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -23,7 +23,6 @@ import HorizontalCarousel from "@/components/HorizontalCarousel";
 // TYPE DEFINITIONS
 // ============================================================
 
-// Extending the shared type to include missing UI properties safely
 export type ExtendedDoctor = SharedDoctor & {
   isVerified?: boolean;
   isFeatured?: boolean;
@@ -38,6 +37,7 @@ export type ExtendedDoctor = SharedDoctor & {
     name: string;
     email: string;
     phone?: string;
+    avatar?: string | null;
   };
 };
 
@@ -45,10 +45,6 @@ export type ExtendedDoctor = SharedDoctor & {
 // UTILITIES
 // ============================================================
 
-/**
- * Extracts up to 2 initials from a given name string.
- * Fallbacks to "DR" if the name is missing or invalid.
- */
 function getInitials(name?: string): string {
   if (!name || typeof name !== "string") return "DR";
   const initials = name
@@ -66,56 +62,56 @@ function getInitials(name?: string): string {
 // UI COMPONENTS
 // ============================================================
 
-/**
- * Premium gradient border wrapper with smooth hover transitions.
- */
 function GradientBorderCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="group relative h-full rounded-[24px] bg-gradient-to-br from-slate-200 to-slate-200 p-[1.5px] transition-all duration-500 hover:from-[#2563EB] hover:via-[#0F766E] hover:to-[#14B8A6] hover:shadow-[0_16px_40px_-8px_rgba(37,99,235,0.25)] dark:from-slate-800 dark:to-slate-800">
-      <div className="relative h-full w-full overflow-hidden rounded-[calc(24px-1.5px)] bg-white transition-colors dark:bg-slate-900">
-        {/* Subtle hover overlay inside the card for a premium glass effect */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2563EB]/[0.02] to-[#0F766E]/[0.02] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+    <div className="group relative h-full rounded-[26px] p-[3px] bg-gradient-to-br from-[#252a67] via-[#3b4a8f] to-[#14B8A6] shadow-[0_4px_20px_-6px_rgba(37,42,103,0.3)] transition-all duration-500 hover:shadow-[0_12px_40px_-8px_rgba(20,184,166,0.4)] hover:from-[#2563EB] hover:via-[#0F766E] hover:to-[#14B8A6] dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 dark:hover:from-[#2563EB] dark:hover:via-[#0F766E] dark:hover:to-[#14B8A6]">
+      <div className="relative h-full w-full overflow-hidden rounded-[calc(26px-3px)] bg-white transition-colors dark:bg-slate-900">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2563EB]/[0.03] to-[#0F766E]/[0.03] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-400/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         {children}
       </div>
     </div>
   );
 }
 
-/**
- * Compact, highly optimized card for the horizontal carousel.
- */
 function DoctorMiniCard({ doctor }: { doctor: ExtendedDoctor }) {
   const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
   const experience = doctor.experience ?? 0;
   const rating = doctor.rating ?? 4.5;
   const reviews = doctor.reviewCount ?? 120;
+  
+  const avatarSrc = (doctor as any).profilePhoto || doctor.user?.avatar;
 
   return (
     <Link
       href={`/doctors/${doctor.id}`}
-      className="block h-[290px] w-[240px] shrink-0"
+      className="block h-[350px] w-[240px] shrink-0" 
       aria-label={`View profile of ${doctor.user.name}`}
     >
       <GradientBorderCard>
         <div className="relative flex h-full flex-col items-center p-5 text-center">
-          {/* Decorative glow blob on hover */}
           <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-[#2563EB]/10 to-[#0F766E]/10 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:opacity-70" />
-
-          {/* Avatar Area */}
+          
+          {/* Avatar Area - বড় করা হয়েছে (6rem x 8rem) */}
           <div className="relative mt-2">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-lg shadow-blue-500/20 transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-3 group-hover:scale-105">
-              {getInitials(doctor.user.name)}
+            <div className="flex w-[6rem] h-[8rem] overflow-hidden items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-3xl font-bold text-white shadow-lg shadow-blue-500/20 transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-3 group-hover:scale-105">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={doctor.user.name} className="h-full w-full object-cover" />
+              ) : (
+                getInitials(doctor.user.name)
+              )}
             </div>
-            {/* Dynamic Verification Badge */}
             {(doctor.isVerified ?? true) && (
               <BadgeCheck className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-white text-[#2563EB] shadow-sm ring-2 ring-white dark:bg-slate-900 dark:ring-slate-900" />
             )}
           </div>
 
-          {/* Name & Specialization */}
+          {/* Name & Specialization - নামের স্টাইল Featured Doctor-এর মতো */}
           <div className="mt-4 flex w-full flex-col items-center">
-            <h4 className="w-full truncate text-base font-bold text-slate-900 dark:text-slate-100">
-              {doctor.user.name}
+            <h4 className="w-full truncate text-base font-extrabold tracking-tight">
+              <span className="bg-gradient-to-r from-[#422995] to-[#4a9860] bg-clip-text text-transparent">
+                {doctor.user.name}
+              </span>
             </h4>
             {doctor.specialization && (
               <p className="mt-1 flex w-full items-center justify-center gap-1.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -140,7 +136,6 @@ function DoctorMiniCard({ doctor }: { doctor: ExtendedDoctor }) {
             </span>
           </div>
 
-          {/* Flexible spacer to push the footer to the bottom */}
           <div className="flex-1" />
 
           {/* Location & Call to Action */}
@@ -163,13 +158,10 @@ function DoctorMiniCard({ doctor }: { doctor: ExtendedDoctor }) {
   );
 }
 
-/**
- * Premium Skeleton Loader mirroring the exact shape of the DoctorMiniCard.
- */
 function DoctorSkeleton() {
   return (
-    <div className="flex h-[290px] w-[240px] shrink-0 flex-col items-center rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
-      <div className="mt-2 h-16 w-16 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+    <div className="flex h-[350px] w-[240px] shrink-0 flex-col items-center rounded-[26px] border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+      <div className="mt-2 w-[6rem] h-[8rem] animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
       <div className="mt-5 h-5 w-3/4 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
       <div className="mt-2 h-3 w-1/2 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
       <div className="mt-4 h-3 w-2/3 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
@@ -186,12 +178,9 @@ function DoctorSkeleton() {
 
 export default function AllDoctors() {
   const t = useTranslations("HomePage");
-  
-  // Custom hook fetching public doctor data
   const { data, isLoading } = usePublicAllDoctors();
   const doctors = (data as ExtendedDoctor[]) ?? [];
 
-  // Gracefully hide the section if no doctors exist (and not loading)
   if (!isLoading && doctors.length === 0) {
     return null; 
   }
@@ -200,7 +189,6 @@ export default function AllDoctors() {
     <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
       <SectionHeader eyebrow="Browse the directory" title={t("allDoctors")} />
 
-      {/* Loading State */}
       {isLoading ? (
         <div className="flex gap-5 overflow-hidden py-4">
           {[1, 2, 3, 4, 5].map((item) => (
@@ -208,7 +196,6 @@ export default function AllDoctors() {
           ))}
         </div>
       ) : (
-        /* Loaded State with Carousel */
         <div className="py-4">
           <HorizontalCarousel ariaLabel={t("allDoctors")}>
             {doctors.map((doctor) => (
@@ -218,7 +205,6 @@ export default function AllDoctors() {
         </div>
       )}
 
-      {/* View All Action */}
       <div className="mt-8 flex justify-center">
         <ViewAllButton href="/doctors" label={t("viewAllDoctors")} />
       </div>

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, Award, Stethoscope, Star, BadgeCheck, ArrowRight } from "lucide-react";
-
 import type { Doctor } from "@doctor-contract/shared";
 import { Link } from "@/i18n/routing";
 import { usePublicFeaturedDoctors } from "@/lib/hooks/usePublicDirectory";
@@ -24,34 +23,38 @@ function initials(name: string) {
 }
 
 // ============================================================
-// GRADIENT BORDER WRAPPER (CLEAN & PREMIUM)
+// EXPERIENCE BADGE (Keep exactly as you had it)
 // ============================================================
 
-function GradientBorderCard({ children }: { children: React.ReactNode }) {
+function ExperienceBadge({ years }: { years: number }) {
+  if (!years || years <= 0) return null;
+
   return (
-    <div className="relative rounded-[28px] p-[2px] bg-gradient-to-br from-[#2563EB] via-[#0F766E] to-[#14B8A6] shadow-[0_4px_20px_-4px_rgba(37,99,235,0.15)] transition-all duration-300 hover:shadow-[0_12px_40px_-8px_rgba(37,99,235,0.25)]">
-      <div className="rounded-[calc(28px-2px)] bg-white dark:bg-slate-900 h-full">
-        {children}
+    <div className="absolute bottom-0 left-0 z-0">
+      <div className="flex items-center gap-1.5 rounded-full border border-white/80 bg-[#252a67]/95 px-3 py-1.5 shadow-[0_5px_14px_rgba(37,42,103,0.35)] backdrop-blur-sm">
+        <Award
+          className="h-3.5 w-3.5 text-amber-300"
+          strokeWidth={2.5}
+        />
+
+        <span className="whitespace-nowrap text-[11px] font-extrabold tracking-wide text-white md:text-xs">
+          {years} Years Experience
+        </span>
       </div>
     </div>
   );
 }
 
 // ============================================================
-// FEATURED DOCTOR CARD (REFINED & CLEAN)
+// DOCTOR CARD - Adding 3px gradient border around the whole card
 // ============================================================
 
-function FeaturedDoctorCard({
-  doctor,
-  index,
-}: {
-  doctor: Doctor;
-  index: number;
-}) {
+function FeaturedDoctorCard({ doctor, index }: { doctor: Doctor; index: number }) {
   const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
   const experience = doctor.experience ?? 0;
   const rating = (doctor as any).rating ?? 4.5;
   const reviews = (doctor as any).reviewCount ?? 120;
+  const avatarSrc = (doctor as any).profilePhoto || (doctor as any).user?.avatar;
 
   return (
     <Link
@@ -59,123 +62,136 @@ function FeaturedDoctorCard({
       style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
       className="group block h-full w-full"
     >
-      <GradientBorderCard>
-        <div className="flex h-full flex-col p-6">
-          {/* Profile Area */}
-          <div className="flex items-start gap-4">
-            {/* Avatar */}
-            <div className="relative shrink-0">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-md transition-transform duration-300 group-hover:scale-105">
-                {initials(doctor.user.name)}
+      {/* 3px Gradient Border Wrapper */}
+      <div className="rounded-2xl p-[3px] bg-gradient-to-br from-[#252a67] via-[#3b4a8f] to-[#14B8A6] shadow-[0_4px_20px_-6px_rgba(37,42,103,0.4)] transition-all duration-300 hover:shadow-[0_12px_40px_-8px_rgba(20,184,166,0.3)]">
+        {/* Inner Card (your original card) */}
+        <div className="doctor-card h-full rounded-[calc(1rem-3px)] bg-white overflow-hidden">
+          <div className="pt-3 md:p-4">
+            <div className="flex flex-col px-2 pb-2 items-center md:flex-row">
+              {/* ================= PROFILE IMAGE ================= */}
+              <div className="relative flex md:mb-0 w-[12rem] h-[16rem] md:w-[10rem] md:h-[14rem] flex-shrink-0">
+
+                {/* Experience Badge (top-left, as original) */}
+                <ExperienceBadge years={experience} />
+                
+                {/* Image */}
+                {avatarSrc ? (
+                  <img
+                    src={avatarSrc}
+                    alt={doctor.user.name}
+                    className="w-full h-full rounded-2xl object-cover border-2 border-[#252a67]"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-2xl object-cover border-2 border-[#252a67] bg-gradient-to-br from-[#2563EB] to-[#6a7583] flex items-center justify-center text-white text-4xl font-bold">
+                    {initials(doctor.user.name)}
+                  </div>
+                )}
+
+                {/* Verified Badge (bottom-right) */}
+                <BadgeCheck className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-white text-[#2563EB] shadow-md ring-2 ring-white dark:bg-slate-800 dark:ring-slate-700" />
               </div>
-              <BadgeCheck className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white text-[#2563EB] shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700" />
-            </div>
 
-            {/* Doctor Info */}
-            <div className="min-w-0 flex-1 pt-1">
-              <h3 className="truncate text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                {doctor.user.name}
-              </h3>
-              {doctor.qualification && (
-                <p className="mt-0.5 text-sm font-medium text-slate-600 dark:text-slate-300">
-                  {doctor.qualification}
-                </p>
-              )}
-              {doctor.specialization && (
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
-                  <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#0F766E]" />
-                  {doctor.specialization}
-                </p>
-              )}
-            </div>
-          </div>
+              {/* ================= DOCTOR DETAILS ================= */}
+              <div className="flex flex-col md:p-3 text-center md:text-left mt-3 md:mt-0">
+                {/* Doctor Name - with gradient style */}
+                <h3 className="text-[1.3rem] md:text-2xl font-extrabold tracking-tight">
+                  <span className="bg-gradient-to-r from-[#422995] to-[#4a9860] bg-clip-text text-transparent">
+                    {doctor.user.name}
+                  </span>
+                </h3>
 
-          {/* Experience & Rating */}
-          <div className="mt-4 flex items-center gap-3">
-            {experience > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
-                <Award className="h-3.5 w-3.5 text-amber-500" />
-                {experience}+ yrs
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <span className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className={`h-3.5 w-3.5 ${star <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200"}`} />
-                ))}
-              </span>
-              <span className="text-xs font-semibold text-slate-700">{rating}</span>
-              <span className="text-[11px] text-slate-400">({reviews})</span>
-            </span>
-          </div>
+                {doctor.qualification && (
+                  <p className="text-black font-semibold text-sm md:text-sm mt-0.5">
+                    {doctor.qualification}
+                  </p>
+                )}
 
-          {/* Divider */}
-          <div className="my-5 h-px bg-slate-100 dark:bg-slate-800" />
+                {doctor.specialization && (
+                  <p className="text-gray-700 text-sm md:text-lg">
+                    {doctor.specialization}
+                  </p>
+                )}
 
-          {/* Location & Fee */}
-          <div className="space-y-2">
-            {location && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <MapPin className="h-4 w-4 shrink-0 text-[#0F766E]" />
-                <span className="truncate">{location}</span>
+                {location && (
+                  <div className="text-black flex flex-wrap gap-1 items-center text-sm md:text-lg justify-center md:justify-start mt-1">
+                    <MapPin className="h-4 w-4 text-gray-600" />
+                    <span
+                      style={{
+                        background: "#eef2ff",
+                        color: "#252a67",
+                        padding: "1px 10px",
+                        borderRadius: "8px",
+                        fontSize: "0.75rem",
+                        border: "1px solid #c7d2fe",
+                      }}
+                    >
+                      {location}
+                    </span>
+                  </div>
+                )}
+
+                {/* Rating */}
+                <div className="flex items-center justify-center md:justify-start gap-1 mt-2">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-3.5 w-3.5 ${
+                          star <= Math.round(rating)
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-slate-200 text-slate-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700">{rating}</span>
+                  <span className="text-[11px] text-gray-400">({reviews})</span>
+                </div>
+
+                {/* Consultation Fee */}
+                {doctor.fee != null && (
+                  <div className="mt-2">
+                    <span className="text-lg font-bold text-[#252a67]">₹{doctor.fee}</span>
+                    <span className="text-xs text-gray-400"> / visit</span>
+                  </div>
+                )}
               </div>
-            )}
-            {doctor.fee != null && (
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                <span className="text-[#2563EB]">₹{doctor.fee}</span>
-                <span className="text-xs font-normal text-slate-400">/ visit</span>
-              </div>
-            )}
-          </div>
-
-          {/* CTA */}
-          <div className="mt-auto pt-6">
-            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 transition-colors group-hover:bg-slate-100 dark:bg-slate-800/50 dark:group-hover:bg-slate-800">
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">View Profile</span>
-              <ArrowRight className="h-4 w-4 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[#2563EB]" />
             </div>
           </div>
         </div>
-      </GradientBorderCard>
+      </div>
     </Link>
   );
 }
 
 // ============================================================
-// MAIN SECTION
+// MAIN SECTION (unchanged logic)
 // ============================================================
 
 export default function FeaturedDoctors() {
   const t = useTranslations("HomePage");
-
   const { data, isLoading } = usePublicFeaturedDoctors();
   const featured = data ?? [];
 
   const [index, setIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-
   const touchStartX = useRef<number | null>(null);
   const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Mobile Detection
   useEffect(() => {
     function checkMobile() {
       setIsMobile(window.innerWidth < 768);
     }
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Auto Slide (mobile only)
   useEffect(() => {
     if (!isMobile || featured.length < 2) return;
-
     autoSlideRef.current = setInterval(() => {
       setIndex((i) => (i + 1) % featured.length);
     }, 4500);
-
     return () => {
       if (autoSlideRef.current) clearInterval(autoSlideRef.current);
     };
@@ -184,7 +200,6 @@ export default function FeaturedDoctors() {
   function restartAutoSlide() {
     if (autoSlideRef.current) clearInterval(autoSlideRef.current);
     if (!isMobile || featured.length < 2) return;
-
     autoSlideRef.current = setInterval(() => {
       setIndex((i) => (i + 1) % featured.length);
     }, 4500);
@@ -202,10 +217,8 @@ export default function FeaturedDoctors() {
 
   function handleTouchEnd(e: React.TouchEvent) {
     if (touchStartX.current === null) return;
-
     const diff = touchStartX.current - e.changedTouches[0].clientX;
     const threshold = 50;
-
     if (Math.abs(diff) > threshold) {
       if (diff > 0) {
         setIndex((i) => (i + 1) % featured.length);
@@ -213,22 +226,17 @@ export default function FeaturedDoctors() {
         setIndex((i) => (i - 1 + featured.length) % featured.length);
       }
     }
-
     touchStartX.current = null;
     restartAutoSlide();
   }
 
-  // Loading / Empty
   if (isLoading) {
     return (
       <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
         <SectionHeader eyebrow="Trusted Healthcare" title={t("featuredDoctors")} />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-56 animate-pulse rounded-[28px] border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50"
-            />
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800/50" />
           ))}
         </div>
       </section>
@@ -261,28 +269,27 @@ export default function FeaturedDoctors() {
 
       {/* Mobile - Swipe Carousel */}
       <div
-        className="relative h-[24rem] overflow-hidden md:hidden"
+        className="relative h-[29rem] overflow-hidden pb-9 md:hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {featured.map((doctor, i) => {
           let position: "center" | "left" | "right" | "hidden" = "hidden";
-
           if (i === index) position = "center";
           else if (i === prevIndex) position = "left";
           else if (i === nextIndex) position = "right";
 
           const styles: Record<typeof position, string> = {
-            center: "left-1/2 -translate-x-1/2 scale-100 opacity-100 blur-0 z-30",
-            left: "left-0 -translate-x-[10%] scale-[0.85] opacity-60 blur-[2px] z-20",
-            right: "left-full -translate-x-[110%] scale-[0.85] opacity-60 blur-[2px] z-20",
+            center: "left-1/2 -translate-x-1/2 scale-100 opacity-100 blur-0 z-30 drop-shadow-[0_18px_30px_rgba(37,42,103,0.22)]",
+            left: "left-0 -translate-x-[4%] scale-[0.86] opacity-45 blur-[1.5px] z-20",
+            right: "left-full -translate-x-[104%] scale-[0.86] opacity-45 blur-[1.5px] z-20",
             hidden: "opacity-0 pointer-events-none",
           };
 
           return (
             <div
               key={doctor.id}
-              className={`absolute top-0 w-[84%] max-w-[320px] transition-all duration-700 ease-out ${styles[position]}`}
+              className={`absolute top-1 w-[78%] max-w-[300px] transition-all duration-500 ease-out ${styles[position]}`}
             >
               <FeaturedDoctorCard doctor={doctor} index={i} />
             </div>
@@ -290,7 +297,7 @@ export default function FeaturedDoctors() {
         })}
 
         {/* Progress Dots */}
-        <div className="absolute bottom-0 left-1/2 z-40 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-1 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
           {featured.map((_, i) => (
             <button
               key={i}
@@ -299,8 +306,8 @@ export default function FeaturedDoctors() {
               onClick={() => goTo(i)}
               className={`rounded-full transition-all duration-300 ${
                 i === index
-                  ? "h-2 w-6 bg-[#2563EB]"
-                  : "h-2 w-2 bg-slate-300"
+                  ? "h-2 w-6 bg-gradient-to-r from-[#252a67] to-[#14B8A6]"
+                  : "h-2 w-2 bg-slate-300 hover:bg-slate-400"
               }`}
             />
           ))}

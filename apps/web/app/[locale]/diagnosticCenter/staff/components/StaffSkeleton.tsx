@@ -24,7 +24,7 @@ export function StaffSkeleton() {
       </div>
 
       {/* Staff Cards Grid Skeleton */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}

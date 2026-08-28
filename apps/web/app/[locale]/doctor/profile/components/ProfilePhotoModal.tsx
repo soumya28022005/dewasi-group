@@ -1,235 +1,153 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { X, Upload, Camera, Loader2, AlertCircle } from "lucide-react";
-import { useUploadDoctorProfilePhoto } from "@/lib/hooks/useDoctor";
-import type { Doctor } from "@doctor-contract/shared";
+import { useState, useRef, useEffect } from "react";
+import { X, UploadCloud, Loader2, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import Image from "next/image";
+import { uploadProfilePhoto } from "@/lib/api"; // আপনার নতুন যোগ করা API ফাংশন
 
 interface ProfilePhotoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (doctor?: Doctor) => void;
+  onSuccess: () => void;
 }
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-export function ProfilePhotoModal({
-  isOpen,
-  onClose,
-  onSuccess,
-}: ProfilePhotoModalProps) {
+export function ProfilePhotoModal({ isOpen, onClose, onSuccess }: ProfilePhotoModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
-
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadMutation = useUploadDoctorProfilePhoto();
+  // মডাল বন্ধ হলে স্টেট রিসেট করা
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setIsUploading(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleFileSelect = (file: File) => {
-    setValidationError(null);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      setValidationError("Please select a valid image file (JPEG, PNG, or WebP).");
+    // ফাইল টাইপ ভ্যালিডেশন
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file (JPG, PNG)");
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setValidationError("Image file size must be less than 5 MB.");
+    // সাইজ ভ্যালিডেশন (Max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
       return;
     }
 
     setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelect(e.target.files[0]);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const handleClearSelection = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setValidationError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleCloseModal = () => {
-    handleClearSelection();
-    onClose();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleUpload = async () => {
     if (!selectedFile) {
-      toast.error("Please select an image file to upload.");
+      toast.error("Please select a photo first");
       return;
     }
 
+    setIsUploading(true);
+
     try {
-      const updatedDoctor = await uploadMutation.mutateAsync(selectedFile);
+      await uploadProfilePhoto(selectedFile);
       toast.success("Profile photo updated successfully!");
-      if (onSuccess) onSuccess(updatedDoctor);
-      handleCloseModal();
-    } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error
-          ? err.message
-          : "Failed to upload profile photo. Please try again.";
-      toast.error(errorMsg);
+      onSuccess(); // পেজ রিফ্রেশ করবে
+      onClose(); // মডাল বন্ধ করবে
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile photo");
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const isPending = uploadMutation.isPending;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
-      <div
-        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Modal Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-              <Camera className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Upload Profile Photo
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Update your doctor avatar image (Max 5 MB)
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleCloseModal}
-            disabled={isPending}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 transition-colors"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in zoom-in-95 duration-200">
+        
+        {/* Header */}
+        <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <ImageIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            Update Profile Photo
+          </h2>
+          <button 
+            onClick={onClose}
+            disabled={isUploading}
+            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {/* File Drag-and-Drop / Upload Area */}
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
-              previewUrl
-                ? "border-blue-300 bg-blue-50/40 dark:border-blue-800/60 dark:bg-blue-950/20"
-                : "border-slate-200 bg-slate-50/50 hover:bg-slate-100/60 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:bg-slate-800/80"
-            }`}
-          >
+        {/* Upload Area */}
+        <div className="space-y-6">
+          <div className="flex flex-col items-center justify-center">
             {previewUrl ? (
-              <div className="flex flex-col items-center space-y-3">
-                <div className="relative h-28 w-28 overflow-hidden rounded-2xl border-2 border-blue-600 shadow-md">
-                  <Image
-                    src={previewUrl}
-                    alt="Preview"
-                    width={112}
-                    height={112}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                </div>
+              <div className="relative h-32 w-32 overflow-hidden rounded-full ring-4 ring-indigo-50 dark:ring-indigo-500/10">
+                <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
                 <button
-                  type="button"
-                  onClick={handleClearSelection}
-                  disabled={isPending}
-                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setPreviewUrl(null);
+                  }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-medium text-white opacity-0 transition-opacity hover:opacity-100"
                 >
-                  Choose Different Image
+                  Change
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col items-center space-y-2">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                  <Upload className="h-6 w-6" />
-                </div>
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  Drag and drop your image here, or{" "}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-blue-600 underline dark:text-blue-400"
-                  >
-                    browse
-                  </button>
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  Supports JPEG, PNG, WebP up to 5 MB
-                </p>
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-32 w-32 cursor-pointer flex-col items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-indigo-400 dark:hover:bg-indigo-500/10"
+              >
+                <UploadCloud className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                <span className="mt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">Click to upload</span>
               </div>
             )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleInputChange}
-              className="hidden"
+            
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept="image/jpeg, image/png, image/webp" 
+              className="hidden" 
             />
           </div>
 
-          {/* Validation Error Message */}
-          {validationError && (
-            <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{validationError}</span>
-            </div>
-          )}
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+            Recommended size: 500x500px.<br /> Maximum file size: 5MB.
+          </p>
 
-          {/* Modal Actions */}
-          <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={handleCloseModal}
-              disabled={isPending}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/60 disabled:opacity-50 transition-colors"
+              onClick={onClose}
+              disabled={isUploading}
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 disabled:opacity-50"
             >
               Cancel
             </button>
-
             <button
-              type="submit"
-              disabled={isPending || !selectedFile}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              onClick={handleUpload}
+              disabled={!selectedFile || isUploading}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-105 active:scale-95 disabled:opacity-50"
             >
-              {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{isPending ? "Uploading..." : "Save Profile Photo"}</span>
+              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {isUploading ? "Uploading..." : "Save Photo"}
             </button>
           </div>
-        </form>
+        </div>
+
       </div>
     </div>
   );

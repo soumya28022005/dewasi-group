@@ -419,7 +419,7 @@ export default function ClinicDoctorsPage() {
           </div>
 
           {/* ✅ FIXED: 1 column on mobile, 2 on tablet, 3 on desktop */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
             {doctors.map((doctor, index) => (
               <DoctorRow 
                 key={doctor.id} 

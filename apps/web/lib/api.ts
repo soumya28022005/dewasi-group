@@ -24,12 +24,12 @@ api.interceptors.response.use(
     // যদি 401 Unauthorized এরর আসে (যেমন: Refresh token invalid)
     if (error.response && error.response.status === 401) {
       
-      // ১. Local Storage থেকে টোকেন ক্লিয়ার করুন
+      // ১. Local Storage থেকে টোকেন ক্লিয়ার করুন
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
-      // ২. Cookie থেকেও টোকেন ক্লিয়ার করুন (এটাই লুপ তৈরি করছিল)
+      // ২. Cookie থেকেও টোকেন ক্লিয়ার করুন (এটাই লুপ তৈরি করছিল)
       document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
@@ -57,6 +57,20 @@ api.interceptors.response.use(
   }
 );
 
+// === User / Profile API Calls (Doctor Photo Upload) ===
+// === User / Profile API Calls (Universal Photo Upload) ===
+export const uploadProfilePhoto = async (file: File) => {
+  const formData = new FormData();
+  formData.append("photo", file); 
+
+  // সবার জন্য এই একটাই API কল হবে
+  const response = await api.post('/users/me/photo', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
 // === Location API Calls ===
 
 export const addSearchLocation = async (locationData: { nameEn: string; nameBn: string; nameHi: string; isActive?: boolean }) => {
