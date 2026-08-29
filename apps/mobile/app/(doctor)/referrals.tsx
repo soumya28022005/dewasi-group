@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
   useSentReferrals,
   useCreateReferral,
@@ -40,6 +41,7 @@ const COMMON_TESTS = [
 ];
 
 export default function DoctorReferralsScreen() {
+  const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Form states
@@ -156,7 +158,14 @@ export default function DoctorReferralsScreen() {
         <GradientCard variant="blue" style={styles.headerCard}>
           <View style={styles.headerContent}>
             <View style={styles.headerRow}>
-              <View>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+                activeOpacity={0.8}
+              >
+                <Icon name="arrow-left" size={18} color={Colors.light.ink900} />
+              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.headerTitle}>Diagnostic Referrals</Text>
                 <Text style={styles.headerSubtitle}>
                   Issue lab & imaging referrals to partner diagnostic centers
@@ -451,6 +460,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.light.surfaceWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.surface200,
+    marginRight: Spacing.one,
   },
   headerTitle: {
     fontSize: Typography.fontSizes.lg,

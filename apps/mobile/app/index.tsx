@@ -71,7 +71,7 @@ export default function IndexScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Phase 1 • Secure Authentication Gateway</Text>
+        <Text style={styles.footerText}>Dewasi Health • Secure Gateway</Text>
       </View>
     </SafeAreaView>
   );

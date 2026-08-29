@@ -132,17 +132,17 @@ export function AuthenticatedPlaceholder({
           </View>
         </View>
 
-        {/* Phase Verification Notice */}
+        {/* Security & Access Notice */}
         <View style={styles.noticeCard}>
           <View style={styles.noticeHeader}>
             <Icon name="shield-check" size={18} color="#2563EB" />
-            <Text style={styles.noticeTitle}>Phase 1 Milestone Complete</Text>
+            <Text style={styles.noticeTitle}>Dewasi Secure Session Active</Text>
           </View>
           <Text style={styles.noticeBody}>
-            Authentication, session persistence via SecureStore, token auto-refresh, and role-based routing have been verified for this account.
+            Session authenticated with end-to-end token encryption and role-based authorization.
           </Text>
           <Text style={styles.noticeFootnote}>
-            Feature dashboards and operational modules will be constructed in Phase 2.
+            Please use the web portal for advanced administrative configuration.
           </Text>
         </View>
 

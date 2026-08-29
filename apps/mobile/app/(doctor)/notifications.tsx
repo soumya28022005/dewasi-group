@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
   useDoctorNotifications,
   useDoctorUnreadNotificationCount,
@@ -24,6 +25,7 @@ import {
 import { Colors, Spacing, Radius, Typography, Shadows } from '../../theme';
 
 export default function DoctorNotificationsScreen() {
+  const router = useRouter();
   const { isConnected } = useAppointmentRealtime();
 
   const {
@@ -89,6 +91,13 @@ export default function DoctorNotificationsScreen() {
         <GradientCard variant="blue" style={styles.headerCard}>
           <View style={styles.headerContent}>
             <View style={styles.headerRow}>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+                activeOpacity={0.8}
+              >
+                <Icon name="arrow-left" size={18} color={Colors.light.ink900} />
+              </TouchableOpacity>
               <View style={styles.headerTitles}>
                 <Text style={styles.headerTitle}>Notifications Center</Text>
                 <Text style={styles.headerSubtitle}>
@@ -220,6 +229,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.light.surfaceWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.surface200,
+    marginRight: Spacing.two,
   },
   headerTitles: {
     flex: 1,

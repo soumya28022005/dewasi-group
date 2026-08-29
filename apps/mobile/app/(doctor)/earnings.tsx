@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useDoctorEarnings, useSearchClinics } from '../../hooks/useDoctor';
 import {
   GradientCard,
@@ -19,6 +20,7 @@ import { Colors, Spacing, Radius, Typography, Shadows } from '../../theme';
 type PeriodType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export default function DoctorEarningsScreen() {
+  const router = useRouter();
   const [period, setPeriod] = useState<PeriodType>('monthly');
   const [selectedClinicId, setSelectedClinicId] = useState('ALL');
 
@@ -63,11 +65,20 @@ export default function DoctorEarningsScreen() {
         <GradientCard variant="green" style={styles.headerCard}>
           <View style={styles.headerContent}>
             <View style={styles.headerTop}>
-              <View>
-                <Text style={styles.headerTitle}>Practice Earnings</Text>
-                <Text style={styles.headerSubtitle}>
-                  Financial analytics and clinic revenue distributions
-                </Text>
+              <View style={styles.headerTitleGroup}>
+                <TouchableOpacity
+                  style={styles.backBtn}
+                  onPress={() => router.back()}
+                  activeOpacity={0.8}
+                >
+                  <Icon name="arrow-left" size={18} color={Colors.light.ink900} />
+                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.headerTitle}>Practice Earnings</Text>
+                  <Text style={styles.headerSubtitle}>
+                    Financial analytics and clinic revenue distributions
+                  </Text>
+                </View>
               </View>
               <View style={styles.currencyBadge}>
                 <Text style={styles.currencyBadgeText}>INR (₹)</Text>
@@ -274,8 +285,25 @@ const styles = StyleSheet.create({
   },
   headerTop: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  headerTitleGroup: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.light.surfaceWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.surface200,
   },
   headerTitle: {
     fontSize: Typography.fontSizes.lg,

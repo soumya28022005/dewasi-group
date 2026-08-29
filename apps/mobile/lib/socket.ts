@@ -13,18 +13,6 @@ export async function getSocket(): Promise<Socket> {
       transports: ['websocket', 'polling'],
       auth: token ? { token: `Bearer ${token}` } : undefined,
     });
-
-    socket.on('connect_error', (err) => {
-      if (__DEV__) {
-        console.warn('[Socket] Connection error:', err.message);
-      }
-    });
-
-    socket.on('disconnect', (reason) => {
-      if (__DEV__) {
-        console.log('[Socket] Disconnected:', reason);
-      }
-    });
   }
   return socket;
 }

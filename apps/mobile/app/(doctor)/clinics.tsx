@@ -132,7 +132,14 @@ export default function DoctorClinicsScreen() {
         <GradientCard variant="blue" style={styles.headerCard}>
           <View style={styles.headerContent}>
             <View style={styles.headerRow}>
-              <View>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+                activeOpacity={0.8}
+              >
+                <Icon name="arrow-left" size={18} color={Colors.light.ink900} />
+              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.headerTitle}>Affiliated Clinics</Text>
                 <Text style={styles.headerSubtitle}>
                   Overview of practice branches and consultation venues
@@ -307,6 +314,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.light.surfaceWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.surface200,
+    marginRight: Spacing.one,
   },
   headerTitle: {
     fontSize: Typography.fontSizes.lg,

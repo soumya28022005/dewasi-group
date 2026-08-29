@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
   useDoctorPrescriptions,
   useCreateDoctorPrescription,
@@ -27,6 +28,7 @@ import {
 import { Colors, Spacing, Radius, Typography, Shadows } from '../../theme';
 
 export default function DoctorPrescriptionsScreen() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClinicId, setSelectedClinicId] = useState('ALL');
 
@@ -159,7 +161,14 @@ export default function DoctorPrescriptionsScreen() {
         <GradientCard variant="blue" style={styles.headerCard}>
           <View style={styles.headerContent}>
             <View style={styles.headerRow}>
-              <View>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+                activeOpacity={0.8}
+              >
+                <Icon name="arrow-left" size={18} color={Colors.light.ink900} />
+              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.headerTitle}>Digital Prescriptions</Text>
                 <Text style={styles.headerSubtitle}>
                   Issue, view, and manage medical prescriptions
@@ -609,6 +618,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.light.surfaceWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.light.surface200,
+    marginRight: Spacing.one,
   },
   headerTitle: {
     fontSize: Typography.fontSizes.lg,

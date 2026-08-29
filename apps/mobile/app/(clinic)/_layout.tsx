@@ -42,8 +42,8 @@ export default function ClinicTabsLayout() {
           backgroundColor: Colors.light.surfaceWhite,
           borderTopColor: Colors.light.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 60 + insets.bottom : 64,
-          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 8,
+          height: 60 + Math.max(insets.bottom, 8),
+          paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
         },
         tabBarLabelStyle: {

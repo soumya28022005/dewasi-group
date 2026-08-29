@@ -57,10 +57,8 @@ export function useAppointmentRealtime() {
           setIsConnected(true);
           socket.emit('joinUser', userId);
         }
-      } catch (err) {
-        if (__DEV__) {
-          console.warn('[useAppointmentRealtime] Socket init error:', err);
-        }
+      } catch {
+        // Socket connection failure gracefully caught without leaking debug logs
       }
     }
 
