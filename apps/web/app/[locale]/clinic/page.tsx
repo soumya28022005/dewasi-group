@@ -29,6 +29,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 
 import {
   useClinicProfile,
@@ -449,22 +450,26 @@ export default function ClinicOverviewPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {/* Doctors - Blue Gradient */}
         <GradientCard gradient="from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]">
-          <StatCard
-            icon={UserRound}
-            label={tNav("doctors")}
-            value={doctors?.length ?? 0}
-            trend="+2 this month"
-          />
+          <Link href="/clinic/add-patient" className="block h-full transition-transform hover:scale-[1.02]">
+            <StatCard
+              icon={UserRound}
+              label={tNav("doctors")}
+              value={doctors?.length ?? 0}
+              trend="+2 this month"
+            />
+          </Link>
         </GradientCard>
 
         {/* Receptionists - Indigo Gradient */}
         <GradientCard gradient="from-[#4f46e5] via-[#6366f1] to-[#818cf8]">
-          <StatCard
-            icon={Users}
-            label={tNav("receptionists")}
-            value={receptionists?.length ?? 0}
-            trend="+1 this month"
-          />
+          <Link href="/clinic/receptionists" className="block h-full transition-transform hover:scale-[1.02]">
+            <StatCard
+              icon={Users}
+              label={tNav("receptionists")}
+              value={receptionists?.length ?? 0}
+              trend="+1 this month"
+            />
+          </Link>
         </GradientCard>
 
         {/* Total Staff - Purple Gradient */}

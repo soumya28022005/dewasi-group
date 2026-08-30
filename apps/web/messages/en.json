@@ -222,7 +222,8 @@
     "requests": "Requests",
     "referrals": "Referrals",
     "reports": "Reports",
-    "settings": "Settings"
+    "settings": "Settings",
+    "addPatient": "Queue / Add Patient"
   },
   "ClinicDashboard": {
     "title": "Operational Dashboard",
