@@ -5,9 +5,9 @@ import {
   Plus,
   X,
   Pencil,
+  Search,
   Stethoscope,
   Mail,
-  Phone,
   Clock3,
   IndianRupee,
   BriefcaseMedical,
@@ -15,21 +15,24 @@ import {
   UserRound,
   CheckCircle2,
   Loader2,
-  Activity,
   Award,
-  Sparkles,
   TrendingUp,
-  Star,
-  Shield,
   BookOpen,
+  Camera,
 } from "lucide-react";
+
 import { useTranslations } from "next-intl";
+
 import {
   useClinicDoctors,
   useAddDoctor,
   useEditDoctor,
   type ClinicDoctor,
 } from "@/lib/hooks/useClinic";
+
+// ============================================================
+// FORM
+// ============================================================
 
 const EMPTY_ADD = {
   name: "",
@@ -43,25 +46,48 @@ const EMPTY_ADD = {
   startTime: "",
 };
 
+// ============================================================
+// INPUT
+// ============================================================
+
 const inputClasses =
-  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 outline-none transition-all placeholder:text-gray-400 hover:border-gray-300 focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary)]/15 dark:border-soft-300 dark:bg-surface-100 dark:text-ink-800 dark:placeholder:text-ink-400 dark:hover:border-soft-300";
+  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 outline-none transition-all placeholder:text-gray-400 hover:border-gray-300 focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary)]/15 dark:border-soft-300 dark:bg-surface-100 dark:text-ink-800 dark:placeholder:text-ink-400";
 
 // ============================================================
-// GRADIENT BORDER CARD COMPONENT
+// BRAND
+// ============================================================
+
+const PRIMARY_GRADIENT =
+  "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]";
+
+const GREEN_GRADIENT =
+  "from-[#047857] via-[#059669] to-[#14B8A6]";
+
+// ============================================================
+// GRADIENT CARD
 // ============================================================
 
 function GradientCard({
   children,
   className = "",
-  gradient = "from-[#667eea] via-[#764ba2] to-[#f093fb]",
+  gradient = PRIMARY_GRADIENT,
 }: {
   children: React.ReactNode;
   className?: string;
   gradient?: string;
 }) {
   return (
-    <div className={`relative rounded-2xl p-[3px] bg-gradient-to-r ${gradient} shadow-lg ${className}`}>
-      <div className="rounded-[calc(1rem-4.5px)] bg-white dark:bg-slate-900 h-full">
+    <div
+      className={`
+        rounded-[22px]
+        bg-gradient-to-r
+        ${gradient}
+        p-[3px]
+        shadow-[0_10px_35px_-22px_rgba(37,42,103,0.55)]
+        ${className}
+      `}
+    >
+      <div className="h-full rounded-[20px] bg-white dark:bg-slate-900">
         {children}
       </div>
     </div>
@@ -69,61 +95,82 @@ function GradientCard({
 }
 
 // ============================================================
-// DOCTOR CARD GRADIENTS - Royal Blue & Leaf Green
-// ============================================================
-
-const DOCTOR_GRADIENTS = [
-  "from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]", // Royal Blue
-  "from-[#059669] via-[#10b981] to-[#34d399]", // Leaf Green
-  "from-[#1e40af] via-[#3b82f6] to-[#059669]", // Blue → Green
-  "from-[#0d9488] via-[#14b8a6] to-[#3b82f6]", // Teal → Blue
-  "from-[#1e3a8a] via-[#1d4ed8] to-[#10b981]", // Deep Blue → Green
-  "from-[#059669] via-[#0d9488] to-[#1e40af]", // Green → Blue
-  "from-[#1e3a8a] via-[#2563eb] to-[#34d399]", // Blue → Light Green
-  "from-[#0f766e] via-[#14b8a6] to-[#3b82f6]", // Teal → Blue
-  "from-[#1e40af] via-[#059669] to-[#10b981]", // Blue → Green
-];
-
-// ============================================================
-// MAIN COMPONENT
+// PAGE
 // ============================================================
 
 export default function ClinicDoctorsPage() {
   const tDoc = useTranslations("ClinicDoctors");
   const tNav = useTranslations("ClinicNav");
-  const { data: doctors, isLoading } = useClinicDoctors();
-  const addDoctor = useAddDoctor();
-  const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState(EMPTY_ADD);
-  const [error, setError] = useState("");
 
-  function handleAdd(e: React.FormEvent) {
+  const {
+    data: doctors,
+    isLoading,
+  } = useClinicDoctors();
+
+  const addDoctor = useAddDoctor();
+
+  const [showAdd, setShowAdd] =
+    useState(false);
+
+  const [searchQuery, setSearchQuery] =
+    useState("");
+
+  const [form, setForm] =
+    useState(EMPTY_ADD);
+
+  const [error, setError] =
+    useState("");
+
+  // ==========================================================
+  // ADD DOCTOR
+  // ==========================================================
+
+  function handleAdd(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
+
     setError("");
+
     addDoctor.mutate(
       {
         name: form.name,
         email: form.email,
         password: form.password,
         phone: form.phone || undefined,
-        specialization: form.specialization || undefined,
-        qualification: form.qualification || undefined,
-        experience: form.experience ? Number(form.experience) : undefined,
-        fee: form.fee ? Number(form.fee) : undefined,
-        startTime: form.startTime || undefined,
+        specialization:
+          form.specialization || undefined,
+        qualification:
+          form.qualification || undefined,
+        experience: form.experience
+          ? Number(form.experience)
+          : undefined,
+        fee: form.fee
+          ? Number(form.fee)
+          : undefined,
+        startTime:
+          form.startTime || undefined,
       },
       {
         onSuccess: () => {
           setForm(EMPTY_ADD);
           setShowAdd(false);
         },
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (err: any) => {
-          setError(err?.response?.data?.message || "Failed to add doctor");
+          setError(
+            err?.response?.data?.message ||
+              "Failed to add doctor"
+          );
         },
       }
     );
   }
+
+  // ==========================================================
+  // CLOSE ADD FORM
+  // ==========================================================
 
   function closeAddForm() {
     setShowAdd(false);
@@ -131,116 +178,234 @@ export default function ClinicDoctorsPage() {
     setError("");
   }
 
+  // ==========================================================
+  // COUNTS
+  // ==========================================================
+
+  const totalDoctors =
+    doctors?.length ?? 0;
+
+  const activeDoctors =
+    doctors?.filter(
+      (doctor) =>
+        doctor.user.isActive
+    ).length ?? 0;
+
+  // ==========================================================
+  // SEARCH
+  //
+  // Only searches doctor NAME.
+  // ==========================================================
+
+  const normalizedSearch =
+    searchQuery.trim().toLowerCase();
+
+  const filteredDoctors =
+    doctors?.filter((doctor) => {
+      const name =
+        doctor.user?.name
+          ?.toLowerCase() ?? "";
+
+      return name.includes(
+        normalizedSearch
+      );
+    }) ?? [];
+
+  // ==========================================================
+  // RENDER
+  // ==========================================================
+
   return (
-    <div className="space-y-6">
-      {/* =====================================================
-          PAGE HEADER - Royal Blue Gradient
-      ====================================================== */}
-      <GradientCard gradient="from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]">
-        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] text-white shadow-lg shadow-blue-500/30">
-                <Stethoscope className="h-4 w-4" />
+    <div className="space-y-4 pb-5 sm:space-y-6">
+
+      {/* ======================================================
+          HEADER
+          ====================================================== */}
+
+      <GradientCard>
+
+        <div className="relative overflow-hidden p-4 sm:p-6">
+
+          {/* Decorative glow */}
+
+          <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[#14B8A6]/10 blur-3xl" />
+
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+            {/* Header content */}
+
+            <div className="min-w-0">
+
+              <div className="mb-2.5 flex flex-wrap items-center gap-2">
+
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-md">
+                  <Stethoscope className="h-4 w-4" />
+                </div>
+
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#252a67] sm:text-xs">
+                  {tNav("doctors")}
+                </span>
+
+                {totalDoctors > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700 sm:text-[10px]">
+
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+                    {activeDoctors} Active
+
+                  </span>
+                )}
+
               </div>
 
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#1e40af]">
-                {tNav("doctors")}
-              </span>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                {tDoc("heading")}
+              </h1>
 
-              {doctors && doctors.length > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#059669] to-[#10b981] px-2 py-0.5 text-[9px] font-bold text-white">
-                  <Sparkles className="h-3 w-3" />
-                  {doctors.length} Active
-                </span>
-              )}
+              <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">
+                {tDoc("subtitle")}
+              </p>
+
             </div>
 
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-              {tDoc("heading")}
-            </h1>
+            {/* Add button */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              {tDoc("subtitle")}
-            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (showAdd) {
+                  closeAddForm();
+                } else {
+                  setShowAdd(true);
+                  setError("");
+                }
+              }}
+              className={`
+                inline-flex
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                px-4
+                py-3
+                text-xs
+                font-bold
+                transition-all
+                sm:w-auto
+                sm:text-sm
+                ${
+                  showAdd
+                    ? "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                    : "bg-gradient-to-r from-[#252a67] to-[#3b4a8f] text-white shadow-[0_8px_20px_-8px_rgba(37,42,103,0.65)] hover:-translate-y-0.5 hover:shadow-lg"
+                }
+              `}
+            >
+
+              {showAdd ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+
+              {showAdd
+                ? tDoc("cancel")
+                : tDoc("addDoctor")}
+
+            </button>
+
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (showAdd) {
-                closeAddForm();
-              } else {
-                setShowAdd(true);
-                setError("");
-              }
-            }}
-            className={
-              showAdd
-                ? "inline-flex items-center justify-center gap-2 rounded-xl border border-[#f5576c]/30 bg-white px-4 py-2.5 text-sm font-bold text-[#f5576c] transition hover:bg-[#f5576c]/5"
-                : "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:shadow-xl"
-            }
-          >
-            {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showAdd ? tDoc("cancel") : tDoc("addDoctor")}
-          </button>
         </div>
+
       </GradientCard>
 
-      {/* =====================================================
-          ADD DOCTOR FORM - Leaf Green Gradient
-      ====================================================== */}
+      {/* ======================================================
+          ADD DOCTOR
+          ====================================================== */}
+
       {showAdd && (
-        <GradientCard gradient="from-[#059669] via-[#10b981] to-[#34d399]">
-          <form onSubmit={handleAdd} className="p-5 sm:p-6">
-            <div className="mb-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#059669] to-[#10b981] text-white shadow-lg shadow-green-500/30">
-                  <UserRound className="h-5 w-5" />
-                </div>
+        <GradientCard gradient={GREEN_GRADIENT}>
 
-                <div>
-                  <h2 className="text-base font-bold text-slate-800">
-                    {tDoc("addNewDoctor")}
-                  </h2>
+          <form
+            onSubmit={handleAdd}
+            className="p-4 sm:p-6"
+          >
 
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {tDoc("addDoctorSub")}
-                  </p>
-                </div>
+            <div className="mb-5 flex items-center gap-3">
+
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#047857] to-[#14B8A6] text-white shadow-md">
+                <UserRound className="h-5 w-5" />
               </div>
+
+              <div className="min-w-0">
+
+                <h2 className="text-sm font-bold text-slate-800 sm:text-base">
+                  {tDoc("addNewDoctor")}
+                </h2>
+
+                <p className="mt-0.5 text-[10px] text-slate-500 sm:text-xs">
+                  {tDoc("addDoctorSub")}
+                </p>
+
+              </div>
+
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label={tDoc("name")} required>
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
+
+              <Field
+                label={tDoc("name")}
+                required
+              >
                 <input
                   required
                   type="text"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      name: e.target.value,
+                    })
+                  }
                   className={inputClasses}
                   placeholder="Enter doctor's name"
                 />
               </Field>
 
-              <Field label={tDoc("email")} required>
+              <Field
+                label={tDoc("email")}
+                required
+              >
                 <input
                   required
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      email: e.target.value,
+                    })
+                  }
                   className={inputClasses}
                   placeholder="doctor@example.com"
                 />
               </Field>
 
-              <Field label={tDoc("password")} required>
+              <Field
+                label={tDoc("password")}
+                required
+              >
                 <input
                   required
                   type="password"
                   minLength={6}
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      password: e.target.value,
+                    })
+                  }
                   className={inputClasses}
                   placeholder="Minimum 6 characters"
                 />
@@ -249,31 +414,49 @@ export default function ClinicDoctorsPage() {
               <Field label={tDoc("phone")}>
                 <input
                   type="tel"
+                  inputMode="tel"
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      phone: e.target.value,
+                    })
+                  }
                   className={inputClasses}
                   placeholder="Phone number"
                 />
               </Field>
 
-              <Field label={tDoc("specialization")}>
+              <Field
+                label={tDoc("specialization")}
+              >
                 <input
                   type="text"
                   value={form.specialization}
                   onChange={(e) =>
-                    setForm({ ...form, specialization: e.target.value })
+                    setForm({
+                      ...form,
+                      specialization:
+                        e.target.value,
+                    })
                   }
                   className={inputClasses}
                   placeholder="e.g. Cardiology"
                 />
               </Field>
 
-              <Field label={tDoc("qualification")}>
+              <Field
+                label={tDoc("qualification")}
+              >
                 <input
                   type="text"
                   value={form.qualification}
                   onChange={(e) =>
-                    setForm({ ...form, qualification: e.target.value })
+                    setForm({
+                      ...form,
+                      qualification:
+                        e.target.value,
+                    })
                   }
                   className={inputClasses}
                   placeholder="e.g. MBBS, MD"
@@ -282,34 +465,51 @@ export default function ClinicDoctorsPage() {
 
               <Field label={tDoc("experience")}>
                 <div className="relative">
+
                   <input
                     type="number"
                     min={0}
                     value={form.experience}
                     onChange={(e) =>
-                      setForm({ ...form, experience: e.target.value })
+                      setForm({
+                        ...form,
+                        experience:
+                          e.target.value,
+                      })
                     }
                     className={`${inputClasses} pr-16`}
                     placeholder="Years"
                   />
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">
+
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     {tDoc("years")}
                   </span>
+
                 </div>
               </Field>
 
               <Field label={tDoc("fee")}>
+
                 <div className="relative">
+
                   <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
                   <input
                     type="number"
                     min={0}
                     value={form.fee}
-                    onChange={(e) => setForm({ ...form, fee: e.target.value })}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        fee: e.target.value,
+                      })
+                    }
                     className={`${inputClasses} pl-9`}
                     placeholder="Consultation fee"
                   />
+
                 </div>
+
               </Field>
 
               <Field label={tDoc("startTime")}>
@@ -317,126 +517,334 @@ export default function ClinicDoctorsPage() {
                   type="time"
                   value={form.startTime}
                   onChange={(e) =>
-                    setForm({ ...form, startTime: e.target.value })
+                    setForm({
+                      ...form,
+                      startTime:
+                        e.target.value,
+                    })
                   }
                   className={inputClasses}
                 />
               </Field>
+
             </div>
 
             {error && (
-              <div className="mt-4 rounded-xl border border-[#f5576c]/20 bg-gradient-to-r from-[#f5576c]/5 to-white px-4 py-3 text-sm font-medium text-[#f5576c]">
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-600">
                 {error}
               </div>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+
               <button
                 type="submit"
-                disabled={addDoctor.isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={
+                  addDoctor.isPending
+                }
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-5 py-3 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-sm"
               >
+
                 {addDoctor.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 )}
-                {addDoctor.isPending ? tDoc("creating") : tDoc("createAccount")}
+
+                {addDoctor.isPending
+                  ? tDoc("creating")
+                  : tDoc("createAccount")}
+
               </button>
 
               <button
                 type="button"
                 onClick={closeAddForm}
-                className="rounded-xl border border-[#1e40af]/30 bg-white px-5 py-2.5 text-sm font-semibold text-[#1e40af] transition hover:bg-[#1e40af]/5"
+                className="w-full rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 sm:w-auto sm:text-sm"
               >
                 {tDoc("cancel")}
               </button>
+
             </div>
+
           </form>
+
         </GradientCard>
       )}
 
-      {/* =====================================================
+      {/* ======================================================
           LOADING
-      ====================================================== */}
+          ====================================================== */}
+
       {isLoading && (
-        <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-[0_2px_15px_rgba(0,0,0,0.04)] dark:border-soft-300 dark:bg-surface">
+        <div className="flex min-h-[220px] items-center justify-center rounded-[22px] border border-slate-100 bg-white dark:border-soft-300 dark:bg-surface">
+
           <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[var(--color-primary)] border-t-transparent" />
-            <p className="text-sm font-medium text-gray-500 dark:text-ink-500">
+
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#252a67] border-t-transparent" />
+
+            <p className="text-xs font-medium text-slate-500 sm:text-sm">
               {tDoc("loadingDoctors")}
             </p>
+
           </div>
+
         </div>
       )}
 
-      {/* =====================================================
-          EMPTY STATE
-      ====================================================== */}
-      {!isLoading && (!doctors || doctors.length === 0) && (
-        <GradientCard gradient="from-[#f093fb] via-[#f5576c] to-[#fda085]">
-          <div className="p-10 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#f5576c] to-[#fda085] text-white shadow-lg shadow-pink-500/30">
-              <Stethoscope className="h-7 w-7" />
-            </div>
+      {/* ======================================================
+          EMPTY
+          ====================================================== */}
 
-            <h2 className="mt-4 text-base font-bold text-slate-800">
-              {tDoc("noDoctorsTitle")}
-            </h2>
+      {!isLoading &&
+        (!doctors ||
+          doctors.length === 0) && (
+          <GradientCard>
 
-            <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
-              {tDoc("noDoctorsSub")}
-            </p>
+            <div className="px-5 py-10 text-center sm:p-10">
 
-            {!showAdd && (
-              <button
-                type="button"
-                onClick={() => setShowAdd(true)}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                <Plus className="h-4 w-4" />
-                {tDoc("addDoctor")}
-              </button>
-            )}
-          </div>
-        </GradientCard>
-      )}
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-lg">
+                <Stethoscope className="h-7 w-7" />
+              </div>
 
-      {/* =====================================================
-          DOCTOR LIST - 1 column mobile, 2 tablet, 3 desktop
-      ====================================================== */}
-      {!isLoading && doctors && doctors.length > 0 && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-slate-800">{tDoc("yourDoctors")}</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {doctors.length} {tDoc("doctorsAdded")}
+              <h2 className="mt-4 text-base font-bold text-slate-800">
+                {tDoc("noDoctorsTitle")}
+              </h2>
+
+              <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 sm:text-sm">
+                {tDoc("noDoctorsSub")}
               </p>
-            </div>
-            <div className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#059669] to-[#10b981] px-3 py-1 text-[10px] font-bold text-white">
-              <TrendingUp className="h-3 w-3" />
-              {doctors.filter(d => d.user.isActive).length} Active
-            </div>
-          </div>
 
-          {/* ✅ FIXED: 1 column on mobile, 2 on tablet, 3 on desktop */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
-            {doctors.map((doctor, index) => (
-              <DoctorRow 
-                key={doctor.id} 
-                doctor={doctor} 
-                gradient={DOCTOR_GRADIENTS[index % DOCTOR_GRADIENTS.length]}
+              {!showAdd && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowAdd(true)
+                  }
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-5 py-3 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  {tDoc("addDoctor")}
+                </button>
+              )}
+
+            </div>
+
+          </GradientCard>
+        )}
+
+      {/* ======================================================
+          DOCTOR LIST
+          ====================================================== */}
+
+      {!isLoading &&
+        doctors &&
+        doctors.length > 0 && (
+
+          <div className="space-y-4 sm:space-y-5">
+
+            {/* ==================================================
+                SEARCH BAR
+                ================================================== */}
+
+            <div className="relative">
+
+              <Search
+                className="
+                  pointer-events-none
+                  absolute
+                  left-3.5
+                  top-1/2
+                  h-4
+                  w-4
+                  -translate-y-1/2
+                  text-slate-400
+                  sm:left-4
+                  sm:h-5
+                  sm:w-5
+                "
               />
-            ))}
+
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) =>
+                  setSearchQuery(
+                    e.target.value
+                  )
+                }
+                placeholder="Search doctor by name..."
+                aria-label="Search doctor by name"
+                className="
+                  w-full
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  bg-white
+                  py-3
+                  pl-10
+                  pr-11
+                  text-xs
+                  font-medium
+                  text-slate-700
+                  outline-none
+                  shadow-[0_6px_24px_-17px_rgba(37,42,103,0.4)]
+                  transition-all
+                  placeholder:text-slate-400
+                  hover:border-slate-300
+                  focus:border-[#252a67]
+                  focus:ring-4
+                  focus:ring-[#252a67]/10
+                  sm:py-3.5
+                  sm:pl-12
+                  sm:text-sm
+                  dark:border-soft-300
+                  dark:bg-surface
+                  dark:text-ink-800
+                "
+              />
+
+              {/* Clear */}
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSearchQuery("")
+                  }
+                  aria-label="Clear search"
+                  className="
+                    absolute
+                    right-3
+                    top-1/2
+                    flex
+                    h-6
+                    w-6
+                    -translate-y-1/2
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-slate-100
+                    text-slate-400
+                    transition
+                    hover:bg-slate-200
+                    hover:text-slate-700
+                  "
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+
+            </div>
+
+            {/* ==================================================
+                SECTION HEADER
+                ================================================== */}
+
+            <div className="flex items-end justify-between gap-3">
+
+              <div className="min-w-0">
+
+                <div className="flex items-center gap-2">
+
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#14B8A6]" />
+
+                  <h2 className="text-sm font-bold text-slate-800 sm:text-base">
+                    {tDoc("yourDoctors")}
+                  </h2>
+
+                </div>
+
+                <p className="mt-1 text-[10px] text-slate-500 sm:text-xs">
+
+                  {searchQuery.trim()
+                    ? `${filteredDoctors.length} of ${totalDoctors} doctors`
+                    : `${totalDoctors} ${tDoc("doctorsAdded")}`}
+
+                </p>
+
+              </div>
+
+              <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[9px] font-bold text-emerald-700 sm:text-[10px]">
+
+                <TrendingUp className="h-3 w-3" />
+
+                {activeDoctors} Active
+
+              </div>
+
+            </div>
+
+            {/* ==================================================
+                RESULTS
+                ================================================== */}
+
+            {filteredDoctors.length > 0 && (
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+
+                {filteredDoctors.map(
+                  (doctor) => (
+                    <DoctorRow
+                      key={doctor.id}
+                      doctor={doctor}
+                    />
+                  )
+                )}
+
+              </div>
+            )}
+
+            {/* ==================================================
+                NO SEARCH RESULT
+                ================================================== */}
+
+            {searchQuery.trim() &&
+              filteredDoctors.length ===
+                0 && (
+                <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-10 text-center shadow-[0_8px_30px_-20px_rgba(37,42,103,0.35)] dark:border-soft-300 dark:bg-surface">
+
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#252a67]/[0.06]">
+
+                    <Search className="h-5 w-5 text-[#252a67]" />
+
+                  </div>
+
+                  <h3 className="mt-3 text-sm font-bold text-slate-800">
+                    No doctor found
+                  </h3>
+
+                  <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
+
+                    No doctor matches{" "}
+
+                    <span className="font-semibold text-[#252a67]">
+                      "{searchQuery}"
+                    </span>
+
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSearchQuery("")
+                    }
+                    className="mt-4 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-4 py-2.5 text-[10px] font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-xs"
+                  >
+                    Clear Search
+                  </button>
+
+                </div>
+              )}
+
           </div>
-        </div>
-      )}
+        )}
+
     </div>
   );
 }
 
 // ============================================================
-// Form Field Component
+// FIELD
 // ============================================================
+
 function Field({
   label,
   children,
@@ -448,40 +856,131 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-bold text-slate-600">
+
+      <span className="mb-1.5 block text-[11px] font-bold text-slate-600 sm:text-xs">
+
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+
+        {required && (
+          <span className="ml-1 text-red-500">
+            *
+          </span>
+        )}
+
       </span>
+
       {children}
+
     </label>
   );
 }
 
 // ============================================================
-// Doctor Card Component - Each with different gradient
+// DOCTOR CARD
 // ============================================================
-function DoctorRow({ doctor, gradient }: { doctor: ClinicDoctor; gradient: string }) {
-  const tDoc = useTranslations("ClinicDoctors");
-  const editDoctor = useEditDoctor();
-  const [editing, setEditing] = useState(false);
+
+function DoctorRow({
+  doctor,
+}: {
+  doctor: ClinicDoctor;
+}) {
+  const tDoc =
+    useTranslations("ClinicDoctors");
+
+  const editDoctor =
+    useEditDoctor();
+
+  const [editing, setEditing] =
+    useState(false);
+
   const [form, setForm] = useState({
-    specialization: doctor.specialization ?? "",
-    qualification: doctor.qualification ?? "",
-    experience: doctor.experience?.toString() ?? "",
-    fee: doctor.fee?.toString() ?? "",
-    startTime: doctor.startTime ?? "",
+    specialization:
+      doctor.specialization ?? "",
+    qualification:
+      doctor.qualification ?? "",
+    experience:
+      doctor.experience?.toString() ?? "",
+    fee:
+      doctor.fee?.toString() ?? "",
+    startTime:
+      doctor.startTime ?? "",
   });
 
-  function handleSave(e: React.FormEvent) {
+  // ==========================================================
+  // PHOTO
+  //
+  // Supports common possible backend fields.
+  // ==========================================================
+
+  const doctorData =
+    doctor as ClinicDoctor & {
+      image?: string | null;
+      photo?: string | null;
+      avatar?: string | null;
+      profileImage?: string | null;
+      profilePhoto?: string | null;
+
+      user?: ClinicDoctor["user"] & {
+        image?: string | null;
+        photo?: string | null;
+        avatar?: string | null;
+        profileImage?: string | null;
+        profilePhoto?: string | null;
+      };
+    };
+
+  const photo =
+    doctorData.user?.image ||
+    doctorData.user?.photo ||
+    doctorData.user?.avatar ||
+    doctorData.user?.profileImage ||
+    doctorData.user?.profilePhoto ||
+    doctorData.image ||
+    doctorData.photo ||
+    doctorData.avatar ||
+    doctorData.profileImage ||
+    doctorData.profilePhoto ||
+    null;
+
+  // ==========================================================
+  // NAME
+  // ==========================================================
+
+  const doctorName =
+    doctor.user.name || "Doctor";
+
+  // ==========================================================
+  // SAVE
+  // ==========================================================
+
+  function handleSave(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
+
     editDoctor.mutate(
       {
         doctorId: doctor.id,
-        specialization: form.specialization || undefined,
-        qualification: form.qualification || undefined,
-        experience: form.experience ? Number(form.experience) : undefined,
-        fee: form.fee ? Number(form.fee) : undefined,
-        startTime: form.startTime || undefined,
+
+        specialization:
+          form.specialization ||
+          undefined,
+
+        qualification:
+          form.qualification ||
+          undefined,
+
+        experience: form.experience
+          ? Number(form.experience)
+          : undefined,
+
+        fee: form.fee
+          ? Number(form.fee)
+          : undefined,
+
+        startTime:
+          form.startTime ||
+          undefined,
       },
       {
         onSuccess: () => {
@@ -491,225 +990,439 @@ function DoctorRow({ doctor, gradient }: { doctor: ClinicDoctor; gradient: strin
     );
   }
 
+  // ==========================================================
+  // CARD
+  // ==========================================================
+
   return (
-    <GradientCard gradient={gradient}>
-      <div className="p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1e40af] to-[#3b82f6] text-white shadow-lg shadow-blue-500/30">
-              <span className="text-sm font-bold">
-                {getInitials(doctor.user.name)}
-              </span>
-            </div>
+    <GradientCard>
 
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1">
-                <p className="truncate text-sm font-bold text-slate-900">
-                  {doctor.user.name}
-                </p>
+      <div className="p-3.5 sm:p-5">
 
-                {doctor.user.isActive ? (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-[#059669] to-[#10b981] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                    <CheckCircle2 className="h-2.5 w-2.5" />
-                    Active
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-gradient-to-r from-[#f5576c] to-[#fda085] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                    Inactive
-                  </span>
-                )}
+        {/* ====================================================
+            PROFILE
+            ==================================================== */}
+
+        <div className="flex min-w-0 items-start gap-3">
+
+          {/* ==================================================
+              DOCTOR PHOTO
+
+              object-cover:
+              fills the small frame
+
+              object-top:
+              preserves the top portion
+              so head/face doesn't disappear
+              ================================================== */}
+
+          <div className="relative h-[68px] w-[58px] shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 sm:h-[78px] sm:w-[66px] sm:rounded-2xl">
+
+            {photo ? (
+              <img
+                src={photo}
+                alt={doctorName}
+                loading="lazy"
+                className="h-full w-full object-cover object-top"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white">
+
+                <Camera className="mb-1 h-3.5 w-3.5 opacity-60" />
+
+                <span className="text-sm font-bold">
+                  {getInitials(
+                    doctorName
+                  )}
+                </span>
+
               </div>
+            )}
 
-              <div className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-slate-500">
-                <Mail className="h-3.5 w-3.5 shrink-0 text-[#1e40af]" />
-                <span className="truncate">{doctor.user.email}</span>
+            {/* Active check */}
+
+            {doctor.user.isActive && (
+              <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-md">
+
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+
               </div>
-            </div>
+            )}
+
           </div>
+
+          {/* ==================================================
+              DOCTOR DETAILS
+              ================================================== */}
+
+          <div className="min-w-0 flex-1">
+
+            <div className="flex min-w-0 items-start gap-1.5">
+
+              <p className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900 sm:text-base">
+                {formatDoctorName(
+                  doctorName
+                )}
+              </p>
+
+              {/* Desktop/tablet status */}
+
+              {doctor.user.isActive ? (
+                <span className="hidden shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700 min-[400px]:inline-flex">
+
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+                  Active
+
+                </span>
+              ) : (
+                <span className="hidden shrink-0 rounded-full bg-red-50 px-2 py-1 text-[9px] font-bold text-red-600 min-[400px]:inline-flex">
+                  Inactive
+                </span>
+              )}
+
+            </div>
+
+            <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+
+              <Mail className="h-3 w-3 shrink-0 text-[#3b4a8f]" />
+
+              <span className="truncate text-[10px] font-medium text-slate-500 sm:text-[11px]">
+                {doctor.user.email}
+              </span>
+
+            </div>
+
+            {/* Small mobile status */}
+
+            <div className="mt-1.5 min-[400px]:hidden">
+
+              {doctor.user.isActive ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[8px] font-bold text-emerald-700">
+
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+
+                  Active
+
+                </span>
+              ) : (
+                <span className="inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[8px] font-bold text-red-600">
+                  Inactive
+                </span>
+              )}
+
+            </div>
+
+          </div>
+
+          {/* ==================================================
+              EDIT
+              ================================================== */}
 
           <button
             type="button"
-            onClick={() => setEditing((value) => !value)}
-            className={
-              editing
-                ? "inline-flex shrink-0 items-center gap-1 rounded-lg border border-[#f5576c]/30 bg-white px-2.5 py-1.5 text-[10px] font-bold text-[#f5576c]"
-                : "inline-flex shrink-0 items-center gap-1 rounded-lg bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-2.5 py-1.5 text-[10px] font-bold text-white shadow-md shadow-blue-500/30"
+            onClick={() =>
+              setEditing(
+                (value) => !value
+              )
             }
+            aria-label={
+              editing
+                ? tDoc("close")
+                : tDoc("edit")
+            }
+            className={`
+              flex
+              h-8
+              w-8
+              shrink-0
+              items-center
+              justify-center
+              rounded-lg
+              transition-all
+              sm:h-9
+              sm:w-9
+              ${
+                editing
+                  ? "border border-red-200 bg-red-50 text-red-600"
+                  : "bg-[#252a67]/[0.06] text-[#252a67] hover:bg-[#252a67]/10"
+              }
+            `}
           >
+
             {editing ? (
-              <X className="h-3 w-3" />
+              <X className="h-3.5 w-3.5" />
             ) : (
-              <Pencil className="h-3 w-3" />
+              <Pencil className="h-3.5 w-3.5" />
             )}
-            {editing ? tDoc("close") : tDoc("edit")}
+
           </button>
+
         </div>
 
-        {/* Info Grid - 2 columns always */}
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        {/* ====================================================
+            QUICK INFO
+            ==================================================== */}
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+
           <InfoItem
             icon={BriefcaseMedical}
             label={tDoc("specialization")}
-            value={doctor.specialization || tDoc("notSet")}
+            value={
+              doctor.specialization ||
+              tDoc("notSet")
+            }
           />
+
           <InfoItem
             icon={GraduationCap}
             label={tDoc("qualification")}
-            value={doctor.qualification || tDoc("notSet")}
+            value={
+              doctor.qualification ||
+              tDoc("notSet")
+            }
           />
+
           <InfoItem
             icon={Clock3}
             label={tDoc("startTime")}
-            value={doctor.startTime || tDoc("notSet")}
+            value={
+              doctor.startTime ||
+              tDoc("notSet")
+            }
           />
+
           <InfoItem
             icon={IndianRupee}
             label={tDoc("fee")}
-            value={doctor.fee != null ? `₹${doctor.fee}` : tDoc("notSet")}
+            value={
+              doctor.fee != null
+                ? `₹${doctor.fee}`
+                : tDoc("notSet")
+            }
           />
+
         </div>
 
-        {/* Qualification Highlight - Deep */}
+        {/* ====================================================
+            EXPERIENCE
+            ==================================================== */}
+
+        {doctor.experience != null && (
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-emerald-50/70 px-3 py-2">
+
+            <Award className="h-4 w-4 shrink-0 text-emerald-600" />
+
+            <span className="text-[10px] font-bold text-emerald-700 sm:text-[11px]">
+              {doctor.experience}{" "}
+              {tDoc("yearsExperience")}
+            </span>
+
+          </div>
+        )}
+
+        {/* ====================================================
+            QUALIFICATION
+            ==================================================== */}
+
         {doctor.qualification && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-3 py-2.5 shadow-md shadow-blue-500/30">
-            <BookOpen className="h-4 w-4 text-white" />
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-3 py-2.5">
+
+            <BookOpen className="h-4 w-4 shrink-0 text-white" />
+
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-blue-200">
+
+              <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200">
                 {tDoc("qualification")}
               </p>
-              <p className="truncate text-xs font-bold text-white">
+
+              <p className="truncate text-[10px] font-bold text-white sm:text-xs">
                 {doctor.qualification}
               </p>
+
             </div>
+
           </div>
         )}
 
-        {/* Experience Banner */}
-        {doctor.experience != null && (
-          <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#059669]/5 to-[#10b981]/5 px-3 py-2 text-[11px] font-medium text-slate-600">
-            <Award className="h-4 w-4 text-[#059669]" />
-            {doctor.experience} {tDoc("yearsExperience")}
-          </div>
-        )}
-
-        {/* =================================================
+        {/* ====================================================
             EDIT FORM
-        ================================================== */}
+            ==================================================== */}
+
         {editing && (
           <form
             onSubmit={handleSave}
-            className="mt-4 border-t border-[#1e40af]/10 pt-4"
+            className="mt-4 border-t border-slate-100 pt-4"
           >
+
             <div className="mb-3">
-              <h3 className="text-sm font-bold text-slate-800">
+
+              <h3 className="text-xs font-bold text-slate-800 sm:text-sm">
                 {tDoc("editDoctorDetails")}
               </h3>
-              <p className="mt-0.5 text-[11px] text-slate-500">
+
+              <p className="mt-0.5 text-[10px] text-slate-500">
                 {tDoc("editDoctorSub")}
               </p>
+
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <div className="grid grid-cols-2 gap-2">
-                <Field label={tDoc("specialization")}>
+            <div className="space-y-3">
+
+              <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2">
+
+                <Field
+                  label={tDoc("specialization")}
+                >
                   <input
-                    value={form.specialization}
+                    value={
+                      form.specialization
+                    }
                     onChange={(e) =>
-                      setForm({ ...form, specialization: e.target.value })
+                      setForm({
+                        ...form,
+                        specialization:
+                          e.target.value,
+                      })
                     }
                     className={`${inputClasses} px-3 py-2 text-xs`}
                     placeholder="e.g. Cardiology"
                   />
                 </Field>
 
-                <Field label={tDoc("qualification")}>
+                <Field
+                  label={tDoc("qualification")}
+                >
                   <input
-                    value={form.qualification}
+                    value={
+                      form.qualification
+                    }
                     onChange={(e) =>
-                      setForm({ ...form, qualification: e.target.value })
+                      setForm({
+                        ...form,
+                        qualification:
+                          e.target.value,
+                      })
                     }
                     className={`${inputClasses} px-3 py-2 text-xs`}
                     placeholder="e.g. MBBS, MD"
                   />
                 </Field>
+
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <Field label={tDoc("experience")}>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={0}
-                      value={form.experience}
-                      onChange={(e) =>
-                        setForm({ ...form, experience: e.target.value })
-                      }
-                      className={`${inputClasses} px-3 py-2 pr-8 text-xs`}
-                      placeholder="Years"
-                    />
-                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-medium text-gray-400">
-                      {tDoc("years")}
-                    </span>
-                  </div>
+              <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2">
+
+                <Field
+                  label={tDoc("experience")}
+                >
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.experience}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        experience:
+                          e.target.value,
+                      })
+                    }
+                    className={`${inputClasses} px-3 py-2 text-xs`}
+                    placeholder="Years"
+                  />
                 </Field>
 
                 <Field label={tDoc("fee")}>
+
                   <div className="relative">
-                    <IndianRupee className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
+
+                    <IndianRupee className="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
+
                     <input
                       type="number"
                       min={0}
                       value={form.fee}
-                      onChange={(e) => setForm({ ...form, fee: e.target.value })}
-                      className={`${inputClasses} px-3 py-2 pl-6 text-xs`}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          fee: e.target.value,
+                        })
+                      }
+                      className={`${inputClasses} px-3 py-2 pl-7 text-xs`}
                       placeholder="Fee"
                     />
+
                   </div>
+
                 </Field>
+
               </div>
 
-              <Field label={tDoc("startTime")}>
+              <Field
+                label={tDoc("startTime")}
+              >
                 <input
                   type="time"
                   value={form.startTime}
                   onChange={(e) =>
-                    setForm({ ...form, startTime: e.target.value })
+                    setForm({
+                      ...form,
+                      startTime:
+                        e.target.value,
+                    })
                   }
                   className={`${inputClasses} px-3 py-2 text-xs`}
                 />
               </Field>
+
             </div>
 
             <div className="mt-3 flex gap-2">
+
               <button
                 type="submit"
-                disabled={editDoctor.isPending}
-                className="inline-flex items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-3 py-2 text-xs font-bold text-white shadow-md shadow-blue-500/30 transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={
+                  editDoctor.isPending
+                }
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-3 py-2.5 text-[10px] font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 sm:flex-none sm:text-xs"
               >
+
                 {editDoctor.isPending && (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 )}
-                {editDoctor.isPending ? tDoc("saving") : tDoc("saveChanges")}
+
+                {editDoctor.isPending
+                  ? tDoc("saving")
+                  : tDoc("saveChanges")}
+
               </button>
 
               <button
                 type="button"
-                onClick={() => setEditing(false)}
-                className="rounded-lg border border-[#1e40af]/30 bg-white px-3 py-2 text-xs font-semibold text-[#1e40af] transition hover:bg-[#1e40af]/5"
+                onClick={() =>
+                  setEditing(false)
+                }
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[10px] font-bold text-slate-600 transition hover:bg-slate-50 sm:flex-none sm:text-xs"
               >
                 {tDoc("cancel")}
               </button>
+
             </div>
+
           </form>
         )}
+
       </div>
+
     </GradientCard>
   );
 }
 
 // ============================================================
-// Info Item Component
+// INFO ITEM
 // ============================================================
+
 function InfoItem({
   icon: Icon,
   label,
@@ -720,26 +1433,56 @@ function InfoItem({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-2.5 transition-colors hover:border-[#1e40af]/20 hover:bg-[#1e40af]/5">
-      <div className="flex items-center gap-1">
-        <Icon className="h-3 w-3 text-[#1e40af]" />
-        <span className="truncate text-[9px] font-bold uppercase tracking-wider text-slate-500">
+    <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition hover:border-[#252a67]/15">
+
+      <div className="flex min-w-0 items-center gap-1.5">
+
+        <Icon className="h-3 w-3 shrink-0 text-[#252a67]" />
+
+        <span className="truncate text-[8px] font-bold uppercase tracking-wide text-slate-400">
           {label}
         </span>
+
       </div>
-      <p className="mt-1 truncate text-[11px] font-bold text-slate-800">{value}</p>
+
+      <p className="mt-1 truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">
+        {value}
+      </p>
+
     </div>
   );
 }
 
 // ============================================================
-// Utility Component
+// DOCTOR NAME
 // ============================================================
-function getInitials(name: string) {
+
+function formatDoctorName(
+  name: string
+) {
+  const cleanName = name
+    .trim()
+    .replace(/^(dr\.?\s*)+/i, "")
+    .trim();
+
+  return cleanName
+    ? `Dr. ${cleanName}`
+    : "Dr. Doctor";
+}
+
+// ============================================================
+// INITIALS
+// ============================================================
+
+function getInitials(
+  name: string
+) {
   return name
     .split(" ")
     .filter(Boolean)
-    .map((part) => part.charAt(0))
+    .map((part) =>
+      part.charAt(0)
+    )
     .slice(0, 2)
     .join("")
     .toUpperCase();
