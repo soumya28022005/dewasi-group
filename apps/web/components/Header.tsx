@@ -114,7 +114,7 @@ export default function Header() {
 
           {/* Available Clinics */}
           <Link
-            href="/clinics"
+            href="/clinics/available"
             className="rounded-full border border-[var(--color-primary)]/25 px-4 py-2 text-sm font-semibold text-[var(--color-primary-text)] transition hover:bg-[var(--color-primary)]/5"
           >
             {nav("availableClinics")}

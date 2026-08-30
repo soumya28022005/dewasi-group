@@ -79,7 +79,8 @@ export function usePublicAvailableDoctors() {
   return useQuery<Doctor[]>({
     queryKey: ["public", "doctors", "available"],
     queryFn: async () => {
-      const res = await api.get("/doctors/available");
+      // Changed from /doctors/available to /doctors?available=true
+      const res = await api.get("/doctors?available=true"); 
       return unwrapDoctors(res);
     },
     staleTime: 30_000,
