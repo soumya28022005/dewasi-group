@@ -454,42 +454,46 @@ export default function ClinicDashboardPage() {
 
         {/* CARD 2: ACTIVE DOCTORS - Indigo Gradient */}
         <GradientCard gradient="from-[#4f46e5] via-[#6366f1] to-[#818cf8]">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                {tDash("activeDoctors")}
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                <Stethoscope className="h-4 w-4" />
+          <Link href="/clinic/add-patient" className="block h-full transition-transform hover:scale-[1.02]">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {tDash("activeDoctors")}
+                </span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <Stethoscope className="h-4 w-4" />
+                </div>
               </div>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {doctors?.length ?? 0}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                {doctors?.filter((d) => d.user.isActive).length ?? 0} active & available
+              </p>
             </div>
-            <p className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {doctors?.length ?? 0}
-            </p>
-            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-              {doctors?.filter((d) => d.user.isActive).length ?? 0} active & available
-            </p>
-          </div>
+          </Link>
         </GradientCard>
 
         {/* CARD 3: RECEPTION STAFF - Purple Gradient */}
         <GradientCard gradient="from-[#7c3aed] via-[#8b5cf6] to-[#a78bfa]">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                {tDash("receptionStaff")}
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                <Users className="h-4 w-4" />
+          <Link href="/clinic/receptionists" className="block h-full transition-transform hover:scale-[1.02]">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {tDash("receptionStaff")}
+                </span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <Users className="h-4 w-4" />
+                </div>
               </div>
+              <p className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {receptionists?.length ?? 0}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                {receptionists?.filter((r) => r.user.isActive).length ?? 0} front desk
+              </p>
             </div>
-            <p className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {receptionists?.length ?? 0}
-            </p>
-            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-              {receptionists?.filter((r) => r.user.isActive).length ?? 0} front desk
-            </p>
-          </div>
+          </Link>
         </GradientCard>
 
         {/* CARD 4: TOTAL PATIENTS - Emerald Gradient */}
