@@ -14,7 +14,7 @@ import GlobalAnnouncement from "@/components/GlobalAnnouncement";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MedConnect | Medical Ecosystem",
+  title: "Doctcontact",
   description: "Doctor Appointment & Clinic Management System",
 };
 
@@ -42,7 +42,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="h-full antialiased" suppressHydrationWarning>
+    <html lang={locale} className="h-full antialiased" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

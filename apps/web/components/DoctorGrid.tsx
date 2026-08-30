@@ -2,32 +2,15 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  MapPin,
-  Calendar,
-  Star,
-  Heart,
-  Clock,
-  BadgeCheck,
-  Stethoscope,
-  Award,
-  Loader2,
-  CalendarCheck,
-} from "lucide-react";
-
-import type { Doctor } from "@doctor-contract/shared";
+import { Calendar, Star, Heart, Clock, BadgeCheck, Stethoscope, Award, Loader2, CalendarCheck, Building2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, Link } from "@/i18n/routing";
 import { useDoctorSearch, useBookAppointment } from "@/lib/hooks/useDoctorSearch";
+import { ExtendedDoctor } from "@/types/doctor";
+import DoctorClinicInfo from "@/components/DoctorClinicInfo";
 
 function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  return name.split(" ").filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 }
 
 function GradientBorderCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -42,7 +25,6 @@ function GradientBorderCard({ children, className }: { children: React.ReactNode
 
 function ExperienceBadge({ years }: { years: number }) {
   if (!years || years <= 0) return null;
-
   return (
     <div className="absolute bottom-1.5 left-1.5 z-10">
       <div className="flex items-center gap-1 rounded-full border border-white/80 bg-[#252a67]/95 px-2 py-0.5 shadow-sm backdrop-blur-sm">
@@ -57,7 +39,8 @@ function ExperienceBadge({ years }: { years: number }) {
 
 export default function DoctorGrid({ query, city }: { query: string; city?: string }) {
   const t = useTranslations("DoctorSearch");
-  const { data: doctors, isLoading } = useDoctorSearch(query, city);
+  const { data, isLoading } = useDoctorSearch(query, city);
+  const doctors = (data as ExtendedDoctor[]) ?? [];
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
@@ -69,9 +52,7 @@ export default function DoctorGrid({ query, city }: { query: string; city?: stri
               <Stethoscope className="h-4 w-4 text-[#2563EB]" />
             </div>
           </div>
-          <p className="mt-3 text-sm font-semibold text-slate-500">
-            {t("loading") || "Finding the best doctors..."}
-          </p>
+          <p className="mt-3 text-sm font-semibold text-slate-500">{t("loading") || "Finding the best doctors..."}</p>
         </div>
       )}
 
@@ -92,7 +73,7 @@ export default function DoctorGrid({ query, city }: { query: string; city?: stri
   );
 }
 
-function DoctorCard({ doctor }: { doctor: Doctor }) {
+function DoctorCard({ doctor }: { doctor: ExtendedDoctor }) {
   const t = useTranslations("DoctorSearch");
   const { user } = useAuth();
   const router = useRouter();
@@ -100,6 +81,11 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
   const [showBooking, setShowBooking] = useState(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  
+  // ================= Clinic Selection State =================
+  const defaultClinicId = doctor.allClinics?.[0]?.id || (doctor as any).clinicId;
+  const [selectedClinicId, setSelectedClinicId] = useState(defaultClinicId);
+  
   const [isFavorite, setIsFavorite] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -128,8 +114,10 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
       setMessage({ type: "error", text: t("pastDateError") || "Please select a future date and time" });
       return;
     }
+    
+    // Using selectedClinicId
     bookMutation.mutate(
-      { doctorId: doctor.id, clinicId: doctor.clinicId, date: dateTime.toISOString() },
+      { doctorId: doctor.id, clinicId: selectedClinicId, date: dateTime.toISOString() },
       {
         onSuccess: (appointment) => {
           setMessage({ type: "success", text: `${t("bookSuccess")} #${appointment.token}` });
@@ -145,23 +133,17 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
     );
   }
 
-  function handleFavoriteToggle() {
-    setIsFavorite(!isFavorite);
-  }
-
   const experienceYears = doctor.experience ?? 0;
-  const rating = (doctor as any).rating ?? 4.5;
-  const reviews = (doctor as any).reviewCount ?? 120;
-  const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
+  const rating = doctor.rating ?? 4.5;
+  const reviews = doctor.reviewCount ?? 120;
   const isAvailable = doctor.isAvailable;
-  const avatarSrc = (doctor as any).profilePhoto || (doctor as any).user?.avatar;
+  const avatarSrc = (doctor as any).profilePhoto || doctor.user?.avatar;
 
   return (
     <GradientBorderCard className="h-full">
       <div className="flex h-full flex-col p-4 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-10 -right-10 h-20 w-20 rounded-full bg-gradient-to-br from-[#2563EB]/5 to-[#0F766E]/10 blur-2xl" />
 
-        {/* ================= PHOTO - COMPACT ================= */}
         <div className="relative mx-auto w-full max-w-[150px] sm:max-w-[150px] aspect-[3/4] overflow-hidden rounded-xl border-2 border-[#252a67]">
           {avatarSrc ? (
             <img src={avatarSrc} alt={doctor.user.name} className="h-full w-full object-cover" />
@@ -170,21 +152,17 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
               {initials(doctor.user.name)}
             </div>
           )}
-
           <ExperienceBadge years={experienceYears} />
-
           <BadgeCheck className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white text-[#2563EB] shadow-sm ring-1 ring-white dark:bg-slate-800 dark:ring-slate-700" />
-
           <button
             type="button"
-            onClick={handleFavoriteToggle}
+            onClick={() => setIsFavorite(!isFavorite)}
             className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-sm backdrop-blur-sm transition-all hover:scale-105 hover:text-red-500 active:scale-95"
           >
             <Heart className={`h-3.5 w-3.5 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-slate-400"}`} />
           </button>
         </div>
 
-        {/* ================= NAME & DETAILS - CENTERED ================= */}
         <div className="relative mt-3 flex flex-col items-center text-center">
           <h3 className="truncate text-base font-bold tracking-tight">
             <span className="bg-gradient-to-r from-[#422995] to-[#4a9860] bg-clip-text text-transparent">
@@ -216,25 +194,12 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
           </div>
         </div>
 
-        <div className="my-3 h-px bg-slate-100 dark:bg-slate-800" />
+        <div className="my-3 h-px w-full bg-slate-100 dark:bg-slate-800" />
 
-        {/* ================= LOCATION & FEE ================= */}
-        <div className="relative space-y-1.5">
-          {location && (
-            <div className="flex items-center justify-center gap-1 truncate text-xs text-slate-600 dark:text-slate-300">
-              <MapPin className="h-3 w-3 shrink-0 text-[#252a67]" />
-              <span className="truncate">{location}</span>
-            </div>
-          )}
-          {doctor.fee != null && (
-            <div className="flex items-center justify-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
-              <span className="text-[#252a67]">₹{doctor.fee}</span>
-              <span className="text-slate-400">{t("consultationFee") || "consultation fee"}</span>
-            </div>
-          )}
+        <div className="relative w-full">
+           <DoctorClinicInfo doctor={doctor} />
         </div>
 
-        {/* ================= STATUS - simplified ================= */}
         <div className="relative mt-3 flex items-center justify-center gap-1.5 text-xs font-medium">
           {isAvailable ? (
             <>
@@ -254,7 +219,6 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
           )}
         </div>
 
-        {/* ================= ACTIONS ================= */}
         <div className="relative mt-4 grid grid-cols-2 gap-2">
           <Link
             href={`/doctors/${doctor.id}`}
@@ -281,6 +245,24 @@ function DoctorCard({ doctor }: { doctor: Doctor }) {
               </div>
 
               <div className="space-y-2">
+                {/* Clinic Selector Dropdown */}
+                {doctor.allClinics && doctor.allClinics.length > 0 && (
+                  <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 transition-all focus-within:border-[#252a67] focus-within:ring-2 focus-within:ring-[#252a67]/20 dark:border-slate-700 dark:bg-slate-900">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-[#252a67]" />
+                    <select
+                      value={selectedClinicId}
+                      onChange={(e) => setSelectedClinicId(e.target.value)}
+                      className="w-full bg-transparent text-xs font-medium text-slate-700 outline-none dark:text-slate-200 cursor-pointer appearance-none"
+                    >
+                      {doctor.allClinics.map((c) => (
+                        <option key={c.id} value={c.id} className="text-slate-800 dark:text-slate-200">
+                          {c.clinicName} {c.city ? `(${c.city})` : ""} - ₹{c.associationDetails?.fee || doctor.fee}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 transition-all focus-within:border-[#252a67] focus-within:ring-2 focus-within:ring-[#252a67]/20 dark:border-slate-700 dark:bg-slate-900">
                   <Calendar className="h-3.5 w-3.5 shrink-0 text-[#252a67]" />
                   <input
