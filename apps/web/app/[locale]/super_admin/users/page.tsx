@@ -662,22 +662,24 @@ export default function SuperAdminUsersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Phone Number (Optional)
-                </label>
-                <div className="relative mt-1">
-                  <Phone className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="tel"
-                    value={adminFormData.phone}
-                    onChange={(e) =>
-                      setAdminFormData({ ...adminFormData, phone: e.target.value })
-                    }
-                    placeholder="e.g. +91 9876543210"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-1.5 pl-8 pr-3 text-xs text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:focus:border-blue-500"
-                  />
-                </div>
-              </div>
+  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+    Phone Number <span className="text-red-500">*</span>
+  </label>
+  <div className="relative mt-1">
+    <Phone className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+    <input
+      type="tel"
+      required
+      minLength={10}
+      value={adminFormData.phone}
+      onChange={(e) =>
+        setAdminFormData({ ...adminFormData, phone: e.target.value })
+      }
+      placeholder="e.g. +91 9876543210"
+      className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-1.5 pl-8 pr-3 text-xs text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:focus:border-blue-500"
+    />
+  </div>
+</div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
