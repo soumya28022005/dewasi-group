@@ -11,9 +11,6 @@ import {
   Building2,
   CalendarOff,
   Sparkles,
-  TrendingUp,
-  Award,
-  Shield,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -25,6 +22,8 @@ import {
   type WorkingHour,
   type DayOfWeek,
 } from "@/lib/hooks/useClinic";
+
+import { PremiumTimeInput } from "@/components/PremiumTimeInput"; // Ensure this path is correct
 
 const DAYS: DayOfWeek[] = [
   "MONDAY",
@@ -40,18 +39,14 @@ function defaultHours(): WorkingHour[] {
   return DAYS.map((dayOfWeek) => ({
     dayOfWeek,
     isClosed: dayOfWeek === "SUNDAY",
-    openTime: "09:00",
-    closeTime: "18:00",
+    openTime: "10:00",
+    closeTime: "19:00",
   }));
 }
 
-function formatDay(day: DayOfWeek) {
-  return day.charAt(0) + day.slice(1).toLowerCase();
-}
-
-// Premium input styling
+// Premium input styling for other inputs (like Date/Text)
 const inputClasses =
-  "rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 outline-none transition-all placeholder:text-gray-400 hover:border-gray-300 focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary)]/15";
+  "rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 outline-none transition-all placeholder:text-gray-400 hover:border-gray-300 focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/15";
 
 // ============================================================
 // GRADIENT BORDER CARD COMPONENT
@@ -112,9 +107,29 @@ export default function ClinicSchedulePage() {
     );
   }
 
+  // Handle Toggle to insert default times when turning ON
+  function handleToggleDay(h: WorkingHour) {
+    const willBeOpen = h.isClosed; // Turning ON
+    updateDay(h.dayOfWeek, { 
+      isClosed: !h.isClosed,
+      openTime: willBeOpen && !h.openTime ? "10:00" : h.openTime,
+      closeTime: willBeOpen && !h.closeTime ? "19:00" : h.closeTime
+    });
+  }
+
   function handleSaveHours(e: React.FormEvent) {
     e.preventDefault();
-    setHours.mutate(hours, {
+    
+    // BACKEND PAYLOAD FORMATTING: 
+    // Closed din gulo te time null kore pathate hobe jate backend reject na kore
+    const payload = hours.map(h => ({
+      dayOfWeek: h.dayOfWeek,
+      isClosed: h.isClosed,
+      openTime: h.isClosed ? null : h.openTime,
+      closeTime: h.isClosed ? null : h.closeTime
+    }));
+
+    setHours.mutate(payload, {
       onSuccess: () => {
         setSaved(true);
         setTimeout(() => {
@@ -145,7 +160,7 @@ export default function ClinicSchedulePage() {
   return (
     <div className="space-y-6">
       {/* =====================================================
-          PAGE HEADER - Gradient Border
+          PAGE HEADER
       ====================================================== */}
       <GradientCard gradient="from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]">
         <div className="p-5">
@@ -176,7 +191,7 @@ export default function ClinicSchedulePage() {
       </GradientCard>
 
       {/* =====================================================
-          WORKING HOURS - Gradient Border
+          WORKING HOURS
       ====================================================== */}
       <GradientCard gradient="from-[#667eea] via-[#764ba2] to-[#f093fb]">
         <form onSubmit={handleSaveHours} className="p-5 sm:p-6">
@@ -214,7 +229,6 @@ export default function ClinicSchedulePage() {
                       : "border-slate-200 bg-white shadow-sm hover:border-[#667eea]/30 hover:shadow-md"
                   }`}
                 >
-                  {/* Left accent bar if open */}
                   {!h.isClosed && (
                     <div className="absolute bottom-0 left-0 top-0 w-1 bg-gradient-to-b from-[#667eea] to-[#764ba2]" />
                   )}
@@ -233,20 +247,10 @@ export default function ClinicSchedulePage() {
                       </div>
 
                       <div className="min-w-0">
-                        <p
-                          className={`text-sm font-bold ${
-                            h.isClosed
-                              ? "text-slate-500"
-                              : "text-slate-800"
-                          }`}
-                        >
+                        <p className={`text-sm font-bold ${h.isClosed ? "text-slate-500" : "text-slate-800"}`}>
                           {tDays(h.dayOfWeek)}
                         </p>
-                        <p
-                          className={`mt-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            h.isClosed ? "text-slate-400" : "text-[#059669]"
-                          }`}
-                        >
+                        <p className={`mt-0.5 text-[10px] font-bold uppercase tracking-wider ${h.isClosed ? "text-slate-400" : "text-[#059669]"}`}>
                           {h.isClosed ? tSched("closed") : tSched("open")}
                         </p>
                       </div>
@@ -259,9 +263,7 @@ export default function ClinicSchedulePage() {
                         type="button"
                         role="switch"
                         aria-checked={!h.isClosed}
-                        onClick={() =>
-                          updateDay(h.dayOfWeek, { isClosed: !h.isClosed })
-                        }
+                        onClick={() => handleToggleDay(h)}
                         className={`relative h-7 w-12 shrink-0 rounded-full p-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#667eea]/20 ${
                           !h.isClosed ? "bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6]" : "bg-slate-300"
                         }`}
@@ -273,31 +275,21 @@ export default function ClinicSchedulePage() {
                         />
                       </button>
 
-                      {/* Time Inputs */}
+                      {/* Premium Time Inputs */}
                       {!h.isClosed && (
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
-                          <input
-                            type="time"
-                            value={h.openTime ?? "09:00"}
-                            onChange={(e) =>
-                              updateDay(h.dayOfWeek, {
-                                openTime: e.target.value,
-                              })
-                            }
-                            className={`${inputClasses} w-[110px] border-none !bg-white !py-2 !px-3 shadow-sm`}
+                        <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-1">
+                          <PremiumTimeInput
+                            value={h.openTime ?? "10:00"}
+                            onChange={(e) => updateDay(h.dayOfWeek, { openTime: e.target.value })}
+                            disabled={h.isClosed}
                           />
                           <span className="text-xs font-bold text-slate-400">
                             {tSched("to")}
                           </span>
-                          <input
-                            type="time"
-                            value={h.closeTime ?? "18:00"}
-                            onChange={(e) =>
-                              updateDay(h.dayOfWeek, {
-                                closeTime: e.target.value,
-                              })
-                            }
-                            className={`${inputClasses} w-[110px] border-none !bg-white !py-2 !px-3 shadow-sm`}
+                          <PremiumTimeInput
+                            value={h.closeTime ?? "19:00"}
+                            onChange={(e) => updateDay(h.dayOfWeek, { closeTime: e.target.value })}
+                            disabled={h.isClosed}
                           />
                         </div>
                       )}
@@ -350,7 +342,6 @@ export default function ClinicSchedulePage() {
             </div>
           </div>
 
-          {/* Add Holiday */}
           <form
             onSubmit={handleAddHoliday}
             className="rounded-2xl border border-[#f5576c]/10 bg-gradient-to-r from-[#f5576c]/5 to-transparent p-4 sm:p-5"
@@ -418,15 +409,9 @@ export default function ClinicSchedulePage() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {holidays?.map((holiday) => {
                   const dateObj = new Date(holiday.date);
-                  const month = dateObj.toLocaleDateString("en-US", {
-                    month: "short",
-                  });
-                  const day = dateObj.toLocaleDateString("en-US", {
-                    day: "2-digit",
-                  });
-                  const year = dateObj.toLocaleDateString("en-US", {
-                    year: "numeric",
-                  });
+                  const month = dateObj.toLocaleDateString("en-US", { month: "short" });
+                  const day = dateObj.toLocaleDateString("en-US", { day: "2-digit" });
+                  const year = dateObj.toLocaleDateString("en-US", { year: "numeric" });
 
                   return (
                     <div
@@ -434,23 +419,14 @@ export default function ClinicSchedulePage() {
                       className="group flex items-center justify-between gap-3 overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm transition hover:border-[#f5576c]/30 hover:shadow-md"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        {/* Mini Calendar Badge */}
                         <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-[#f5576c] to-[#fda085] text-white shadow-md shadow-pink-500/30">
-                          <span className="text-[10px] font-bold uppercase leading-none">
-                            {month}
-                          </span>
-                          <span className="mt-0.5 text-lg font-black leading-none tracking-tight">
-                            {day}
-                          </span>
+                          <span className="text-[10px] font-bold uppercase leading-none">{month}</span>
+                          <span className="mt-0.5 text-lg font-black leading-none tracking-tight">{day}</span>
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-800">
-                            {holiday.reason || tSched("defaultReason")}
-                          </p>
-                          <p className="mt-0.5 text-xs font-semibold text-slate-400">
-                            {year}
-                          </p>
+                          <p className="text-sm font-bold text-slate-800">{holiday.reason || tSched("defaultReason")}</p>
+                          <p className="mt-0.5 text-xs font-semibold text-slate-400">{year}</p>
                         </div>
                       </div>
 
@@ -461,11 +437,7 @@ export default function ClinicSchedulePage() {
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 opacity-0 transition-all hover:border-[#f5576c]/30 hover:bg-[#f5576c]/5 hover:text-[#f5576c] group-hover:opacity-100 disabled:opacity-50"
                         aria-label="Remove holiday"
                       >
-                        {removeHoliday.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
+                        {removeHoliday.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </button>
                     </div>
                   );

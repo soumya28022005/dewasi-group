@@ -288,7 +288,7 @@ export default function Header() {
 
                 {/* ================= AVAILABLE CLINICS ================= */}
                 <Link
-                  href="/clinics"
+                  href="/clinics/available"
                   onClick={() => setOpen(false)}
                   className="block rounded-lg border border-[var(--color-primary)]/25 px-4 py-3 text-center text-sm font-semibold text-[var(--color-primary-text)] transition hover:bg-[var(--color-primary)]/5"
                 >
