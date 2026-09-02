@@ -434,6 +434,7 @@ export default function ClinicDashboardPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {/* CARD 1: TODAY'S APPOINTMENTS - Blue Gradient */}
         <GradientCard gradient="from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]">
+           <Link href="/clinic/reports" className="block h-full transition-transform hover:scale-[1.02]">
           <div className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -450,6 +451,7 @@ export default function ClinicDashboardPage() {
               {statusBreakdown["WAITING"] ?? 0} waiting in queue
             </p>
           </div>
+          </Link>
         </GradientCard>
 
         {/* CARD 2: ACTIVE DOCTORS - Indigo Gradient */}
