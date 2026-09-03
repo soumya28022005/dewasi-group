@@ -2,19 +2,12 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation"; // NEW: To read URL params
 import { MapPin, Loader2, Pencil, X, Navigation, CheckCircle2, Building2, Sparkles, Search } from "lucide-react";
 import DoctorGrid from "@/components/DoctorGrid";
 import { useLocationCity } from "@/lib/hooks/useLocationCity";
 
-function GradientCard({
-  children,
-  className = "",
-  gradient = "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  gradient?: string;
-}) {
+function GradientCard({ children, className = "", gradient = "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]" }: { children: React.ReactNode; className?: string; gradient?: string; }) {
   return (
     <div className={`relative rounded-[20px] p-[3px] bg-gradient-to-r ${gradient} shadow-[0_4px_15px_-6px_rgba(37,42,103,0.3)] transition-all duration-300 ${className}`}>
       <div className="rounded-[calc(20px-3px)] bg-white dark:bg-slate-900 h-full">
@@ -27,8 +20,12 @@ function GradientCard({
 export default function DoctorsPage() {
   const t = useTranslations("DoctorSearch");
   const { city, status, setManualCity } = useLocationCity();
+  
+  // NEW: Read liveNow from the URL
+  const searchParams = useSearchParams();
+  const isLiveNow = searchParams.get("liveNow") === "true";
 
-  const [query, setQuery] = useState(""); // Search Query State
+  const [query, setQuery] = useState(""); 
   const [editingLocation, setEditingLocation] = useState(false);
   const [manualInput, setManualInput] = useState("");
 
@@ -53,12 +50,10 @@ export default function DoctorsPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      
       {/* ================= COMPACT HEADER ================= */}
       <GradientCard>
         <div className="relative overflow-hidden p-5 sm:p-6">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gradient-to-br from-[#252a67]/[0.06] to-[#14B8A6]/[0.06] blur-3xl" />
-
           <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -69,22 +64,12 @@ export default function DoctorsPage() {
                   {t("findDoctors") || "Find Doctors"}
                 </p>
               </div>
-
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                {t("heading") || "All Doctors"}
+                {isLiveNow ? "Live Doctors" : (t("heading") || "All Doctors")}
               </h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {t("subheading") || "Search for trusted doctors near you"}
+                {isLiveNow ? "Doctors actively seeing patients right now" : (t("subheading") || "Search for trusted doctors near you")}
               </p>
-            </div>
-
-            <div className="hidden shrink-0 sm:block">
-              <div className="flex items-center gap-2 rounded-full bg-slate-50 dark:bg-slate-800 px-3 py-1.5 border border-slate-100 dark:border-slate-700">
-                <Sparkles className="h-3.5 w-3.5 text-[#14B8A6]" />
-                <span className="text-xs font-semibold text-[#252a67] dark:text-blue-300">
-                  {t("trustedNetwork") || "Trusted Healthcare Network"}
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -130,13 +115,7 @@ export default function DoctorsPage() {
 
                 {editingLocation && (
                   <form onSubmit={applyManualLocation} className="flex items-center gap-2 w-full">
-                    <input
-                      autoFocus
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
-                      placeholder={t("locationInputPlaceholder") || "Enter city..."}
-                      className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#14B8A6]"
-                    />
+                    <input autoFocus value={manualInput} onChange={(e) => setManualInput(e.target.value)} placeholder={t("locationInputPlaceholder") || "Enter city..."} className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#14B8A6]" />
                     <button type="submit" className="rounded-lg bg-[#252a67] px-3 py-1.5 text-xs text-white">Apply</button>
                     <button type="button" onClick={cancelEditing} className="text-xs text-slate-500">Cancel</button>
                   </form>
@@ -155,27 +134,18 @@ export default function DoctorsPage() {
                       </button>
                     </>
                   ) : (
-                    <button onClick={() => setEditingLocation(true)} className="px-3 py-1.5 bg-[#252a67] text-white text-xs rounded-lg">
-                      Change
-                    </button>
+                    <button onClick={() => setEditingLocation(true)} className="px-3 py-1.5 bg-[#252a67] text-white text-xs rounded-lg">Change</button>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Divider for Desktop */}
             <div className="hidden md:block w-px h-10 bg-slate-200 dark:bg-slate-700" />
 
             {/* Name Search Section */}
             <div className="flex-1 w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-[#14B8A6] focus-within:bg-white dark:bg-slate-800 dark:border-slate-700">
               <Search className="h-4 w-4 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by doctor or clinic name..."
-                className="w-full bg-transparent text-sm outline-none text-slate-800 dark:text-slate-200"
-              />
+              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by doctor or clinic name..." className="w-full bg-transparent text-sm outline-none text-slate-800 dark:text-slate-200" />
               {query && (
                 <button onClick={() => setQuery("")} className="text-slate-400 hover:text-slate-600">
                   <X className="h-3.5 w-3.5" />
@@ -189,7 +159,8 @@ export default function DoctorsPage() {
 
       {/* ================= DOCTOR GRID ================= */}
       <div className="mt-8">
-        <DoctorGrid query={query} city={city ?? undefined} />
+        {/* NEW: Passing liveNow down to the Grid */}
+        <DoctorGrid query={query} city={city ?? undefined} liveNow={isLiveNow} />
       </div>
     </main>
   );

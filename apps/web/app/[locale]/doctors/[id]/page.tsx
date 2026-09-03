@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Star, Award, Stethoscope, BadgeCheck, Clock, Calendar, CalendarCheck, Loader2, Building2, MapPin } from "lucide-react";
+import { Star, Award, Stethoscope, BadgeCheck, Clock, Calendar, CalendarCheck, Loader2, Building2, MapPin, Activity } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "@/i18n/routing";
 import { ExtendedDoctor } from "@/types/doctor";
 import { useBookAppointment } from "@/lib/hooks/useDoctorSearch"; 
+import { api } from "@/lib/api"; // NEW: Using Axios instance for authenticated requests
 
 function initials(name: string) {
   return name.split(" ").filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
@@ -39,24 +40,25 @@ export default function DoctorProfilePage() {
   // Booking States
   const [showBooking, setShowBooking] = useState(false);
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [selectedClinicId, setSelectedClinicId] = useState("");
+  
+  // NEW: Schedule States (Replacing freeform Time)
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [isFetchingSchedules, setIsFetchingSchedules] = useState(false);
+
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const bookMutation = useBookAppointment();
 
+  // 1. Fetch Doctor Profile
   useEffect(() => {
     async function fetchDoctor() {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-        const res = await fetch(`${API_URL}/doctors/${doctorId}`);
-        
-        if (!res.ok) throw new Error("Failed to fetch");
-        
-        const json = await res.json();
-        if (json.success && json.data) {
-          setDoctor(json.data);
-          setSelectedClinicId(json.data.allClinics?.[0]?.id || json.data.clinicId);
+        const res = await api.get(`/doctors/${doctorId}`);
+        if (res.data?.success && res.data?.data) {
+          setDoctor(res.data.data);
+          setSelectedClinicId(res.data.data.allClinics?.[0]?.id || res.data.data.clinicId);
         } else {
           setError(true);
         }
@@ -66,9 +68,34 @@ export default function DoctorProfilePage() {
         setIsLoading(false);
       }
     }
-    
     if (doctorId) fetchDoctor();
   }, [doctorId]);
+
+  // 2. NEW: Fetch Schedules when Clinic changes and Booking is open
+  useEffect(() => {
+    async function fetchClinicSchedules() {
+      if (!showBooking || !selectedClinicId || !doctorId) return;
+      
+      setIsFetchingSchedules(true);
+      try {
+        const res = await api.get(`/doctors/${doctorId}/clinics/${selectedClinicId}/schedules`);
+        if (res.data?.success) {
+          const activeSchedules = res.data.data.schedules.filter((s: any) => s.isActive);
+          setSchedules(activeSchedules);
+          if (activeSchedules.length > 0) {
+            setSelectedScheduleId(activeSchedules[0].id);
+          } else {
+            setSelectedScheduleId("");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch schedules", err);
+      } finally {
+        setIsFetchingSchedules(false);
+      }
+    }
+    fetchClinicSchedules();
+  }, [showBooking, selectedClinicId, doctorId]);
 
   function handleBookClick() {
     if (!user) {
@@ -78,29 +105,39 @@ export default function DoctorProfilePage() {
     setMessage(null);
     setShowBooking((v) => !v);
     if (!showBooking) {
-      setDate("");
-      setTime("");
+      setDate(new Date().toISOString().split("T")[0]); // Default to today
     }
   }
 
   function handleConfirmBooking() {
-    if (!date || !time) {
-      setMessage({ type: "error", text: t("pleaseSelectDateTime") || "Please select date and time" });
+    if (!date || !selectedScheduleId) {
+      setMessage({ type: "error", text: t("pleaseSelectDateTime") || "Please select a date and session" });
       return;
     }
-    const dateTime = new Date(`${date}T${time}`);
-    if (dateTime < new Date()) {
-      setMessage({ type: "error", text: t("pastDateError") || "Please select a future date and time" });
+
+    const selectedSchedule = schedules.find(s => s.id === selectedScheduleId);
+    if (!selectedSchedule) return;
+
+    // Combine the selected date with the schedule's exact start time for the backend YYYY-MM-DDTHH:mm:ss format
+    const dateTime = new Date(`${date}T${selectedSchedule.startTime}`);
+    
+    // Allow booking for today even if the start time has slightly passed (Live Queue logic)
+    const today = new Date().toISOString().split("T")[0];
+    if (date < today) {
+      setMessage({ type: "error", text: t("pastDateError") || "Please select a future date" });
       return;
     }
     
     bookMutation.mutate(
-      { doctorId: doctor!.id, clinicId: selectedClinicId, date: dateTime.toISOString() },
+      { 
+        doctorId: doctor!.id, 
+        clinicId: selectedClinicId, 
+        date: dateTime.toISOString(),
+        scheduleId: selectedScheduleId // NEW: Injecting the required Schedule ID
+      },
       {
         onSuccess: (appointment) => {
-          setMessage({ type: "success", text: `${t("bookSuccess")} #${appointment.token}` });
-          setDate("");
-          setTime("");
+          setMessage({ type: "success", text: `${t("bookSuccess")} #${appointment.token || appointment.id}` });
           setTimeout(() => {
             setShowBooking(false);
             setMessage(null);
@@ -146,7 +183,6 @@ export default function DoctorProfilePage() {
         <div className="p-5 sm:p-6 lg:p-8">
           
           <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-            
             {/* Left: Compact Avatar */}
             <div className="relative w-32 h-40 shrink-0 rounded-xl border-2 border-slate-100 shadow-md bg-slate-50 overflow-hidden dark:border-slate-800 dark:bg-slate-800">
               {avatarSrc ? (
@@ -172,20 +208,13 @@ export default function DoctorProfilePage() {
                   {doctor.user.name}
                 </span>
               </h1>
-              
-              {doctor.qualification && (
-                <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                  {doctor.qualification}
-                </p>
-              )}
-              
+              {doctor.qualification && <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">{doctor.qualification}</p>}
               {doctor.specialization && (
                 <p className="mt-1 flex items-center justify-center sm:justify-start gap-1 text-sm text-[#0F766E] font-medium">
                   <Stethoscope className="h-3.5 w-3.5" />
                   {doctor.specialization}
                 </p>
               )}
-
               <div className="mt-3 flex items-center justify-center sm:justify-start gap-1">
                 <div className="flex items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -204,27 +233,15 @@ export default function DoctorProfilePage() {
               <Building2 className="h-4 w-4 text-[#14B8A6]" />
               Available at
             </h3>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {doctor.allClinics?.map((c) => (
                 <div key={c.id} className="flex flex-col justify-between border-l-4 border-l-[#14B8A6] bg-slate-50 dark:bg-slate-800/50 rounded-r-xl p-3 shadow-sm">
                   <div className="flex justify-between items-start gap-2">
-                    <h4 className="font-bold text-sm text-[#252a67] dark:text-blue-300 leading-tight">
-                      {c.clinicName}
-                    </h4>
-                    {c.isPrimary && (
-                      <span className="shrink-0 bg-blue-100 text-blue-700 text-[9px] px-1.5 py-0.5 rounded font-bold dark:bg-blue-900/40 dark:text-blue-400">
-                        Primary
-                      </span>
-                    )}
+                    <h4 className="font-bold text-sm text-[#252a67] dark:text-blue-300 leading-tight">{c.clinicName}</h4>
+                    {c.isPrimary && <span className="shrink-0 bg-blue-100 text-blue-700 text-[9px] px-1.5 py-0.5 rounded font-bold dark:bg-blue-900/40 dark:text-blue-400">Primary</span>}
                   </div>
-                  <p className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <MapPin className="h-3 w-3" />
-                    {c.city || 'Location not specified'}
-                  </p>
-                  <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                    Fee: <span className="text-[#0F766E]">₹{c.associationDetails?.fee || doctor.fee}</span>
-                  </p>
+                  <p className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400"><MapPin className="h-3 w-3" />{c.city || 'Location not specified'}</p>
+                  <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-200">Fee: <span className="text-[#0F766E]">₹{c.associationDetails?.fee || doctor.fee}</span></p>
                 </div>
               ))}
             </div>
@@ -233,10 +250,7 @@ export default function DoctorProfilePage() {
           {/* Booking Section */}
           <div className="mt-6 bg-slate-50 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
             {!showBooking ? (
-              <button
-                onClick={handleBookClick}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#14B8A6] px-6 py-3 text-sm font-bold text-white shadow-md transition-transform hover:-translate-y-0.5"
-              >
+              <button onClick={handleBookClick} className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#14B8A6] px-6 py-3 text-sm font-bold text-white shadow-md transition-transform hover:-translate-y-0.5">
                 <Calendar className="h-4 w-4" />
                 {t("bookButton") || "Book Appointment"}
               </button>
@@ -253,15 +267,9 @@ export default function DoctorProfilePage() {
                     <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Clinic</label>
                     <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 focus-within:border-[#14B8A6]">
                       <Building2 className="h-3.5 w-3.5 text-[#14B8A6]" />
-                      <select
-                        value={selectedClinicId}
-                        onChange={(e) => setSelectedClinicId(e.target.value)}
-                        className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none cursor-pointer"
-                      >
+                      <select value={selectedClinicId} onChange={(e) => setSelectedClinicId(e.target.value)} className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none cursor-pointer">
                         {doctor.allClinics?.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.clinicName} (₹{c.associationDetails?.fee || doctor.fee})
-                          </option>
+                          <option key={c.id} value={c.id}>{c.clinicName} (₹{c.associationDetails?.fee || doctor.fee})</option>
                         ))}
                       </select>
                     </div>
@@ -272,34 +280,35 @@ export default function DoctorProfilePage() {
                     <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Date</label>
                     <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 focus-within:border-[#14B8A6]">
                       <Calendar className="h-3.5 w-3.5 text-[#14B8A6]" />
-                      <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => { setDate(e.target.value); setMessage(null); }}
-                        min={new Date().toISOString().split("T")[0]}
-                        className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none"
-                      />
+                      <input type="date" value={date} onChange={(e) => { setDate(e.target.value); setMessage(null); }} min={new Date().toISOString().split("T")[0]} className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none" />
                     </div>
                   </div>
 
-                  {/* Time Selection */}
+                  {/* NEW: Session/Schedule Selection */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Time</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Session</label>
                     <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 focus-within:border-[#14B8A6]">
-                      <Clock className="h-3.5 w-3.5 text-[#14B8A6]" />
-                      <input
-                        type="time"
-                        value={time}
-                        onChange={(e) => { setTime(e.target.value); setMessage(null); }}
-                        className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none"
-                      />
+                      <Activity className="h-3.5 w-3.5 text-[#14B8A6]" />
+                      {isFetchingSchedules ? (
+                        <span className="text-xs text-slate-400">Loading...</span>
+                      ) : schedules.length > 0 ? (
+                        <select value={selectedScheduleId} onChange={(e) => { setSelectedScheduleId(e.target.value); setMessage(null); }} className="w-full bg-transparent text-xs font-semibold text-slate-700 outline-none cursor-pointer">
+                          {schedules.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.startTime} - {s.endTime} (Max: {s.maxPatients})
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-xs text-red-500 font-semibold">No Sessions Available</span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <button
                   onClick={handleConfirmBooking}
-                  disabled={bookMutation.isPending || !date || !time}
+                  disabled={bookMutation.isPending || !date || !selectedScheduleId}
                   className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-[#0F766E] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#14B8A6] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {bookMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />}

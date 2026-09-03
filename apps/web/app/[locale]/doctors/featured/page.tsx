@@ -79,7 +79,7 @@ function DoctorCard({ doctor }: { doctor: ExtendedDoctor }) {
     }
     
     bookMutation.mutate(
-      { doctorId: doctor.id, clinicId: selectedClinicId, date: dateTime.toISOString() },
+      { doctorId: doctor.id, clinicId: selectedClinicId, date: dateTime.toISOString(),  },
       {
         onSuccess: (appointment) => {
           setMessage({ type: "success", text: `${t("bookSuccess")} #${appointment.token}` });

@@ -15,7 +15,7 @@ export function useDoctorSearch(query: string, city?: string) {
   });
 }
 
-type BookPayload = { doctorId: string; clinicId: string; date: string };
+type BookPayload = { doctorId: string; clinicId: string; date: string; scheduleId?: string; };
 
 export function useBookAppointment() {
   const queryClient = useQueryClient();
