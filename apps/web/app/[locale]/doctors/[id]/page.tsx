@@ -7,7 +7,18 @@ import { useRouter } from "@/i18n/routing";
 import { ExtendedDoctor } from "@/types/doctor";
 import { useBookAppointment } from "@/lib/hooks/useDoctorSearch";
 import { api } from "@/lib/api";
-import { MapPin, Globe, AlertTriangle, Building2, Calendar, Clock, X, PhoneCall, Navigation, Loader2, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, AlertTriangle, Building2, Calendar, Clock, X, PhoneCall, Loader2, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+
+// ============================================================
+// WHATSAPP ICON (Official SVG)
+// ============================================================
+function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.482-1.46-1.656-1.758-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+    </svg>
+  );
+}
 
 export default function DoctorProfilePage() {
   const params = useParams();
@@ -137,13 +148,8 @@ export default function DoctorProfilePage() {
     setMessage(null);
   };
 
-  const handlePrevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-  };
+  const handlePrevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  const handleNextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
 
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#252a67]" /></div>;
   if (!doctor) return <div className="text-center py-20 text-red-500 font-bold">Doctor Not Found</div>;
@@ -230,7 +236,7 @@ export default function DoctorProfilePage() {
             <div className="space-y-4">
               {doctor.allClinics?.map((clinic) => (
                 <div key={clinic.id} className="flex flex-col sm:flex-row gap-4 border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow bg-slate-50/50">
-                  <div className="w-full sm:w-40 h-32 bg-white border border-slate-200 rounded-lg overflow-hidden shrink-0">
+                  <div className="w-full sm:w-32 h-32 bg-white border border-slate-200 rounded-lg overflow-hidden shrink-0">
                     {clinic.logo ? (
                       <img src={clinic.logo} alt={clinic.clinicName} className="w-full h-full object-contain p-2" />
                     ) : (
@@ -238,32 +244,49 @@ export default function DoctorProfilePage() {
                     )}
                   </div>
                   
-                  <div className="flex-1 flex flex-col justify-between">
+                  <div className="flex-1 flex flex-col justify-center">
                     <div>
                       <h3 className="font-bold text-lg text-slate-800">{clinic.clinicName}</h3>
                       <p className="text-xs text-slate-500 mt-1.5 flex items-start gap-1">
                         <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-500" />
                         {clinic.address ? `${clinic.address}, ` : ""}{clinic.city ? clinic.city : "Address not provided"}
                       </p>
-                      {clinic.phone && (
-                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                          <PhoneCall className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                          {clinic.phone}
-                        </p>
-                      )}
-                      <p className="text-xs font-bold text-slate-700 mt-3">Consultation Fee: ₹{clinic.associationDetails?.fee || doctor.fee}</p>
+                      <p className="text-sm font-bold text-slate-700 mt-3">Consultation Fee: ₹{clinic.associationDetails?.fee || doctor.fee}</p>
                     </div>
                   </div>
 
+                  {/* 🟢 CORRECTED: Booking & Contact Buttons Group */}
                   <div className="flex flex-col gap-2 w-full sm:w-48 shrink-0 justify-center">
-                    <button onClick={() => openBookingModal(clinic)} className="w-full py-2 bg-[#22c55e] hover:bg-[#16a34a] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+                    <button onClick={() => openBookingModal(clinic)} className="w-full py-2.5 bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md hover:shadow-lg">
                       <Calendar className="h-4 w-4" /> Book Appointment
                     </button>
-                    {clinic.phone && (
-                      <a href={`tel:${clinic.phone}`} className="w-full py-2 bg-[#1e293b] hover:bg-[#0f172a] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-                        <PhoneCall className="h-4 w-4" /> Call Clinic
-                      </a>
-                    )}
+                    
+                    {/* Proper Logos Row for Phone, WhatsApp & Maps */}
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                      {clinic.phone ? (
+                        <a href={`tel:${clinic.phone}`} className="flex items-center justify-center py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors border border-blue-100 shadow-sm" title="Call Clinic">
+                          <PhoneCall className="h-4 w-4" />
+                        </a>
+                      ) : (
+                        <div className="py-2 bg-slate-50 rounded-lg border border-slate-100 opacity-50" />
+                      )}
+
+                      {clinic.whatsapp ? (
+                        <a href={`https://wa.me/${clinic.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center py-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] rounded-lg transition-colors border border-[#25D366]/20 shadow-sm" title="WhatsApp">
+                          <WhatsAppIcon className="h-4 w-4" />
+                        </a>
+                      ) : (
+                        <div className="py-2 bg-slate-50 rounded-lg border border-slate-100 opacity-50" />
+                      )}
+
+                      {(clinic as any).googleMapsUrl ? (
+                        <a href={(clinic as any).googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center py-2 bg-[#EA4335]/10 hover:bg-[#EA4335]/20 text-[#EA4335] rounded-lg transition-colors border border-[#EA4335]/20 shadow-sm" title="Google Maps">
+                          <MapPin className="h-4 w-4" />
+                        </a>
+                      ) : (
+                        <div className="py-2 bg-slate-50 rounded-lg border border-slate-100 opacity-50" />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -272,7 +295,7 @@ export default function DoctorProfilePage() {
         </div>
       </div>
 
-      {/* Booking Modal Popup - with custom calendar */}
+      {/* Booking Modal Popup - Already Correct */}
       {isModalOpen && selectedClinic && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
@@ -292,7 +315,6 @@ export default function DoctorProfilePage() {
               <div className="mb-6">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Step 1: Choose Date</p>
                 <div className="bg-slate-50 rounded-xl border border-slate-100 p-4">
-                  {/* Calendar Header */}
                   <div className="flex items-center justify-between mb-4">
                     <button onClick={handlePrevMonth} className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 transition">
                       <ChevronLeft className="h-5 w-5" />
@@ -304,21 +326,15 @@ export default function DoctorProfilePage() {
                       <ChevronRight className="h-5 w-5" />
                     </button>
                   </div>
-
-                  {/* Weekday Headers */}
                   <div className="grid grid-cols-7 gap-1 mb-2">
                     {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
                       <div key={day} className="text-center text-[10px] font-bold text-slate-400">{day}</div>
                     ))}
                   </div>
-
-                  {/* Days Grid */}
                   <div className="grid grid-cols-7 gap-1">
-                    {/* Empty cells before first day */}
                     {Array.from({ length: getWeekdayOffset(currentMonth) }).map((_, index) => (
                       <div key={`empty-${index}`} />
                     ))}
-                    {/* Days */}
                     {getDaysInMonth(currentMonth).map((day) => {
                       const dayDate = day.getDate();
                       const isDisabled = isDateDisabled(day);

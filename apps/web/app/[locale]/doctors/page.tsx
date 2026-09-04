@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation"; // NEW: To read URL params
-import { MapPin, Loader2, Pencil, X, Navigation, CheckCircle2, Building2, Sparkles, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { MapPin, Loader2, Pencil, X, Navigation, CheckCircle2, Building2, Search } from "lucide-react";
 import DoctorGrid from "@/components/DoctorGrid";
 import { useLocationCity } from "@/lib/hooks/useLocationCity";
 
+// ================= COMPONENT: GRADIENT CARD =================
 function GradientCard({ children, className = "", gradient = "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]" }: { children: React.ReactNode; className?: string; gradient?: string; }) {
   return (
     <div className={`relative rounded-[20px] p-[3px] bg-gradient-to-r ${gradient} shadow-[0_4px_15px_-6px_rgba(37,42,103,0.3)] transition-all duration-300 ${className}`}>
@@ -17,11 +18,12 @@ function GradientCard({ children, className = "", gradient = "from-[#252a67] via
   );
 }
 
-export default function DoctorsPage() {
+// ================= COMPONENT: MAIN CONTENT =================
+function DoctorsContent() {
   const t = useTranslations("DoctorSearch");
   const { city, status, setManualCity } = useLocationCity();
   
-  // NEW: Read liveNow from the URL
+  // Read liveNow from the URL
   const searchParams = useSearchParams();
   const isLiveNow = searchParams.get("liveNow") === "true";
 
@@ -159,9 +161,24 @@ export default function DoctorsPage() {
 
       {/* ================= DOCTOR GRID ================= */}
       <div className="mt-8">
-        {/* NEW: Passing liveNow down to the Grid */}
         <DoctorGrid query={query} city={city ?? undefined} liveNow={isLiveNow} />
       </div>
     </main>
+  );
+}
+
+// ================= PAGE DEFAULT EXPORT WITH SUSPENSE =================
+export default function DoctorsPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#14B8A6]" />
+          <p className="text-slate-500 font-medium">Loading doctors...</p>
+        </div>
+      }
+    >
+      <DoctorsContent />
+    </Suspense>
   );
 }

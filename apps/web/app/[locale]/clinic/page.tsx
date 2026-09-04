@@ -23,6 +23,8 @@ import {
   TrendingUp,
   Award,
   Activity,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -72,6 +74,10 @@ const clinicFormSchema = z.object({
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
   pincode: z.string().regex(/^\d{5,6}$/, "Enter a valid 5-6 digit pincode"),
+  // 🟢 NEW: Contact Validation
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  googleMapsUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 type ClinicFormData = z.infer<typeof clinicFormSchema>;
@@ -101,6 +107,9 @@ export default function ClinicOverviewPage() {
     city: "",
     state: "",
     pincode: "",
+    phone: "",
+    whatsapp: "",
+    googleMapsUrl: "",
   });
 
   const [editing, setEditing] = useState(false);
@@ -150,6 +159,9 @@ export default function ClinicOverviewPage() {
         city: clinic.city ?? "",
         state: clinic.state ?? "",
         pincode: clinic.pincode ?? "",
+        phone: (clinic as any).phone ?? "",
+        whatsapp: (clinic as any).whatsapp ?? "",
+        googleMapsUrl: (clinic as any).googleMapsUrl ?? "",
       });
       setErrors({});
     }
@@ -448,7 +460,6 @@ export default function ClinicOverviewPage() {
       ====================================================== */}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {/* Doctors - Blue Gradient */}
         <GradientCard gradient="from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]">
           <Link href="/clinic/add-patient" className="block h-full transition-transform hover:scale-[1.02]">
             <StatCard
@@ -460,7 +471,6 @@ export default function ClinicOverviewPage() {
           </Link>
         </GradientCard>
 
-        {/* Receptionists - Indigo Gradient */}
         <GradientCard gradient="from-[#4f46e5] via-[#6366f1] to-[#818cf8]">
           <Link href="/clinic/receptionists" className="block h-full transition-transform hover:scale-[1.02]">
             <StatCard
@@ -472,7 +482,6 @@ export default function ClinicOverviewPage() {
           </Link>
         </GradientCard>
 
-        {/* Total Staff - Purple Gradient */}
         <GradientCard gradient="from-[#7c3aed] via-[#8b5cf6] to-[#a78bfa]">
           <StatCard
             icon={Activity}
@@ -482,7 +491,6 @@ export default function ClinicOverviewPage() {
           />
         </GradientCard>
 
-        {/* Verified Status - Emerald Gradient */}
         <GradientCard gradient="from-[#059669] via-[#10b981] to-[#34d399]">
           <div className="h-full p-5">
             <div className="flex items-center justify-between">
@@ -541,7 +549,6 @@ export default function ClinicOverviewPage() {
                   <Building2 className="h-7 w-7 text-[#1e40af]" />
                 )}
 
-                {/* Upload overlay */}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-[10px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100">
                   {uploadLogo.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -580,6 +587,25 @@ export default function ClinicOverviewPage() {
                     <span>{fullAddress}</span>
                   </p>
                 )}
+
+                {/* 🟢 NEW: Contact Info Display */}
+<div className="mt-3 flex flex-wrap items-center gap-2">
+  {(clinic as any).phone && (
+    <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-bold bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+      <Phone className="h-3 w-3 text-blue-500" /> {(clinic as any).phone}
+    </div>
+  )}
+  {(clinic as any).whatsapp && (
+    <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-bold bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+      <MessageCircle className="h-3 w-3 text-emerald-500" /> {(clinic as any).whatsapp}
+    </div>
+  )}
+  {(clinic as any).googleMapsUrl && (
+    <a href={(clinic as any).googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md border border-rose-100 hover:underline hover:bg-rose-100 transition-colors">
+      <MapPin className="h-3 w-3 text-rose-500" /> View on Map
+    </a>
+  )}
+</div>
               </div>
             </div>
 
@@ -624,13 +650,31 @@ export default function ClinicOverviewPage() {
                   <input
                     required
                     value={form.clinicName}
-                    onChange={(e) =>
-                      handleFormChange("clinicName", e.target.value)
-                    }
-                    className={`w-full rounded-xl border ${
-                      errors.clinicName ? "border-red-300" : "border-slate-200"
-                    } bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all placeholder:text-slate-400 hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    onChange={(e) => handleFormChange("clinicName", e.target.value)}
+                    className={`w-full rounded-xl border ${errors.clinicName ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
                     placeholder="Enter clinic name"
+                  />
+                </Field>
+
+                {/* 🟢 NEW: Phone Input */}
+                <Field label="Contact Number" error={errors.phone}>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => handleFormChange("phone", e.target.value)}
+                    className={`w-full rounded-xl border ${errors.phone ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    placeholder="+91 9000000000"
+                  />
+                </Field>
+
+                {/* 🟢 NEW: WhatsApp Input */}
+                <Field label="WhatsApp Number" error={errors.whatsapp}>
+                  <input
+                    type="tel"
+                    value={form.whatsapp}
+                    onChange={(e) => handleFormChange("whatsapp", e.target.value)}
+                    className={`w-full rounded-xl border ${errors.whatsapp ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    placeholder="+91 9000000000"
                   />
                 </Field>
 
@@ -638,9 +682,7 @@ export default function ClinicOverviewPage() {
                   <input
                     value={form.city}
                     onChange={(e) => handleFormChange("city", e.target.value)}
-                    className={`w-full rounded-xl border ${
-                      errors.city ? "border-red-300" : "border-slate-200"
-                    } bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all placeholder:text-slate-400 hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    className={`w-full rounded-xl border ${errors.city ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
                     placeholder="Enter city"
                   />
                 </Field>
@@ -649,10 +691,19 @@ export default function ClinicOverviewPage() {
                   <input
                     value={form.address}
                     onChange={(e) => handleFormChange("address", e.target.value)}
-                    className={`w-full rounded-xl border ${
-                      errors.address ? "border-red-300" : "border-slate-200"
-                    } bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all placeholder:text-slate-400 hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    className={`w-full rounded-xl border ${errors.address ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
                     placeholder="Street, area, locality"
+                  />
+                </Field>
+
+                {/* 🟢 NEW: Google Maps URL Input */}
+                <Field label="Google Maps Link" full error={errors.googleMapsUrl}>
+                  <input
+                    type="url"
+                    value={form.googleMapsUrl}
+                    onChange={(e) => handleFormChange("googleMapsUrl", e.target.value)}
+                    className={`w-full rounded-xl border ${errors.googleMapsUrl ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    placeholder="https://maps.google.com/..."
                   />
                 </Field>
 
@@ -660,9 +711,7 @@ export default function ClinicOverviewPage() {
                   <input
                     value={form.state}
                     onChange={(e) => handleFormChange("state", e.target.value)}
-                    className={`w-full rounded-xl border ${
-                      errors.state ? "border-red-300" : "border-slate-200"
-                    } bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all placeholder:text-slate-400 hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    className={`w-full rounded-xl border ${errors.state ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
                     placeholder="Enter state"
                   />
                 </Field>
@@ -671,9 +720,7 @@ export default function ClinicOverviewPage() {
                   <input
                     value={form.pincode}
                     onChange={(e) => handleFormChange("pincode", e.target.value)}
-                    className={`w-full rounded-xl border ${
-                      errors.pincode ? "border-red-300" : "border-slate-200"
-                    } bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all placeholder:text-slate-400 hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
+                    className={`w-full rounded-xl border ${errors.pincode ? "border-red-300" : "border-slate-200"} bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all hover:border-[#1e40af]/30 focus:border-[#1e40af] focus:ring-[3px] focus:ring-[#1e40af]/15`}
                     placeholder="Enter pincode"
                   />
                 </Field>
@@ -684,13 +731,9 @@ export default function ClinicOverviewPage() {
                 <button
                   type="submit"
                   disabled={updateProfile.isPending}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#1e3a8a]/30 transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1e3a8a] to-[#3b82f6] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#1e3a8a]/30 transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {updateProfile.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
+                  {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {updateProfile.isPending ? "Saving..." : "Save Changes"}
                 </button>
 
@@ -712,6 +755,9 @@ export default function ClinicOverviewPage() {
                         city: clinic.city ?? "",
                         state: clinic.state ?? "",
                         pincode: clinic.pincode ?? "",
+                        phone: (clinic as any).phone ?? "",
+                        whatsapp: (clinic as any).whatsapp ?? "",
+                        googleMapsUrl: (clinic as any).googleMapsUrl ?? "",
                       });
                       setErrors({});
                       setHasUnsavedChanges(false);
