@@ -62,10 +62,11 @@
     "companyHeading": "Company",
     "helpHeading": "Need Help?",
     "aboutUs": "About Us",
-    "contract": "contract",
     "privacyPolicy": "Privacy Policy",
     "termsConditions": "Terms & Conditions",
-    "copyright": "All rights reserved."
+    "copyright": "All rights reserved.",
+    "groupLine": "An initiative by",
+    "developedBy": "Developed by"
   },
   "AuthPage": {
     "loginHeading": "Welcome back",
@@ -98,66 +99,52 @@
     "clinicEmail": "Email us"
   },
   "Dashboard": {
-  "welcome": "Welcome back",
-  "subtitle": "Here's what's happening with your appointments.",
-
-  "upcomingCount": "Upcoming",
-  "totalCount": "Total Appointments",
-
-  "findDoctorCta": "Find a Doctor",
-  "myAppointments": "My Appointments",
-  "myProfile": "My Profile",
-  "logout": "Logout",
-
-  "noAppointments": "You have no appointments yet.",
-  "noAppointmentsDesc": "Book your first appointment with a trusted doctor today.",
-  "noAppointmentsCta": "Book Your First Appointment",
-
-  "token": "Token",
-  "statusWaiting": "Waiting",
-  "statusCheckedIn": "Checked In",
-  "statusAbsent": "Absent",
-  "statusCompleted": "Completed",
-  "statusCancelled": "Cancelled",
-
-  "patientsAhead": "patients ahead of you",
-  "estimatedWait": "Estimated wait",
-  "minutes": "min",
-  "privateQueue": "Live queue is private. Please check with the reception desk.",
-
-  "loadingAppointments": "Loading your appointments...",
-
-  "profileName": "Name",
-  "profilePhone": "Phone",
-  "profileEmail": "Email",
-  "profileDob": "Date of Birth",
-  "profileGender": "Gender",
-  "profileBloodGroup": "Blood Group",
-  "profileNotSet": "Not set",
-
-  "editProfile": "Edit Profile",
-  "saveChanges": "Save Changes",
-  "savingChanges": "Saving...",
-  "profileUpdated": "Profile updated successfully",
-
-  "selectGender": "Select gender",
-  "genderMale": "Male",
-  "genderFemale": "Female",
-  "genderOther": "Other",
-
-  "addressPlaceholder": "Street, area, city",
-  "bloodGroupPlaceholder": "e.g. O+",
-
-  "backToDashboard": "Back to Dashboard",
-
-  "doctorPanel": "Doctor Panel",
-  "clinicPanel": "Clinic Panel",
-
-  "dashboard": "Dashboard",
-  "profile": "Profile"
-},
-
- "DoctorSearch": {
+    "welcome": "Welcome back",
+    "subtitle": "Here's what's happening with your appointments.",
+    "upcomingCount": "Upcoming",
+    "totalCount": "Total Appointments",
+    "findDoctorCta": "Find a Doctor",
+    "myAppointments": "My Appointments",
+    "myProfile": "My Profile",
+    "logout": "Logout",
+    "noAppointments": "You have no appointments yet.",
+    "noAppointmentsDesc": "Book your first appointment with a trusted doctor today.",
+    "noAppointmentsCta": "Book Your First Appointment",
+    "token": "Token",
+    "statusWaiting": "Waiting",
+    "statusCheckedIn": "Checked In",
+    "statusAbsent": "Absent",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "patientsAhead": "patients ahead of you",
+    "estimatedWait": "Estimated wait",
+    "minutes": "min",
+    "privateQueue": "Live queue is private. Please check with the reception desk.",
+    "loadingAppointments": "Loading your appointments...",
+    "profileName": "Name",
+    "profilePhone": "Phone",
+    "profileEmail": "Email",
+    "profileDob": "Date of Birth",
+    "profileGender": "Gender",
+    "profileBloodGroup": "Blood Group",
+    "profileNotSet": "Not set",
+    "editProfile": "Edit Profile",
+    "saveChanges": "Save Changes",
+    "savingChanges": "Saving...",
+    "profileUpdated": "Profile updated successfully",
+    "selectGender": "Select gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "addressPlaceholder": "Street, area, city",
+    "bloodGroupPlaceholder": "e.g. O+",
+    "backToDashboard": "Back to Dashboard",
+    "doctorPanel": "Doctor Panel",
+    "clinicPanel": "Clinic Panel",
+    "dashboard": "Dashboard",
+    "profile": "Profile"
+  },
+  "DoctorSearch": {
     "heading": "All Doctors",
     "subheading": "Search for trusted doctors near you",
     "findDoctors": "Find Doctors",
@@ -274,16 +261,15 @@
     "pending": "Pending"
   },
   "Settings": {
-  "title": "Settings",
-  "general": "General Settings",
-  "language": "Language & Region",
-  "notifications": "Notifications",
-  "appearance": "Appearance",
-  "security": "Security",
-  "data": "Data Management",
-  "integrations": "Integrations"
-},
-
+    "title": "Settings",
+    "general": "General Settings",
+    "language": "Language & Region",
+    "notifications": "Notifications",
+    "appearance": "Appearance",
+    "security": "Security",
+    "data": "Data Management",
+    "integrations": "Integrations"
+  },
   "ClinicOverview": {
     "heading": "Clinic Overview",
     "subtitle": "Manage your clinic profile, staff, and online consultation settings.",
@@ -308,7 +294,6 @@
     "unsavedWarning": "You have unsaved changes.",
     "updateSuccess": "Clinic profile updated successfully!"
   },
-
   "ClinicDoctors": {
     "tagline": "Doctors",
     "heading": "Doctor Management",
@@ -1053,7 +1038,7 @@
     "noResults": "No clinics found. Try a different search.",
     "loadError": "Could not load clinics right now. Please try again shortly."
   },
- "AvailableDoctors": {
+  "AvailableDoctors": {
     "findDoctors": "Find Doctors",
     "trustedNetwork": "Trusted Healthcare Network",
     "heading": "Available Doctors",
@@ -1064,85 +1049,276 @@
     "browseAllDoctors": "Browse All Doctors",
     "availableNow": "Available Now"
   },
-"AdminDoctorAvailability": {
-  "title": "Doctor Availability",
-  "subtitle": "Mark doctors as available or unavailable for bookings across the platform.",
-  "searchPlaceholder": "Search doctors by name, specialty, or clinic...",
-  "retry": "Refresh",
-  "dismiss": "Dismiss",
-  "errorTitle": "Could not load doctors",
-  "emptyTitle": "No doctors found",
-  "available": "Available",
-  "unavailable": "Unavailable",
-  "markAvailable": "Mark Available",
-  "markUnavailable": "Mark Unavailable",
-  "updating": "Updating...",
-  "successUpdated": "Availability updated."
-},
-"AdminFeaturedClinics": {
-  "title": "Featured Clinics",
-  "subtitle": "Choose which approved clinics appear in the homepage spotlight.",
-  "addClinic": "Add Clinic",
-  "retry": "Refresh",
-  "searchPlaceholder": "Search approved clinics by name or city...",
-  "noAddable": "No more approved clinics to add.",
-  "add": "Add",
-  "dismiss": "Dismiss",
-  "errorTitle": "Could not load featured clinics",
-  "emptyTitle": "No featured clinics yet",
-  "emptyDesc": "Use \"Add Clinic\" above to feature one.",
-  "featuredOrder": "Order",
-  "setOrder": "Set Order",
-  "confirm": "Confirm",
-  "cancel": "Cancel",
-  "updating": "Updating...",
-  "removeFeatured": "Remove",
-  "successFeatured": "Clinic added to featured.",
-  "successRemoved": "Clinic removed from featured."
-},
-"AdminReviews": {
-  "title": "Reviews Moderation",
-  "subtitle": "Approve, reject, or handle reported patient reviews.",
-  "retry": "Refresh",
-  "dismiss": "Dismiss",
-  "errorTitle": "Could not load reviews",
-  "tabPending": "Pending Approval",
-  "tabReported": "Reported",
-  "emptyPending": "No reviews awaiting approval",
-  "emptyReported": "No reported reviews",
-  "reported": "Reported",
-  "reportReason": "Report reason",
-  "approve": "Approve",
-  "reject": "Reject",
-  "successApproved": "Review approved.",
-  "successRejected": "Review rejected."
-},
-"AdminAnnouncements": {
-  "title": "Platform Announcements",
-  "subtitle": "Broadcast a notice to every user on the platform, live via Socket.io.",
-  "retry": "Refresh",
-  "dismiss": "Dismiss",
-  "errorTitle": "Could not load announcements",
-  "typeLabel": "Type",
-  "type_GENERAL": "General",
-  "type_EMERGENCY": "Emergency",
-  "type_MAINTENANCE": "Maintenance",
-  "type_HOLIDAY": "Holiday",
-  "type_CLINIC_CLOSED": "Clinic Closed",
-  "type_DOCTOR_ABSENT": "Doctor Absent",
-  "titleLabel": "Title",
-  "titlePlaceholder": "e.g. Scheduled maintenance tonight",
-  "messageLabel": "Message",
-  "messagePlaceholder": "Details for the announcement...",
-  "publish": "Publish Announcement",
-  "publishing": "Publishing...",
-  "validationRequired": "Title and message are required.",
-  "successPublished": "Announcement published.",
-  "successDeactivated": "Announcement deactivated.",
-  "emptyTitle": "No announcements published yet",
-  "active": "Active",
-  "inactive": "Inactive",
-  "deactivate": "Deactivate",
-  "deactivating": "Deactivating..."
-}
+  "AdminDoctorAvailability": {
+    "title": "Doctor Availability",
+    "subtitle": "Mark doctors as available or unavailable for bookings across the platform.",
+    "searchPlaceholder": "Search doctors by name, specialty, or clinic...",
+    "retry": "Refresh",
+    "dismiss": "Dismiss",
+    "errorTitle": "Could not load doctors",
+    "emptyTitle": "No doctors found",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "markAvailable": "Mark Available",
+    "markUnavailable": "Mark Unavailable",
+    "updating": "Updating...",
+    "successUpdated": "Availability updated."
+  },
+  "AdminFeaturedClinics": {
+    "title": "Featured Clinics",
+    "subtitle": "Choose which approved clinics appear in the homepage spotlight.",
+    "addClinic": "Add Clinic",
+    "retry": "Refresh",
+    "searchPlaceholder": "Search approved clinics by name or city...",
+    "noAddable": "No more approved clinics to add.",
+    "add": "Add",
+    "dismiss": "Dismiss",
+    "errorTitle": "Could not load featured clinics",
+    "emptyTitle": "No featured clinics yet",
+    "emptyDesc": "Use \"Add Clinic\" above to feature one.",
+    "featuredOrder": "Order",
+    "setOrder": "Set Order",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "updating": "Updating...",
+    "removeFeatured": "Remove",
+    "successFeatured": "Clinic added to featured.",
+    "successRemoved": "Clinic removed from featured."
+  },
+  "AdminReviews": {
+    "title": "Reviews Moderation",
+    "subtitle": "Approve, reject, or handle reported patient reviews.",
+    "retry": "Refresh",
+    "dismiss": "Dismiss",
+    "errorTitle": "Could not load reviews",
+    "tabPending": "Pending Approval",
+    "tabReported": "Reported",
+    "emptyPending": "No reviews awaiting approval",
+    "emptyReported": "No reported reviews",
+    "reported": "Reported",
+    "reportReason": "Report reason",
+    "approve": "Approve",
+    "reject": "Reject",
+    "successApproved": "Review approved.",
+    "successRejected": "Review rejected."
+  },
+  "AdminAnnouncements": {
+    "title": "Platform Announcements",
+    "subtitle": "Broadcast a notice to every user on the platform, live via Socket.io.",
+    "retry": "Refresh",
+    "dismiss": "Dismiss",
+    "errorTitle": "Could not load announcements",
+    "typeLabel": "Type",
+    "type_GENERAL": "General",
+    "type_EMERGENCY": "Emergency",
+    "type_MAINTENANCE": "Maintenance",
+    "type_HOLIDAY": "Holiday",
+    "type_CLINIC_CLOSED": "Clinic Closed",
+    "type_DOCTOR_ABSENT": "Doctor Absent",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Scheduled maintenance tonight",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Details for the announcement...",
+    "publish": "Publish Announcement",
+    "publishing": "Publishing...",
+    "validationRequired": "Title and message are required.",
+    "successPublished": "Announcement published.",
+    "successDeactivated": "Announcement deactivated.",
+    "emptyTitle": "No announcements published yet",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate",
+    "deactivating": "Deactivating..."
+  },
+  "AboutPage": {
+    "metaTitle": "About Us",
+    "kicker": "About Doctor Contact",
+    "heroTitle": "Healthcare that tells you the truth about the wait.",
+    "heroSubtitle": "Doctor Contact connects patients with verified doctors, clinics, and diagnostic centers — with a live queue you can actually see, instead of a waiting room you can only guess at.",
+    "storyP1": "Doctor Contact started with a simple frustration: patients showing up early and waiting for hours with no idea how many people were ahead of them, while clinics ran their queues on paper registers and guesswork. We built a platform where every token, every schedule, and every queue update happens in real time, on one system, whether you're booking online, walking in, or being seen by a receptionist.",
+    "storyP2": "Today the platform brings doctors, clinics, receptionists, diagnostic centers, and patients onto one shared source of truth, in Bengali, Hindi, and English, so care stays understandable for the people who need it most.",
+    "audienceHeading": "Who it's for",
+    "audiences": [
+      {
+        "title": "Patients",
+        "body": "Search doctors and clinics, book a token online or arrive as a walk-in, and track your place in the queue and estimated wait time in real time."
+      },
+      {
+        "title": "Clinics & Doctors",
+        "body": "Manage schedules across multiple clinics, control the queue live, and see patient load at a glance — no separate register for online and walk-in patients."
+      },
+      {
+        "title": "Diagnostic Centers",
+        "body": "Receive test referrals directly from doctors and clinics, manage available tests, and keep every referral traceable back to the visit it came from."
+      }
+    ],
+    "valuesHeading": "What we care about",
+    "values": [
+      {
+        "title": "Real-time, not guesswork",
+        "body": "Queue status, doctor availability, and wait times are calculated live from what's actually happening at the clinic, never a static estimate."
+      },
+      {
+        "title": "Built for every language",
+        "body": "The platform is available in Bengali, Hindi, and English, because healthcare information should never be gatekept by language."
+      },
+      {
+        "title": "Careful with your data",
+        "body": "Appointment and queue information is shared only with the doctor or clinic you're booking with — never sold, never used for anything else."
+      }
+    ],
+    "companyLine": "An initiative by",
+    "ctaButton": "Find a doctor"
+  },
+  "TermsPage": {
+    "title": "Terms & Conditions",
+    "lastUpdated": "Last updated: September 2026",
+    "intro": "These Terms & Conditions govern your use of the Doctor Contact platform, operated by Dewasi Group. By creating an account or using the platform, you agree to these terms.",
+    "onThisPage": "On this page",
+    "sections": [
+      {
+        "title": "Acceptance of Terms",
+        "body": [
+          "By registering for or using Doctor Contact as a patient, doctor, clinic, receptionist, diagnostic center, or administrator, you agree to be bound by these Terms & Conditions and our Privacy Policy. If you do not agree, please do not use the platform."
+        ]
+      },
+      {
+        "title": "What Doctor Contact Does",
+        "body": [
+          "Doctor Contact is a booking and queue-management platform that connects patients with doctors, clinics, and diagnostic centers. We help you find a doctor, book an appointment token, and track queue status in real time.",
+          "We do not employ doctors or operate clinics ourselves — clinics and doctors remain independently responsible for the medical care they provide."
+        ]
+      },
+      {
+        "title": "Accounts & Roles",
+        "body": [
+          "You are responsible for keeping your login credentials confidential and for all activity under your account.",
+          "Clinics are responsible for the accuracy of the doctor, staff, and schedule information they add to the platform. Receptionist and staff accounts are created and managed by the clinic they belong to."
+        ]
+      },
+      {
+        "title": "Appointments, Tokens & Queue",
+        "body": [
+          "A queue token confirms your place in a doctor's queue for a session; it is not a guaranteed consultation time. Wait times shown on the platform are estimates based on current queue activity and can change if a doctor is delayed, a session runs long, or the clinic closes unexpectedly.",
+          "Clinics and receptionists may cancel or reschedule appointments in line with the clinic's own policies."
+        ]
+      },
+      {
+        "title": "Medical Disclaimer",
+        "body": [
+          "Doctor Contact is a scheduling and information platform. It does not provide medical advice, diagnosis, or treatment, and nothing on the platform should be treated as a substitute for professional medical judgment.",
+          "In a medical emergency, contact your local emergency services immediately instead of using the platform."
+        ]
+      },
+      {
+        "title": "Fees & Payments",
+        "body": [
+          "Consultation fees shown on the platform are indicative and set by the clinic or doctor. Payment for consultations and services is currently handled directly at the clinic or diagnostic center, not through the platform."
+        ]
+      },
+      {
+        "title": "Acceptable Use",
+        "body": [
+          "You agree not to misuse the platform, including submitting false patient or clinic information, booking appointments you don't intend to attend, or interfering with the queue system for other patients."
+        ]
+      },
+      {
+        "title": "Clinic & Diagnostic Center Listings",
+        "body": [
+          "Clinics and diagnostic centers are responsible for the accuracy of their own listings, working hours, doctor schedules, and available tests. Doctor Contact may verify, feature, or remove listings at its discretion to maintain the quality of the platform."
+        ]
+      },
+      {
+        "title": "Intellectual Property",
+        "body": [
+          "The Doctor Contact name, logo, and platform design are the property of Dewasi Group. You may not copy, reproduce, or reuse them without written permission."
+        ]
+      },
+      {
+        "title": "Limitation of Liability",
+        "body": [
+          "Doctor Contact is not liable for the quality of medical care provided by any doctor or clinic, for missed appointments due to inaccurate schedule information supplied by a clinic, or for delays outside the platform's control."
+        ]
+      },
+      {
+        "title": "Changes to These Terms",
+        "body": [
+          "We may update these Terms & Conditions from time to time. Continued use of the platform after an update means you accept the revised terms."
+        ]
+      },
+      {
+        "title": "Governing Law",
+        "body": [
+          "These terms are governed by the laws of India."
+        ]
+      }
+    ],
+    "contactHeading": "Questions about these terms?",
+    "contactBody": "Reach us at"
+  },
+  "PrivacyPage": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: September 2026",
+    "intro": "This Privacy Policy explains what information Doctor Contact collects, how we use it, and the choices you have. It applies to patients, doctors, clinics, receptionists, and diagnostic centers using the platform.",
+    "onThisPage": "On this page",
+    "sections": [
+      {
+        "title": "Information We Collect",
+        "body": [
+          "We collect the information you provide when creating an account or booking an appointment — such as your name, phone number, email, date of birth, and gender for patients, and clinic, qualification, and schedule details for doctors and clinics.",
+          "We also record appointment and queue activity, such as which doctor and clinic you booked with and your token status."
+        ]
+      },
+      {
+        "title": "How We Use Your Information",
+        "body": [
+          "We use this information to create and manage your account, process bookings, generate queue tokens, send appointment and queue notifications, and show you relevant doctors, clinics, and diagnostic centers."
+        ]
+      },
+      {
+        "title": "What We Don't Collect",
+        "body": [
+          "Doctor Contact does not currently store prescriptions, diagnoses, or detailed medical records. Test referrals record only the names of tests requested, not results."
+        ]
+      },
+      {
+        "title": "Sharing Your Information",
+        "body": [
+          "Your appointment details are shared only with the doctor, clinic, or diagnostic center you book with, and with staff they authorize to manage their queue. We do not sell your personal information to third parties."
+        ]
+      },
+      {
+        "title": "Data Security",
+        "body": [
+          "We use industry-standard measures, including encrypted passwords and secure connections, to protect your information. No system is completely secure, and we encourage you to keep your login credentials private."
+        ]
+      },
+      {
+        "title": "Your Rights",
+        "body": [
+          "You can review and update your profile information from your account settings at any time. To request deletion of your account or data, contact us using the details below."
+        ]
+      },
+      {
+        "title": "Cookies & Similar Technologies",
+        "body": [
+          "We use essential cookies and local storage to keep you signed in and remember your language preference. We do not use these to track you across other websites."
+        ]
+      },
+      {
+        "title": "Children's Privacy",
+        "body": [
+          "Doctor Contact is intended for use by adults booking appointments for themselves or on behalf of family members, including children. We do not knowingly collect account information directly from children."
+        ]
+      },
+      {
+        "title": "Changes to This Policy",
+        "body": [
+          "We may update this Privacy Policy from time to time. Significant changes will be reflected with an updated \"last updated\" date above."
+        ]
+      }
+    ],
+    "contactHeading": "Questions about your data?",
+    "contactBody": "Reach us at"
+  }
 }

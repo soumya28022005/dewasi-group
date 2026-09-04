@@ -140,9 +140,17 @@ export default function DoctorProfilePage() {
     return date < today;
   };
 
-  const handleDateSelect = (date: Date) => {
+ const handleDateSelect = (date: Date) => {
     if (isDateDisabled(date)) return;
-    const dateStr = date.toISOString().split("T")[0];
+    
+    // 🛑 TIMEZONE BUG FIX
+    // DO NOT USE .toISOString() because it converts to UTC and shifts the date backwards for IST!
+    // Extract local year, month, and day directly from the Date object.
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`; 
+
     setSelectedDate(date);
     setDate(dateStr);
     setMessage(null);
