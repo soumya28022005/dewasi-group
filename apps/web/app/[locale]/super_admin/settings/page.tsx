@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
+
 import {
   Settings,
   AlertCircle,
@@ -18,8 +19,8 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { GradientCard } from "@/components/ui/GradientCard";
 
-// IMPORT THE NEW COMPONENT HERE (Adjust the path if you placed it elsewhere)
-import AddLocationForm from "./components/AddLocationForm"; 
+import AddLocationForm from "./components/AddLocationForm";
+import AddSpecializationForm from "./components/AddSpecializationForm";
 
 export default function AdminSettingsPage() {
   const t = useTranslations("AdminSettings");
@@ -236,8 +237,15 @@ export default function AdminSettingsPage() {
           </GradientCard>
 
           {/* Search Location Management Card */}
-          <AddLocationForm />
-          
+          <div className="h-full">
+            <AddLocationForm />
+          </div>
+
+          {/* Specialization Management Form (Full Width) */}
+          <div className="lg:col-span-2">
+            <AddSpecializationForm />
+          </div>
+
         </div>
       )}
     </div>

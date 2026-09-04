@@ -2,21 +2,13 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { 
-  Stethoscope, 
-  BadgeCheck, 
-  Star, 
-  ArrowRight, 
-  Award 
-} from "lucide-react";
+import { MapPin, Stethoscope, BadgeCheck, Star, Award } from "lucide-react";
 
 import { Link } from "@/i18n/routing";
 import { usePublicAllDoctors } from "@/lib/hooks/usePublicDirectory";
 import SectionHeader from "@/components/SectionHeader";
-import HorizontalCarousel from "@/components/HorizontalCarousel";
 
 import { ExtendedDoctor } from "@/types/doctor";
-import DoctorClinicInfo from "@/components/DoctorClinicInfo";
 
 // ============================================================
 // UTILITIES
@@ -24,130 +16,129 @@ import DoctorClinicInfo from "@/components/DoctorClinicInfo";
 
 function getInitials(name?: string): string {
   if (!name || typeof name !== "string") return "DR";
-  const initials = name
+  return name
     .split(" ")
     .filter(Boolean)
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
-  
-  return initials || "DR";
 }
 
 // ============================================================
-// UI COMPONENTS
+// COMPACT DOCTOR CARD (PREMIUM & CONSISTENT)
 // ============================================================
 
-function GradientBorderCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="group relative h-full rounded-[26px] p-[3px] bg-gradient-to-br from-[#252a67] via-[#3b4a8f] to-[#14B8A6] shadow-[0_4px_20px_-6px_rgba(37,42,103,0.3)] transition-all duration-500 hover:shadow-[0_12px_40px_-8px_rgba(20,184,166,0.4)] hover:from-[#2563EB] hover:via-[#0F766E] hover:to-[#14B8A6] dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 dark:hover:from-[#2563EB] dark:hover:via-[#0F766E] dark:hover:to-[#14B8A6]">
-      <div className="relative h-full w-full overflow-hidden rounded-[calc(26px-3px)] bg-white transition-colors dark:bg-slate-900">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2563EB]/[0.03] to-[#0F766E]/[0.03] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-400/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function DoctorMiniCard({ doctor }: { doctor: ExtendedDoctor }) {
+function CompactDoctorCard({ doctor }: { doctor: ExtendedDoctor }) {
+  const [imgError, setImgError] = React.useState(false);
   const experience = doctor.experience ?? 0;
   const rating = doctor.rating ?? 4.5;
-  const reviews = doctor.reviewCount ?? 120;
-  
+  const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
   const avatarSrc = (doctor as any).profilePhoto || doctor.user?.avatar;
 
   return (
     <Link
       href={`/doctors/${doctor.id}`}
-      className="block h-[370px] w-[240px] shrink-0" 
+      className="group block w-[300px] shrink-0"
       aria-label={`View profile of ${doctor.user.name}`}
     >
-      <GradientBorderCard>
-        <div className="relative flex h-full flex-col items-center p-5 text-center">
-          <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-[#2563EB]/10 to-[#0F766E]/10 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:opacity-70" />
-          
-          {/* Avatar Area */}
-          <div className="relative mt-2">
-            <div className="flex w-[6rem] h-[8rem] overflow-hidden items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-3xl font-bold text-white shadow-lg shadow-blue-500/20 transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-3 group-hover:scale-105">
-              {avatarSrc ? (
-                <img src={avatarSrc} alt={doctor.user.name} className="h-full w-full object-cover" />
-              ) : (
-                getInitials(doctor.user.name)
-              )}
+      <div className="flex h-[7.5rem] items-center rounded-3xl border-2 border-[#252a67] bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+        {/* Left: Photo */}
+        <div className="relative mr-3 flex-shrink-0">
+          {/* Experience Badge (Overlapping) */}
+          {experience > 0 && (
+            <div className="absolute -left-2 -top-2 z-10">
+              <div className="flex items-center gap-1 rounded-full bg-[#252a67] px-2.5 py-1 text-[9px] font-bold text-white shadow-md whitespace-nowrap">
+                <Award className="h-3 w-3 text-amber-400" />
+                {experience}+ Yrs
+              </div>
             </div>
-            {(doctor.isVerified ?? true) && (
-              <BadgeCheck className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-white text-[#2563EB] shadow-sm ring-2 ring-white dark:bg-slate-900 dark:ring-slate-900" />
-            )}
-          </div>
+          )}
 
-          {/* Name & Specialization */}
-          <div className="mt-4 flex w-full flex-col items-center">
-            <h4 className="w-full truncate text-base font-extrabold tracking-tight">
-              <span className="bg-gradient-to-r from-[#422995] to-[#4a9860] bg-clip-text text-transparent">
-                {doctor.user.name}
-              </span>
-            </h4>
-            {doctor.specialization && (
-              <p className="mt-1 flex w-full items-center justify-center gap-1.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#0F766E]" />
-                <span className="truncate">{doctor.specialization}</span>
+          {/* Photo / Initials */}
+          {avatarSrc && !imgError ? (
+            <img
+              src={avatarSrc}
+              alt={doctor.user.name}
+              onError={() => setImgError(true)}
+              className="h-[5.5rem] w-[4.5rem] rounded-2xl border-2 border-[#252a67]/20 object-cover shadow-md"
+            />
+          ) : (
+            <div className="flex h-[5.5rem] w-[4.5rem] items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#0F766E] text-xl font-bold text-white shadow-md">
+              {getInitials(doctor.user.name)}
+            </div>
+          )}
+
+          {/* Verified Badge */}
+          <BadgeCheck className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white text-[#2563EB] shadow-sm ring-1 ring-slate-100" />
+        </div>
+
+        {/* Right: Doctor Info */}
+        <div className="flex min-w-0 flex-col justify-center">
+          <h3 className="truncate text-[1.05rem] font-bold leading-tight text-slate-900">
+            {doctor.user.name}
+          </h3>
+          {doctor.qualification && (
+            <p className="mt-0.5 truncate text-[0.85rem] font-semibold text-black">
+              {doctor.qualification}
+            </p>
+          )}
+          {doctor.specialization && (
+            <p className="mt-0.5 truncate text-[0.8rem] text-gray-600">
+              {doctor.specialization}
+            </p>
+          )}
+
+          {/* Bottom: Location + Rating */}
+          <div className="mt-1.5 flex items-center gap-2">
+            {location && (
+              <p className="flex items-center gap-1 truncate text-[0.7rem] font-medium text-gray-500">
+                <MapPin className="h-3 w-3 shrink-0 text-[#0F766E]" />
+                <span className="truncate">{location}</span>
               </p>
             )}
-          </div>
-
-          {/* Core Metrics */}
-          <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
-            {experience > 0 && (
-              <span className="flex items-center gap-1 font-semibold">
-                <Award className="h-3.5 w-3.5 text-amber-500" />
-                {experience}+ Yrs
-              </span>
-            )}
-            <span className="flex items-center gap-1 font-semibold">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              <span className="text-slate-800 dark:text-slate-200">{rating}</span>
-              <span className="font-normal text-slate-400">({reviews})</span>
+            <span className="flex items-center gap-0.5 text-[0.7rem] font-semibold text-slate-700">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              {rating}
             </span>
           </div>
-
-          <div className="flex-1 w-full overflow-hidden mt-1">
-             {/* ================================================== */}
-             {/* এখানে ডায়নামিক ক্লিনিক ও ফি-এর কম্পোনেন্ট বসানো হলো */}
-             <DoctorClinicInfo doctor={doctor} />
-             {/* ================================================== */}
-          </div>
-
-          {/* Call to Action */}
-          <div className="w-full mt-2">
-            <div className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-50 py-2.5 text-xs font-bold text-slate-600 transition-all duration-300 group-hover:bg-gradient-to-r group-hover:from-[#2563EB]/10 group-hover:to-[#0F766E]/10 group-hover:text-[#2563EB] dark:bg-slate-800 dark:text-slate-300">
-              View Profile
-              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-            </div>
-          </div>
         </div>
-      </GradientBorderCard>
+      </div>
     </Link>
   );
 }
 
-function DoctorSkeleton() {
+// ============================================================
+// MARQUEE ROW (Smooth & Consistent)
+// ============================================================
+
+function MarqueeRow({ doctors, duration }: { doctors: ExtendedDoctor[]; duration: string }) {
+  if (!doctors || doctors.length === 0) return null;
+
+  // Duplicate doctors for infinite scroll
+  const doubledDoctors = [...doctors, ...doctors];
+
   return (
-    <div className="flex h-[370px] w-[240px] shrink-0 flex-col items-center rounded-[26px] border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
-      <div className="mt-2 w-[6rem] h-[8rem] animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
-      <div className="mt-5 h-5 w-3/4 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-      <div className="mt-2 h-3 w-1/2 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-      <div className="mt-4 h-3 w-2/3 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-      <div className="flex-1" />
-      <div className="mb-3 h-3 w-1/2 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-      <div className="h-9 w-full animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+    <div className="group relative w-full overflow-hidden py-2">
+      {/* Left Fade */}
+      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-white to-transparent" />
+      {/* Right Fade */}
+      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-white to-transparent" />
+
+      <div
+        className="flex w-max gap-4 animate-marquee group-hover:[animation-play-state:paused]"
+        style={{ animationDuration: duration }}
+      >
+        {doubledDoctors.map((doctor, index) => (
+          <CompactDoctorCard key={`${doctor.id}-${index}`} doctor={doctor} />
+        ))}
+      </div>
     </div>
   );
 }
 
 // ============================================================
-// MAIN COMPONENT
+// MAIN COMPONENT - Two Rows (Right to Left)
 // ============================================================
 
 export default function AllDoctors() {
@@ -155,36 +146,39 @@ export default function AllDoctors() {
   const { data, isLoading } = usePublicAllDoctors();
   const doctors = (data as ExtendedDoctor[]) ?? [];
 
-  if (!isLoading && doctors.length === 0) {
-    return null; 
-  }
+  if (!isLoading && doctors.length === 0) return null;
+
+  const midpoint = Math.ceil(doctors.length / 2);
+  const firstRow = doctors.slice(0, midpoint);
+  const secondRow = doctors.slice(midpoint);
 
   return (
-    <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
-      {/* 
-        এখানে viewAllHref এবং viewAllLabel যুক্ত করা হয়েছে, 
-        যার ফলে View All বাটনটি হেডারের পাশেই দেখাবে।
-      */}
-      <SectionHeader 
-        eyebrow="Browse the directory" 
-        title={t("allDoctors")} 
-        viewAllHref="/doctors" 
-        viewAllLabel={t("viewAllDoctors") || "View All"} 
-      />
+    <section className="w-full bg-white py-12">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <SectionHeader 
+          eyebrow="Browse the directory" 
+          title={t("allDoctors")} 
+          viewAllHref="/doctors" 
+          viewAllLabel={t("viewAllDoctors") || "View All"} 
+        />
+      </div>
 
       {isLoading ? (
-        <div className="flex gap-5 overflow-hidden py-4">
-          {[1, 2, 3, 4, 5].map((item) => (
-            <DoctorSkeleton key={item} />
+        <div className="space-y-4 px-4">
+          {[1, 2].map((row) => (
+            <div key={row} className="flex gap-4 overflow-hidden">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="h-[7.5rem] w-[300px] shrink-0 animate-pulse rounded-3xl border-2 border-slate-200 bg-slate-100" />
+              ))}
+            </div>
           ))}
         </div>
       ) : (
-        <div className="py-4">
-          <HorizontalCarousel ariaLabel={t("allDoctors")}>
-            {doctors.map((doctor) => (
-              <DoctorMiniCard key={doctor.id} doctor={doctor} />
-            ))}
-          </HorizontalCarousel>
+        <div className="space-y-5">
+          {/* Row 1 - Right to Left (40s) */}
+          <MarqueeRow doctors={firstRow} duration="40s" />
+          {/* Row 2 - Right to Left (55s) */}
+          <MarqueeRow doctors={secondRow} duration="40s" />
         </div>
       )}
     </section>

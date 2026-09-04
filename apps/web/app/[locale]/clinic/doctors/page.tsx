@@ -1,176 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Plus,
-  X,
-  Pencil,
-  Search,
-  Stethoscope,
-  Mail,
-  Clock3,
-  IndianRupee,
-  BriefcaseMedical,
-  GraduationCap,
-  UserRound,
-  CheckCircle2,
-  Loader2,
-  Award,
-  TrendingUp,
-  BookOpen,
-  Camera,
+  Plus, X, Pencil, Search, Stethoscope, Mail, IndianRupee,
+  BriefcaseMedical, GraduationCap, UserRound, CheckCircle2,
+  Loader2, Award, Clock, Users, Trash2, Edit2, CalendarDays, Check
 } from "lucide-react";
-
 import { useTranslations } from "next-intl";
+import { useClinicProfile, useClinicDoctors, useAddDoctor, useEditDoctor, type ClinicDoctor } from "@/lib/hooks/useClinic";
+import { api } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
-import {
-  useClinicDoctors,
-  useAddDoctor,
-  useEditDoctor,
-  type ClinicDoctor,
-} from "@/lib/hooks/useClinic";
-
-// ============================================================
-// FORM
-// ============================================================
+const DAYS_OF_WEEK = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+const WEEKS = [{ label: "1st", val: 1 }, { label: "2nd", val: 2 }, { label: "3rd", val: 3 }, { label: "4th", val: 4 }, { label: "Last", val: "LAST" }];
 
 const EMPTY_ADD = {
-  name: "",
-  email: "",
-  password: "",
-  phone: "",
-  specialization: "",
-  qualification: "",
-  experience: "",
-  fee: "",
-  startTime: "",
+  name: "", email: "", password: "", phone: "", specialization: "", qualification: "", experience: "", fee: "",
+  startTime: "", endTime: "", capacity: "20",
+  recurrenceType: "DAILY", recurrenceDays: [] as string[], recurrenceDate: "", recurrenceWeek: "1st", recurrenceWeekday: "MONDAY", specificDate: ""
 };
 
-// ============================================================
-// INPUT
-// ============================================================
+const inputClasses = "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-sm font-medium text-gray-700 outline-none transition-all placeholder:text-gray-400 hover:border-gray-300 focus:border-[#252a67] focus:ring-[3px] focus:ring-[#252a67]/15 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500";
+const PRIMARY_GRADIENT = "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]";
+const GREEN_GRADIENT = "from-[#047857] via-[#059669] to-[#14B8A6]";
 
-const inputClasses =
-  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 outline-none transition-all placeholder:text-gray-400 hover:border-gray-300 focus:border-[var(--color-primary)] focus:ring-[3px] focus:ring-[var(--color-primary)]/15 dark:border-soft-300 dark:bg-surface-100 dark:text-ink-800 dark:placeholder:text-ink-400";
-
-// ============================================================
-// BRAND
-// ============================================================
-
-const PRIMARY_GRADIENT =
-  "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]";
-
-const GREEN_GRADIENT =
-  "from-[#047857] via-[#059669] to-[#14B8A6]";
-
-// ============================================================
-// GRADIENT CARD
-// ============================================================
-
-function GradientCard({
-  children,
-  className = "",
-  gradient = PRIMARY_GRADIENT,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  gradient?: string;
-}) {
+function GradientCard({ children, className = "", gradient = PRIMARY_GRADIENT }: { children: React.ReactNode; className?: string; gradient?: string; }) {
   return (
-    <div
-      className={`
-        rounded-[22px]
-        bg-gradient-to-r
-        ${gradient}
-        p-[3px]
-        shadow-[0_10px_35px_-22px_rgba(37,42,103,0.55)]
-        ${className}
-      `}
-    >
-      <div className="h-full rounded-[20px] bg-white dark:bg-slate-900">
-        {children}
-      </div>
+    <div className={`rounded-[22px] bg-gradient-to-r ${gradient} p-[3px] shadow-sm ${className}`}>
+      <div className="h-full rounded-[20px] bg-white dark:bg-slate-900">{children}</div>
     </div>
   );
 }
 
-// ============================================================
-// PAGE
-// ============================================================
-
 export default function ClinicDoctorsPage() {
   const tDoc = useTranslations("ClinicDoctors");
   const tNav = useTranslations("ClinicNav");
-
-  const {
-    data: doctors,
-    isLoading,
-  } = useClinicDoctors();
-
+  
+  const { data: clinic } = useClinicProfile();
+  const { data: doctors, isLoading } = useClinicDoctors();
   const addDoctor = useAddDoctor();
 
-  const [showAdd, setShowAdd] =
-    useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [form, setForm] = useState(EMPTY_ADD);
+  const [error, setError] = useState("");
+  const [specializations, setSpecializations] = useState<any[]>([]);
 
-  const [searchQuery, setSearchQuery] =
-    useState("");
+  // Fetch Specializations dynamically
+  useEffect(() => {
+    async function fetchSpecializations() {
+      try {
+        const res = await api.get("/specializations");
+        if (res.data?.success) setSpecializations(res.data.data.specializations);
+      } catch (err) {}
+    }
+    fetchSpecializations();
+  }, []);
 
-  const [form, setForm] =
-    useState(EMPTY_ADD);
-
-  const [error, setError] =
-    useState("");
-
-  // ==========================================================
-  // ADD DOCTOR
-  // ==========================================================
-
-  function handleAdd(
-    e: React.FormEvent
-  ) {
+  function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-
     setError("");
 
-    addDoctor.mutate(
-      {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        phone: form.phone || undefined,
-        specialization:
-          form.specialization || undefined,
-        qualification:
-          form.qualification || undefined,
-        experience: form.experience
-          ? Number(form.experience)
-          : undefined,
-        fee: form.fee
-          ? Number(form.fee)
-          : undefined,
-        startTime:
-          form.startTime || undefined,
-      },
-      {
-        onSuccess: () => {
-          setForm(EMPTY_ADD);
-          setShowAdd(false);
-        },
+    let recurrencePattern = {};
+    if (form.recurrenceType === "WEEKLY") recurrencePattern = { days: form.recurrenceDays };
+    if (form.recurrenceType === "MONTHLY_DATE") recurrencePattern = { date: Number(form.recurrenceDate) };
+    if (form.recurrenceType === "MONTHLY_WEEKDAY") recurrencePattern = { week: form.recurrenceWeek, day: form.recurrenceWeekday };
+    if (form.recurrenceType === "SPECIFIC_DATE") recurrencePattern = { exactDate: form.specificDate };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (err: any) => {
-          setError(
-            err?.response?.data?.message ||
-              "Failed to add doctor"
-          );
-        },
-      }
-    );
+    const payload: any = {
+      name: form.name,
+      email: form.email,
+      password: form.password,
+      phone: form.phone || undefined,
+      specialization: form.specialization || undefined,
+      qualification: form.qualification || undefined,
+      experience: form.experience ? Number(form.experience) : undefined,
+      fee: form.fee ? Number(form.fee) : undefined,
+      startTime: form.startTime || undefined,
+      endTime: form.endTime || undefined,
+      maxPatients: form.capacity ? Number(form.capacity) : 20,
+      recurrenceType: form.recurrenceType,
+      recurrencePattern,
+      dayOfWeek: form.recurrenceType === "WEEKLY" && form.recurrenceDays.length > 0 ? form.recurrenceDays[0] : "MONDAY",
+    };
+
+    addDoctor.mutate(payload, {
+      onSuccess: () => { setForm(EMPTY_ADD); setShowAdd(false); toast.success("Doctor added successfully"); },
+      onError: (err: any) => setError(err?.response?.data?.message || "Failed to add doctor"),
+    });
   }
-
-  // ==========================================================
-  // CLOSE ADD FORM
-  // ==========================================================
 
   function closeAddForm() {
     setShowAdd(false);
@@ -178,1312 +96,509 @@ export default function ClinicDoctorsPage() {
     setError("");
   }
 
-  // ==========================================================
-  // COUNTS
-  // ==========================================================
-
-  const totalDoctors =
-    doctors?.length ?? 0;
-
-  const activeDoctors =
-    doctors?.filter(
-      (doctor) =>
-        doctor.user.isActive
-    ).length ?? 0;
-
-  // ==========================================================
-  // SEARCH
-  //
-  // Only searches doctor NAME.
-  // ==========================================================
-
-  const normalizedSearch =
-    searchQuery.trim().toLowerCase();
-
-  const filteredDoctors =
-    doctors?.filter((doctor) => {
-      const name =
-        doctor.user?.name
-          ?.toLowerCase() ?? "";
-
-      return name.includes(
-        normalizedSearch
-      );
-    }) ?? [];
-
-  // ==========================================================
-  // RENDER
-  // ==========================================================
+  const totalDoctors = doctors?.length ?? 0;
+  const activeDoctors = doctors?.filter((doctor) => doctor.user.isActive).length ?? 0;
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredDoctors = doctors?.filter((doctor) => (doctor.user?.name?.toLowerCase() ?? "").includes(normalizedSearch)) ?? [];
 
   return (
-    <div className="space-y-4 pb-5 sm:space-y-6">
-
-      {/* ======================================================
-          HEADER
-          ====================================================== */}
-
+    <div className="space-y-4 pb-8 sm:space-y-6">
       <GradientCard>
-
         <div className="relative overflow-hidden p-4 sm:p-6">
-
-          {/* Decorative glow */}
-
           <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[#14B8A6]/10 blur-3xl" />
-
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-            {/* Header content */}
-
             <div className="min-w-0">
-
               <div className="mb-2.5 flex flex-wrap items-center gap-2">
-
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-md">
                   <Stethoscope className="h-4 w-4" />
                 </div>
-
-                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#252a67] sm:text-xs">
-                  {tNav("doctors")}
-                </span>
-
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#252a67] sm:text-xs">{tNav("doctors")}</span>
                 {totalDoctors > 0 && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700 sm:text-[10px]">
-
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-                    {activeDoctors} Active
-
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {activeDoctors} Active
                   </span>
                 )}
-
               </div>
-
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                {tDoc("heading")}
-              </h1>
-
-              <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">
-                {tDoc("subtitle")}
-              </p>
-
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-3xl">{tDoc("heading")}</h1>
             </div>
-
-            {/* Add button */}
 
             <button
               type="button"
-              onClick={() => {
-                if (showAdd) {
-                  closeAddForm();
-                } else {
-                  setShowAdd(true);
-                  setError("");
-                }
-              }}
-              className={`
-                inline-flex
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                px-4
-                py-3
-                text-xs
-                font-bold
-                transition-all
-                sm:w-auto
-                sm:text-sm
-                ${
-                  showAdd
-                    ? "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                    : "bg-gradient-to-r from-[#252a67] to-[#3b4a8f] text-white shadow-[0_8px_20px_-8px_rgba(37,42,103,0.65)] hover:-translate-y-0.5 hover:shadow-lg"
-                }
-              `}
+              onClick={() => showAdd ? closeAddForm() : setShowAdd(true)}
+              className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold transition-all sm:w-auto sm:text-sm ${
+                  showAdd ? "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100" : "bg-gradient-to-r from-[#252a67] to-[#3b4a8f] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg"
+                }`}
             >
-
-              {showAdd ? (
-                <X className="h-4 w-4" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-
-              {showAdd
-                ? tDoc("cancel")
-                : tDoc("addDoctor")}
-
+              {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {showAdd ? tDoc("cancel") : tDoc("addDoctor")}
             </button>
-
           </div>
         </div>
-
       </GradientCard>
-
-      {/* ======================================================
-          ADD DOCTOR
-          ====================================================== */}
 
       {showAdd && (
         <GradientCard gradient={GREEN_GRADIENT}>
+          <form onSubmit={handleAdd} className="p-4 sm:p-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#047857] to-[#14B8A6] text-white"><UserRound className="h-6 w-6" /></div>
+              <div><h2 className="text-base font-bold text-slate-800 dark:text-white">{tDoc("addNewDoctor")}</h2><p className="mt-0.5 text-xs text-slate-500">{tDoc("addDoctorSub")}</p></div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+              <Field label={tDoc("name")} required><input required type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClasses} placeholder="Enter doctor's name" /></Field>
+              <Field label={tDoc("email")} required><input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputClasses} placeholder="doctor@example.com" /></Field>
+              <Field label={tDoc("password")} required><input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputClasses} placeholder="Minimum 6 characters" /></Field>
+              <Field label={tDoc("phone")}><input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClasses} placeholder="Phone number" /></Field>
+              
+              <Field label={tDoc("specialization")}>
+                <select value={form.specialization} onChange={(e) => setForm({ ...form, specialization: e.target.value })} className={inputClasses}>
+                  <option value="">-- Select Category --</option>
+                  {specializations.map((spec) => (
+                    <option key={spec.id} value={spec.name}>{spec.name}</option>
+                  ))}
+                </select>
+              </Field>
 
-          <form
-            onSubmit={handleAdd}
-            className="p-4 sm:p-6"
-          >
-
-            <div className="mb-5 flex items-center gap-3">
-
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#047857] to-[#14B8A6] text-white shadow-md">
-                <UserRound className="h-5 w-5" />
-              </div>
-
-              <div className="min-w-0">
-
-                <h2 className="text-sm font-bold text-slate-800 sm:text-base">
-                  {tDoc("addNewDoctor")}
-                </h2>
-
-                <p className="mt-0.5 text-[10px] text-slate-500 sm:text-xs">
-                  {tDoc("addDoctorSub")}
-                </p>
-
-              </div>
-
+              <Field label={tDoc("qualification")}><input type="text" value={form.qualification} onChange={(e) => setForm({ ...form, qualification: e.target.value })} className={inputClasses} placeholder="e.g. MBBS, MD" /></Field>
+              <Field label={tDoc("experience")}><input type="number" min={0} value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} className={inputClasses} placeholder="Years" /></Field>
+              <Field label={tDoc("fee")}><input type="number" min={0} value={form.fee} onChange={(e) => setForm({ ...form, fee: e.target.value })} className={inputClasses} placeholder="Consultation fee" /></Field>
             </div>
 
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
+            <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-900/50 mb-4">
+              <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-400 mb-4 flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Initial Schedule Setup</h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                
+                {/* 🟢 Modern Time Inputs for Add Doctor */}
+                <Field label="Start Time" required>
+                  <div className="relative">
+                    <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#14B8A6] pointer-events-none" />
+                    <input required type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} className={`${inputClasses} pl-10 font-bold tracking-widest`} />
+                  </div>
+                </Field>
+                <Field label="End Time" required>
+                  <div className="relative">
+                    <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#14B8A6] pointer-events-none" />
+                    <input required type="time" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} className={`${inputClasses} pl-10 font-bold tracking-widest`} />
+                  </div>
+                </Field>
 
-              <Field
-                label={tDoc("name")}
-                required
-              >
-                <input
-                  required
-                  type="text"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      name: e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                  placeholder="Enter doctor's name"
-                />
-              </Field>
-
-              <Field
-                label={tDoc("email")}
-                required
-              >
-                <input
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      email: e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                  placeholder="doctor@example.com"
-                />
-              </Field>
-
-              <Field
-                label={tDoc("password")}
-                required
-              >
-                <input
-                  required
-                  type="password"
-                  minLength={6}
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      password: e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                  placeholder="Minimum 6 characters"
-                />
-              </Field>
-
-              <Field label={tDoc("phone")}>
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  value={form.phone}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      phone: e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                  placeholder="Phone number"
-                />
-              </Field>
-
-              <Field
-                label={tDoc("specialization")}
-              >
-                <input
-                  type="text"
-                  value={form.specialization}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      specialization:
-                        e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                  placeholder="e.g. Cardiology"
-                />
-              </Field>
-
-              <Field
-                label={tDoc("qualification")}
-              >
-                <input
-                  type="text"
-                  value={form.qualification}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      qualification:
-                        e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                  placeholder="e.g. MBBS, MD"
-                />
-              </Field>
-
-              <Field label={tDoc("experience")}>
-                <div className="relative">
-
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.experience}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        experience:
-                          e.target.value,
-                      })
-                    }
-                    className={`${inputClasses} pr-16`}
-                    placeholder="Years"
-                  />
-
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                    {tDoc("years")}
-                  </span>
-
-                </div>
-              </Field>
-
-              <Field label={tDoc("fee")}>
-
-                <div className="relative">
-
-                  <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.fee}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        fee: e.target.value,
-                      })
-                    }
-                    className={`${inputClasses} pl-9`}
-                    placeholder="Consultation fee"
-                  />
-
-                </div>
-
-              </Field>
-
-              <Field label={tDoc("startTime")}>
-                <input
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      startTime:
-                        e.target.value,
-                    })
-                  }
-                  className={inputClasses}
-                />
-              </Field>
-
-            </div>
-
-            {error && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-semibold text-red-600">
-                {error}
+                <Field label="Capacity"><input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} className={inputClasses} placeholder="20" /></Field>
+                
+                <Field label="Schedule Type">
+                  <select value={form.recurrenceType} onChange={e => setForm({...form, recurrenceType: e.target.value})} className={inputClasses}>
+                    <option value="DAILY">Daily (Every Day)</option>
+                    <option value="WEEKLY">Weekly (Custom Days)</option>
+                    <option value="MONTHLY_DATE">Monthly (Specific Date)</option>
+                    <option value="MONTHLY_WEEKDAY">Monthly (Specific Weekday)</option>
+                    <option value="SPECIFIC_DATE">Specific Date (Exception)</option>
+                  </select>
+                </Field>
               </div>
-            )}
 
-            <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-
-              <button
-                type="submit"
-                disabled={
-                  addDoctor.isPending
-                }
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-5 py-3 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-sm"
-              >
-
-                {addDoctor.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="mt-4">
+                {form.recurrenceType === "WEEKLY" && (
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map(day => (
+                      <button type="button" key={day} onClick={() => setForm({...form, recurrenceDays: form.recurrenceDays.includes(day) ? form.recurrenceDays.filter(d => d !== day) : [...form.recurrenceDays, day]})} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${form.recurrenceDays.includes(day) ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-600'}`}>
+                        {form.recurrenceDays.includes(day) && <Check className="inline h-3 w-3 mr-1"/>} {day.substring(0,3)}
+                      </button>
+                    ))}
+                  </div>
                 )}
-
-                {addDoctor.isPending
-                  ? tDoc("creating")
-                  : tDoc("createAccount")}
-
-              </button>
-
-              <button
-                type="button"
-                onClick={closeAddForm}
-                className="w-full rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 sm:w-auto sm:text-sm"
-              >
-                {tDoc("cancel")}
-              </button>
-
+                {form.recurrenceType === "MONTHLY_DATE" && (
+                  <div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-600">Every Month on the</span><input type="number" min={1} max={31} value={form.recurrenceDate} onChange={e => setForm({...form, recurrenceDate: e.target.value})} className="border border-slate-200 p-2 rounded-lg w-20 text-center text-sm font-bold" /><span className="text-xs font-bold text-slate-600">th</span></div>
+                )}
+                {form.recurrenceType === "MONTHLY_WEEKDAY" && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-slate-600">Every</span>
+                    <select value={form.recurrenceWeek} onChange={e => setForm({...form, recurrenceWeek: e.target.value})} className="border border-slate-200 p-2 rounded-lg text-sm font-bold">{WEEKS.map(w => <option key={w.label} value={w.val}>{w.label}</option>)}</select>
+                    <select value={form.recurrenceWeekday} onChange={e => setForm({...form, recurrenceWeekday: e.target.value})} className="border border-slate-200 p-2 rounded-lg text-sm font-bold">{DAYS_OF_WEEK.map(d => <option key={d} value={d}>{d}</option>)}</select>
+                  </div>
+                )}
+                {form.recurrenceType === "SPECIFIC_DATE" && (
+                  <div><label className="text-xs font-bold text-amber-600 block mb-1">Select Exception Date</label><input type="date" value={form.specificDate} onChange={e=>setForm({...form, specificDate: e.target.value})} className="w-full border border-amber-200 bg-amber-50 rounded-lg p-2 text-sm font-bold outline-none focus:border-amber-400 dark:bg-amber-900/20 dark:text-white" /></div>
+                )}
+              </div>
             </div>
 
+            {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">{error}</div>}
+            
+            <div className="mt-6">
+              <button type="submit" disabled={addDoctor.isPending} className="w-full sm:w-auto px-8 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] py-3.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5">{addDoctor.isPending ? "Creating Account..." : "Create Doctor Account"}</button>
+            </div>
           </form>
-
         </GradientCard>
       )}
 
-      {/* ======================================================
-          LOADING
-          ====================================================== */}
-
-      {isLoading && (
-        <div className="flex min-h-[220px] items-center justify-center rounded-[22px] border border-slate-100 bg-white dark:border-soft-300 dark:bg-surface">
-
-          <div className="flex flex-col items-center gap-3">
-
-            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#252a67] border-t-transparent" />
-
-            <p className="text-xs font-medium text-slate-500 sm:text-sm">
-              {tDoc("loadingDoctors")}
-            </p>
-
-          </div>
-
+      {!isLoading && doctors && doctors.length > 0 && (
+        <div className="relative mt-2">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search doctors by name..." className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-4 text-sm font-medium outline-none focus:border-[#252a67] dark:bg-slate-900 dark:border-slate-800 dark:text-white" />
         </div>
       )}
 
-      {/* ======================================================
-          EMPTY
-          ====================================================== */}
+      {!isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-4">
+          {filteredDoctors.map((doctor) => (
+            <DoctorRow key={doctor.id} doctor={doctor} clinicId={clinic?.id} specializations={specializations} />
+          ))}
+        </div>
+      )}
 
-      {!isLoading &&
-        (!doctors ||
-          doctors.length === 0) && (
-          <GradientCard>
-
-            <div className="px-5 py-10 text-center sm:p-10">
-
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-lg">
-                <Stethoscope className="h-7 w-7" />
-              </div>
-
-              <h2 className="mt-4 text-base font-bold text-slate-800">
-                {tDoc("noDoctorsTitle")}
-              </h2>
-
-              <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 sm:text-sm">
-                {tDoc("noDoctorsSub")}
-              </p>
-
-              {!showAdd && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowAdd(true)
-                  }
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-5 py-3 text-xs font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-sm"
-                >
-                  <Plus className="h-4 w-4" />
-                  {tDoc("addDoctor")}
-                </button>
-              )}
-
-            </div>
-
-          </GradientCard>
-        )}
-
-      {/* ======================================================
-          DOCTOR LIST
-          ====================================================== */}
-
-      {!isLoading &&
-        doctors &&
-        doctors.length > 0 && (
-
-          <div className="space-y-4 sm:space-y-5">
-
-            {/* ==================================================
-                SEARCH BAR
-                ================================================== */}
-
-            <div className="relative">
-
-              <Search
-                className="
-                  pointer-events-none
-                  absolute
-                  left-3.5
-                  top-1/2
-                  h-4
-                  w-4
-                  -translate-y-1/2
-                  text-slate-400
-                  sm:left-4
-                  sm:h-5
-                  sm:w-5
-                "
-              />
-
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) =>
-                  setSearchQuery(
-                    e.target.value
-                  )
-                }
-                placeholder="Search doctor by name..."
-                aria-label="Search doctor by name"
-                className="
-                  w-full
-                  rounded-2xl
-                  border
-                  border-slate-200
-                  bg-white
-                  py-3
-                  pl-10
-                  pr-11
-                  text-xs
-                  font-medium
-                  text-slate-700
-                  outline-none
-                  shadow-[0_6px_24px_-17px_rgba(37,42,103,0.4)]
-                  transition-all
-                  placeholder:text-slate-400
-                  hover:border-slate-300
-                  focus:border-[#252a67]
-                  focus:ring-4
-                  focus:ring-[#252a67]/10
-                  sm:py-3.5
-                  sm:pl-12
-                  sm:text-sm
-                  dark:border-soft-300
-                  dark:bg-surface
-                  dark:text-ink-800
-                "
-              />
-
-              {/* Clear */}
-
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSearchQuery("")
-                  }
-                  aria-label="Clear search"
-                  className="
-                    absolute
-                    right-3
-                    top-1/2
-                    flex
-                    h-6
-                    w-6
-                    -translate-y-1/2
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-slate-100
-                    text-slate-400
-                    transition
-                    hover:bg-slate-200
-                    hover:text-slate-700
-                  "
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-
-            </div>
-
-            {/* ==================================================
-                SECTION HEADER
-                ================================================== */}
-
-            <div className="flex items-end justify-between gap-3">
-
-              <div className="min-w-0">
-
-                <div className="flex items-center gap-2">
-
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#14B8A6]" />
-
-                  <h2 className="text-sm font-bold text-slate-800 sm:text-base">
-                    {tDoc("yourDoctors")}
-                  </h2>
-
-                </div>
-
-                <p className="mt-1 text-[10px] text-slate-500 sm:text-xs">
-
-                  {searchQuery.trim()
-                    ? `${filteredDoctors.length} of ${totalDoctors} doctors`
-                    : `${totalDoctors} ${tDoc("doctorsAdded")}`}
-
-                </p>
-
-              </div>
-
-              <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[9px] font-bold text-emerald-700 sm:text-[10px]">
-
-                <TrendingUp className="h-3 w-3" />
-
-                {activeDoctors} Active
-
-              </div>
-
-            </div>
-
-            {/* ==================================================
-                RESULTS
-                ================================================== */}
-
-            {filteredDoctors.length > 0 && (
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
-
-                {filteredDoctors.map(
-                  (doctor) => (
-                    <DoctorRow
-                      key={doctor.id}
-                      doctor={doctor}
-                    />
-                  )
-                )}
-
-              </div>
-            )}
-
-            {/* ==================================================
-                NO SEARCH RESULT
-                ================================================== */}
-
-            {searchQuery.trim() &&
-              filteredDoctors.length ===
-                0 && (
-                <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-10 text-center shadow-[0_8px_30px_-20px_rgba(37,42,103,0.35)] dark:border-soft-300 dark:bg-surface">
-
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#252a67]/[0.06]">
-
-                    <Search className="h-5 w-5 text-[#252a67]" />
-
-                  </div>
-
-                  <h3 className="mt-3 text-sm font-bold text-slate-800">
-                    No doctor found
-                  </h3>
-
-                  <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
-
-                    No doctor matches{" "}
-
-                    <span className="font-semibold text-[#252a67]">
-                      "{searchQuery}"
-                    </span>
-
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSearchQuery("")
-                    }
-                    className="mt-4 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-4 py-2.5 text-[10px] font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-xs"
-                  >
-                    Clear Search
-                  </button>
-
-                </div>
-              )}
-
-          </div>
-        )}
-
+      {!isLoading && filteredDoctors.length === 0 && searchQuery && (
+        <div className="text-center py-10 text-slate-500 font-medium">No doctors found matching "{searchQuery}"</div>
+      )}
     </div>
   );
 }
 
-// ============================================================
-// FIELD
-// ============================================================
-
-function Field({
-  label,
-  children,
-  required,
-}: {
-  label: string;
-  children: React.ReactNode;
-  required?: boolean;
-}) {
+function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean; }) {
   return (
     <label className="block">
-
-      <span className="mb-1.5 block text-[11px] font-bold text-slate-600 sm:text-xs">
-
-        {label}
-
-        {required && (
-          <span className="ml-1 text-red-500">
-            *
-          </span>
-        )}
-
-      </span>
-
+      <span className="mb-1.5 block text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">{label}{required && <span className="text-red-500 ml-1">*</span>}</span>
       {children}
-
     </label>
   );
 }
 
-// ============================================================
-// DOCTOR CARD
-// ============================================================
-
-function DoctorRow({
-  doctor,
-}: {
-  doctor: ClinicDoctor;
-}) {
-  const tDoc =
-    useTranslations("ClinicDoctors");
-
-  const editDoctor =
-    useEditDoctor();
-
-  const [editing, setEditing] =
-    useState(false);
+function DoctorRow({ doctor, clinicId, specializations }: { doctor: ClinicDoctor; clinicId?: string; specializations: any[] }) {
+  const tDoc = useTranslations("ClinicDoctors");
+  const editDoctor = useEditDoctor();
+  
+  const [editing, setEditing] = useState(false);
+  const [showSchedules, setShowSchedules] = useState(false); 
 
   const [form, setForm] = useState({
-    specialization:
-      doctor.specialization ?? "",
-    qualification:
-      doctor.qualification ?? "",
-    experience:
-      doctor.experience?.toString() ?? "",
-    fee:
-      doctor.fee?.toString() ?? "",
-    startTime:
-      doctor.startTime ?? "",
+    specialization: doctor.specialization ?? "", qualification: doctor.qualification ?? "",
+    experience: doctor.experience?.toString() ?? "", fee: doctor.fee?.toString() ?? "",
+    startTime: doctor.startTime ?? "", endTime: (doctor as any).endTime ?? "", 
+    maxPatients: (doctor as any).maxPatients?.toString() ?? "",
   });
 
-  // ==========================================================
-  // PHOTO
-  //
-  // Supports common possible backend fields.
-  // ==========================================================
+  const docAny = doctor as any;
+  const photo = docAny.user?.avatar || docAny.profilePhoto || null;
+  const doctorName = doctor.user.name || "Doctor";
 
-  const doctorData =
-    doctor as ClinicDoctor & {
-      image?: string | null;
-      photo?: string | null;
-      avatar?: string | null;
-      profileImage?: string | null;
-      profilePhoto?: string | null;
-
-      user?: ClinicDoctor["user"] & {
-        image?: string | null;
-        photo?: string | null;
-        avatar?: string | null;
-        profileImage?: string | null;
-        profilePhoto?: string | null;
-      };
-    };
-
-  const photo =
-    doctorData.user?.image ||
-    doctorData.user?.photo ||
-    doctorData.user?.avatar ||
-    doctorData.user?.profileImage ||
-    doctorData.user?.profilePhoto ||
-    doctorData.image ||
-    doctorData.photo ||
-    doctorData.avatar ||
-    doctorData.profileImage ||
-    doctorData.profilePhoto ||
-    null;
-
-  // ==========================================================
-  // NAME
-  // ==========================================================
-
-  const doctorName =
-    doctor.user.name || "Doctor";
-
-  // ==========================================================
-  // SAVE
-  // ==========================================================
-
-  function handleSave(
-    e: React.FormEvent
-  ) {
+  function handleSave(e: React.FormEvent) {
     e.preventDefault();
 
-    editDoctor.mutate(
-      {
-        doctorId: doctor.id,
+    // 🟢 FIX: Define payload as 'any' to bypass strict TypeScript checking for new fields
+    const payload: any = {
+      doctorId: doctor.id,
+      specialization: form.specialization || undefined,
+      qualification: form.qualification || undefined,
+      experience: form.experience ? Number(form.experience) : undefined,
+      fee: form.fee ? Number(form.fee) : undefined,
+      startTime: form.startTime || undefined,
+      endTime: form.endTime || undefined,
+      maxPatients: form.maxPatients ? Number(form.maxPatients) : undefined,
+    };
 
-        specialization:
-          form.specialization ||
-          undefined,
-
-        qualification:
-          form.qualification ||
-          undefined,
-
-        experience: form.experience
-          ? Number(form.experience)
-          : undefined,
-
-        fee: form.fee
-          ? Number(form.fee)
-          : undefined,
-
-        startTime:
-          form.startTime ||
-          undefined,
-      },
-      {
-        onSuccess: () => {
-          setEditing(false);
-        },
+    editDoctor.mutate(payload, {
+      onSuccess: () => { 
+        setEditing(false); 
+        toast.success("Profile updated"); 
       }
-    );
+    });
   }
 
-  // ==========================================================
-  // CARD
-  // ==========================================================
-
   return (
-    <GradientCard>
-
-      <div className="p-3.5 sm:p-5">
-
-        {/* ====================================================
-            PROFILE
-            ==================================================== */}
-
-        <div className="flex min-w-0 items-start gap-3">
-
-          {/* ==================================================
-              DOCTOR PHOTO
-
-              object-cover:
-              fills the small frame
-
-              object-top:
-              preserves the top portion
-              so head/face doesn't disappear
-              ================================================== */}
-
-          <div className="relative h-[68px] w-[58px] shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 sm:h-[78px] sm:w-[66px] sm:rounded-2xl">
-
-            {photo ? (
-              <img
-                src={photo}
-                alt={doctorName}
-                loading="lazy"
-                className="h-full w-full object-cover object-top"
-              />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white">
-
-                <Camera className="mb-1 h-3.5 w-3.5 opacity-60" />
-
-                <span className="text-sm font-bold">
-                  {getInitials(
-                    doctorName
-                  )}
-                </span>
-
-              </div>
-            )}
-
-            {/* Active check */}
-
-            {doctor.user.isActive && (
-              <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-md">
-
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-
-              </div>
-            )}
-
+    <GradientCard className="flex flex-col h-full">
+      <div className="flex flex-col h-full p-4 sm:p-5">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="relative h-[80px] w-[70px] shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
+            {photo ? <img src={photo} alt={doctorName} className="h-full w-full object-cover object-top" /> : <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white font-bold text-xl">{doctorName.substring(0, 2).toUpperCase()}</div>}
+            {doctor.user.isActive && <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-md"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /></div>}
           </div>
-
-          {/* ==================================================
-              DOCTOR DETAILS
-              ================================================== */}
-
-          <div className="min-w-0 flex-1">
-
-            <div className="flex min-w-0 items-start gap-1.5">
-
-              <p className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900 sm:text-base">
-                {formatDoctorName(
-                  doctorName
-                )}
-              </p>
-
-              {/* Desktop/tablet status */}
-
-              {doctor.user.isActive ? (
-                <span className="hidden shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700 min-[400px]:inline-flex">
-
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-                  Active
-
-                </span>
-              ) : (
-                <span className="hidden shrink-0 rounded-full bg-red-50 px-2 py-1 text-[9px] font-bold text-red-600 min-[400px]:inline-flex">
-                  Inactive
-                </span>
-              )}
-
-            </div>
-
-            <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-
-              <Mail className="h-3 w-3 shrink-0 text-[#3b4a8f]" />
-
-              <span className="truncate text-[10px] font-medium text-slate-500 sm:text-[11px]">
-                {doctor.user.email}
-              </span>
-
-            </div>
-
-            {/* Small mobile status */}
-
-            <div className="mt-1.5 min-[400px]:hidden">
-
-              {doctor.user.isActive ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[8px] font-bold text-emerald-700">
-
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-                  Active
-
-                </span>
-              ) : (
-                <span className="inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[8px] font-bold text-red-600">
-                  Inactive
-                </span>
-              )}
-
-            </div>
-
+          <div className="min-w-0 flex-1 pt-1">
+            <p className="truncate text-base font-extrabold text-slate-900 dark:text-white">Dr. {doctorName.replace("Dr. ", "")}</p>
+            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">{doctor.specialization || "General"}</p>
+            <div className="mt-1.5 flex items-center gap-1.5"><Mail className="h-3 w-3 text-slate-400" /><span className="text-[11px] font-medium text-slate-500 truncate">{doctor.user.email}</span></div>
           </div>
+        </div>
 
-          {/* ==================================================
-              EDIT
-              ================================================== */}
-
-          <button
-            type="button"
-            onClick={() =>
-              setEditing(
-                (value) => !value
-              )
-            }
-            aria-label={
-              editing
-                ? tDoc("close")
-                : tDoc("edit")
-            }
-            className={`
-              flex
-              h-8
-              w-8
-              shrink-0
-              items-center
-              justify-center
-              rounded-lg
-              transition-all
-              sm:h-9
-              sm:w-9
-              ${
-                editing
-                  ? "border border-red-200 bg-red-50 text-red-600"
-                  : "bg-[#252a67]/[0.06] text-[#252a67] hover:bg-[#252a67]/10"
-              }
-            `}
-          >
-
-            {editing ? (
-              <X className="h-3.5 w-3.5" />
-            ) : (
-              <Pencil className="h-3.5 w-3.5" />
-            )}
-
+        <div className="grid grid-cols-2 gap-2 mb-4 border-b border-slate-100 pb-4 dark:border-slate-800">
+          <button onClick={() => { setShowSchedules(!showSchedules); setEditing(false); }} className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all ${showSchedules ? "bg-[#14B8A6] text-white shadow-sm" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"}`}>
+            <CalendarDays className="h-4 w-4" /> Sessions
           </button>
-
+          <button onClick={() => { setEditing(!editing); setShowSchedules(false); }} className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all ${editing ? "bg-[#252a67] text-white shadow-sm" : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400"}`}>
+            <Edit2 className="h-4 w-4" /> Edit Profile
+          </button>
         </div>
 
-        {/* ====================================================
-            QUICK INFO
-            ==================================================== */}
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-
-          <InfoItem
-            icon={BriefcaseMedical}
-            label={tDoc("specialization")}
-            value={
-              doctor.specialization ||
-              tDoc("notSet")
-            }
-          />
-
-          <InfoItem
-            icon={GraduationCap}
-            label={tDoc("qualification")}
-            value={
-              doctor.qualification ||
-              tDoc("notSet")
-            }
-          />
-
-          <InfoItem
-            icon={Clock3}
-            label={tDoc("startTime")}
-            value={
-              doctor.startTime ||
-              tDoc("notSet")
-            }
-          />
-
-          <InfoItem
-            icon={IndianRupee}
-            label={tDoc("fee")}
-            value={
-              doctor.fee != null
-                ? `₹${doctor.fee}`
-                : tDoc("notSet")
-            }
-          />
-
-        </div>
-
-        {/* ====================================================
-            EXPERIENCE
-            ==================================================== */}
-
-        {doctor.experience != null && (
-          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-emerald-50/70 px-3 py-2">
-
-            <Award className="h-4 w-4 shrink-0 text-emerald-600" />
-
-            <span className="text-[10px] font-bold text-emerald-700 sm:text-[11px]">
-              {doctor.experience}{" "}
-              {tDoc("yearsExperience")}
-            </span>
-
-          </div>
-        )}
-
-        {/* ====================================================
-            QUALIFICATION
-            ==================================================== */}
-
-        {doctor.qualification && (
-          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-3 py-2.5">
-
-            <BookOpen className="h-4 w-4 shrink-0 text-white" />
-
-            <div className="min-w-0">
-
-              <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200">
-                {tDoc("qualification")}
-              </p>
-
-              <p className="truncate text-[10px] font-bold text-white sm:text-xs">
-                {doctor.qualification}
-              </p>
-
+        {!editing && !showSchedules && (
+          <div className="grid grid-cols-2 gap-2.5 mt-auto">
+            <InfoItem icon={GraduationCap} label="Qualification" value={doctor.qualification || "N/A"} />
+            <InfoItem icon={Award} label="Experience" value={doctor.experience ? `${doctor.experience} Yrs` : "N/A"} />
+            <InfoItem icon={IndianRupee} label="Fee" value={doctor.fee != null ? `₹${doctor.fee}` : "N/A"} />
+            <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/30">
+               <span className={`text-[10px] font-bold uppercase ${doctor.user.isActive ? "text-emerald-600" : "text-red-500"}`}>Status: {doctor.user.isActive ? "Active" : "Inactive"}</span>
             </div>
-
           </div>
         )}
-
-        {/* ====================================================
-            EDIT FORM
-            ==================================================== */}
 
         {editing && (
-          <form
-            onSubmit={handleSave}
-            className="mt-4 border-t border-slate-100 pt-4"
-          >
-
-            <div className="mb-3">
-
-              <h3 className="text-xs font-bold text-slate-800 sm:text-sm">
-                {tDoc("editDoctorDetails")}
-              </h3>
-
-              <p className="mt-0.5 text-[10px] text-slate-500">
-                {tDoc("editDoctorSub")}
-              </p>
-
-            </div>
-
-            <div className="space-y-3">
-
-              <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2">
-
-                <Field
-                  label={tDoc("specialization")}
-                >
-                  <input
-                    value={
-                      form.specialization
-                    }
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        specialization:
-                          e.target.value,
-                      })
-                    }
-                    className={`${inputClasses} px-3 py-2 text-xs`}
-                    placeholder="e.g. Cardiology"
-                  />
-                </Field>
-
-                <Field
-                  label={tDoc("qualification")}
-                >
-                  <input
-                    value={
-                      form.qualification
-                    }
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        qualification:
-                          e.target.value,
-                      })
-                    }
-                    className={`${inputClasses} px-3 py-2 text-xs`}
-                    placeholder="e.g. MBBS, MD"
-                  />
-                </Field>
-
-              </div>
-
-              <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2">
-
-                <Field
-                  label={tDoc("experience")}
-                >
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.experience}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        experience:
-                          e.target.value,
-                      })
-                    }
-                    className={`${inputClasses} px-3 py-2 text-xs`}
-                    placeholder="Years"
-                  />
-                </Field>
-
-                <Field label={tDoc("fee")}>
-
-                  <div className="relative">
-
-                    <IndianRupee className="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
-
-                    <input
-                      type="number"
-                      min={0}
-                      value={form.fee}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          fee: e.target.value,
-                        })
-                      }
-                      className={`${inputClasses} px-3 py-2 pl-7 text-xs`}
-                      placeholder="Fee"
-                    />
-
-                  </div>
-
-                </Field>
-
-              </div>
-
-              <Field
-                label={tDoc("startTime")}
-              >
-                <input
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      startTime:
-                        e.target.value,
-                    })
-                  }
-                  className={`${inputClasses} px-3 py-2 text-xs`}
-                />
+          <form onSubmit={handleSave} className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Specialization">
+                <select value={form.specialization} onChange={(e) => setForm({ ...form, specialization: e.target.value })} className={`${inputClasses} py-2.5`}>
+                  <option value="">Select Category</option>
+                  {specializations.map((spec) => (
+                    <option key={spec.id} value={spec.name}>{spec.name}</option>
+                  ))}
+                </select>
               </Field>
-
+              <Field label="Qualification">
+                <input value={form.qualification} onChange={(e) => setForm({ ...form, qualification: e.target.value })} className={`${inputClasses} py-2.5`} placeholder="MBBS, MD" />
+              </Field>
             </div>
-
-            <div className="mt-3 flex gap-2">
-
-              <button
-                type="submit"
-                disabled={
-                  editDoctor.isPending
-                }
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#252a67] to-[#3b4a8f] px-3 py-2.5 text-[10px] font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 sm:flex-none sm:text-xs"
-              >
-
-                {editDoctor.isPending && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                )}
-
-                {editDoctor.isPending
-                  ? tDoc("saving")
-                  : tDoc("saveChanges")}
-
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setEditing(false)
-                }
-                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[10px] font-bold text-slate-600 transition hover:bg-slate-50 sm:flex-none sm:text-xs"
-              >
-                {tDoc("cancel")}
-              </button>
-
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Experience (Yrs)">
+                <input type="number" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} className={`${inputClasses} py-2.5`} />
+              </Field>
+              <Field label="Fee (₹)">
+                <div className="relative">
+                  <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <input type="number" value={form.fee} onChange={(e) => setForm({ ...form, fee: e.target.value })} className={`${inputClasses} pl-8 py-2.5`} />
+                </div>
+              </Field>
             </div>
-
+            
+            <button type="submit" disabled={editDoctor.isPending} className="w-full rounded-xl bg-[#252a67] py-3 text-sm font-bold text-white shadow-md hover:bg-[#1e2251] transition-all flex justify-center items-center gap-2">
+              {editDoctor.isPending ? <Loader2 className="h-4 w-4 animate-spin"/> : <CheckCircle2 className="h-4 w-4"/>}
+              {editDoctor.isPending ? "Saving..." : "Save Profile"}
+            </button>
           </form>
         )}
 
+        {showSchedules && clinicId && (
+          <div className="animate-in fade-in zoom-in-95 duration-200">
+            <InlineScheduleEditor doctorId={doctor.id} clinicId={clinicId} />
+          </div>
+        )}
       </div>
-
     </GradientCard>
   );
 }
 
-// ============================================================
-// INFO ITEM
-// ============================================================
-
-function InfoItem({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-}) {
+function InfoItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string; }) {
   return (
-    <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition hover:border-[#252a67]/15">
-
-      <div className="flex min-w-0 items-center gap-1.5">
-
-        <Icon className="h-3 w-3 shrink-0 text-[#252a67]" />
-
-        <span className="truncate text-[8px] font-bold uppercase tracking-wide text-slate-400">
-          {label}
-        </span>
-
-      </div>
-
-      <p className="mt-1 truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">
-        {value}
-      </p>
-
+    <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 p-3 dark:bg-slate-800 dark:border-slate-700 hover:border-[#252a67]/20 transition-colors">
+      <div className="flex items-center gap-1.5 mb-1.5"><Icon className="h-3.5 w-3.5 text-[#252a67] dark:text-blue-400" /><span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500">{label}</span></div>
+      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{value}</p>
     </div>
   );
 }
 
 // ============================================================
-// DOCTOR NAME
+// 🟢 SESSIONS MANAGER WITH DROPDOWN RECURRENCE & MODERN TIME
 // ============================================================
+function InlineScheduleEditor({ doctorId, clinicId }: { doctorId: string; clinicId: string; }) {
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [maxPatients, setMaxPatients] = useState(20);
+  const [recurrenceType, setRecurrenceType] = useState("DAILY");
+  
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [monthlyDate, setMonthlyDate] = useState(1);
+  const [monthlyWeek, setMonthlyWeek] = useState<number | "LAST">(1);
+  const [monthlyDay, setMonthlyDay] = useState("SUNDAY");
+  const [specificDate, setSpecificDate] = useState("");
+  
+  const [editingCapacityId, setEditingCapacityId] = useState<string | null>(null);
+  const [editCapValue, setEditCapValue] = useState(20);
 
-function formatDoctorName(
-  name: string
-) {
-  const cleanName = name
-    .trim()
-    .replace(/^(dr\.?\s*)+/i, "")
-    .trim();
+  const fetchSchedules = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/doctors/${doctorId}/clinics/${clinicId}/schedules`);
+      if (res.data?.success) setSchedules(res.data.data.schedules);
+    } catch (err) { toast.error("Failed to fetch schedules"); }
+    finally { setLoading(false); }
+  };
 
-  return cleanName
-    ? `Dr. ${cleanName}`
-    : "Dr. Doctor";
-}
+  useEffect(() => { fetchSchedules(); }, [doctorId, clinicId]);
 
-// ============================================================
-// INITIALS
-// ============================================================
+  const handleAdd = async () => {
+    if (!startTime || !endTime) return toast.error("Start and End times are required");
+    
+    let recurrencePattern = {};
+    if (recurrenceType === "WEEKLY") {
+      if (selectedDays.length === 0) return toast.error("Select at least one day");
+      recurrencePattern = { days: selectedDays };
+    }
+    if (recurrenceType === "MONTHLY_DATE") recurrencePattern = { date: monthlyDate };
+    if (recurrenceType === "MONTHLY_WEEKDAY") {
+      if (monthlyWeek === "LAST") recurrencePattern = { isLast: true, day: monthlyDay };
+      else recurrencePattern = { week: monthlyWeek, day: monthlyDay };
+    }
+    if (recurrenceType === "SPECIFIC_DATE") {
+      if (!specificDate) return toast.error("Please select an exception date");
+      recurrencePattern = { exactDate: specificDate };
+    }
+    
+    try {
+      await api.post(`/doctors/${doctorId}/clinics/${clinicId}/schedules`, { startTime, endTime, maxPatients, recurrenceType, recurrencePattern });
+      toast.success("Session added!");
+      setStartTime(""); setEndTime(""); fetchSchedules();
+    } catch (err: any) { toast.error(err.response?.data?.message || "Failed to add session"); }
+  };
 
-function getInitials(
-  name: string
-) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) =>
-      part.charAt(0)
-    )
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  const handleUpdateCapacity = async (id: string) => {
+    try {
+      await api.put(`/doctors/${doctorId}/clinics/${clinicId}/schedules/${id}`, { maxPatients: editCapValue });
+      toast.success("Capacity updated");
+      setEditingCapacityId(null); fetchSchedules();
+    } catch (err) { toast.error("Failed to update"); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if(!confirm("Delete this session completely?")) return;
+    try {
+      await api.delete(`/doctors/${doctorId}/clinics/${clinicId}/schedules/${id}`);
+      toast.success("Session removed"); fetchSchedules();
+    } catch (err) { toast.error("Failed to delete"); }
+  };
+
+  return (
+    <div className="space-y-4">
+      
+      {/* ADD NEW SESSION FORM */}
+      <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <p className="text-[10px] font-extrabold uppercase text-slate-500 mb-4 tracking-wider">Add New Time Slot</p>
+        
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {/* 🟢 Modern Time Input: Start Time */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Start Time</label>
+            <div className="relative group">
+              <Clock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#14B8A6] group-focus-within:text-[#252a67] transition-colors" />
+              <input 
+                type="time" 
+                value={startTime} 
+                onChange={e=>setStartTime(e.target.value)} 
+                className="w-full border border-slate-200 rounded-xl p-2.5 pl-9 text-xs font-bold outline-none transition-all focus:border-[#252a67] focus:ring-[3px] focus:ring-[#252a67]/15 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white tracking-widest" 
+              />
+            </div>
+          </div>
+
+          {/* 🟢 Modern Time Input: End Time */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">End Time</label>
+            <div className="relative group">
+              <Clock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#14B8A6] group-focus-within:text-[#252a67] transition-colors" />
+              <input 
+                type="time" 
+                value={endTime} 
+                onChange={e=>setEndTime(e.target.value)} 
+                className="w-full border border-slate-200 rounded-xl p-2.5 pl-9 text-xs font-bold outline-none transition-all focus:border-[#252a67] focus:ring-[3px] focus:ring-[#252a67]/15 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white tracking-widest" 
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Capacity</label>
+            <div className="relative">
+              <Users className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input type="number" min={1} value={maxPatients} onChange={e=>setMaxPatients(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl p-2.5 pl-8 text-xs font-bold outline-none transition-all focus:border-[#252a67] focus:ring-[3px] focus:ring-[#252a67]/15 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white" />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Schedule Type</label>
+            <select value={recurrenceType} onChange={e=>setRecurrenceType(e.target.value)} className="w-full border border-slate-200 bg-slate-600 text-white rounded-xl p-2.5 text-[10px] font-bold outline-none focus:ring-2 focus:ring-[#14B8A6]/50 cursor-pointer">
+              <option value="DAILY">Daily (Every Day)</option>
+              <option value="WEEKLY">Weekly (Custom Days)</option>
+              <option value="MONTHLY_DATE">Monthly (Specific Date)</option>
+              <option value="MONTHLY_WEEKDAY">Monthly (Specific Weekday)</option>
+              <option value="SPECIFIC_DATE">Specific Date (Exception)</option>
+            </select>
+          </div>
+        </div>
+        
+        {/* RECURRENCE BUILDER */}
+        {recurrenceType === "WEEKLY" && (
+          <div className="flex flex-wrap gap-1.5 mb-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+            {DAYS_OF_WEEK.map(day => (
+              <button key={day} onClick={() => setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])} className={`px-2.5 py-1.5 rounded-lg text-[9px] font-bold border flex items-center gap-1 transition-colors ${selectedDays.includes(day) ? 'bg-[#14B8A6] text-white border-[#14B8A6]' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-600'}`}>
+                {selectedDays.includes(day) && <Check className="h-3 w-3"/>} {day.substring(0,3)}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {recurrenceType === "MONTHLY_DATE" && (
+          <div className="flex items-center gap-2 mb-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+            <span className="text-[10px] font-bold text-slate-600">Every Month on the</span>
+            <input type="number" min={1} max={31} value={monthlyDate} onChange={e => setMonthlyDate(Number(e.target.value))} className="border border-slate-200 p-2 rounded-xl w-16 text-center text-xs font-bold outline-none focus:border-[#252a67] dark:bg-slate-800 dark:border-slate-600 dark:text-white" />
+            <span className="text-[10px] font-bold text-slate-600">th</span>
+          </div>
+        )}
+
+        {recurrenceType === "MONTHLY_WEEKDAY" && (
+          <div className="flex items-center gap-2 mb-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+            <span className="text-[10px] font-bold text-slate-600">Every</span>
+            <select value={monthlyWeek} onChange={e => setMonthlyWeek(e.target.value === "LAST" ? "LAST" : Number(e.target.value))} className="border border-slate-200 p-2 rounded-xl text-xs font-bold outline-none focus:border-[#252a67] dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+              {WEEKS.map(w => <option key={w.label} value={w.val}>{w.label}</option>)}
+            </select>
+            <select value={monthlyDay} onChange={e => setMonthlyDay(e.target.value)} className="border border-slate-200 p-2 rounded-xl text-xs font-bold outline-none focus:border-[#252a67] dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+              {DAYS_OF_WEEK.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+        )}
+
+        {recurrenceType === "SPECIFIC_DATE" && (
+          <div className="mb-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+            <label className="text-[10px] font-bold text-amber-600 block mb-1">Select Exception Date</label>
+            <input type="date" value={specificDate} onChange={e=>setSpecificDate(e.target.value)} className="w-full border border-amber-200 bg-amber-50 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-amber-400 focus:ring-[3px] focus:ring-amber-400/20 dark:bg-amber-900/20 dark:text-white tracking-widest" />
+          </div>
+        )}
+        
+        <button onClick={handleAdd} className="w-full bg-[#14B8A6] text-white font-bold py-2.5 text-sm rounded-xl shadow-sm hover:bg-[#0f766e] transition-colors">Save Time Slot</button>
+      </div>
+
+      {/* EXISTING SESSIONS LIST */}
+      <div>
+        <p className="text-[10px] font-extrabold uppercase text-slate-400 mb-3 tracking-wider flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Active Sessions</p>
+        <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
+          {loading ? <div className="p-3 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-slate-400"/></div> : schedules.length === 0 ? <p className="text-xs text-slate-400 italic text-center p-4 border border-dashed rounded-xl">No sessions configured.</p> : schedules.map(s => (
+            <div key={s.id} className="flex flex-col border border-slate-200 rounded-xl p-3.5 bg-white shadow-sm hover:border-[#14B8A6]/40 transition-colors dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className={`text-[9px] uppercase font-extrabold px-2 py-0.5 rounded tracking-wide ${s.recurrenceType === 'SPECIFIC_DATE' ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-600'}`}>
+                    {s.recurrenceType.replace("_", " ")}
+                  </span>
+                  <p className="text-sm font-extrabold text-slate-800 mt-2 dark:text-slate-200 flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-slate-400" /> {s.startTime} - {s.endTime}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={()=>{setEditingCapacityId(s.id); setEditCapValue(s.maxPatients);}} className="h-8 w-8 flex items-center justify-center text-slate-500 hover:text-blue-600 border border-slate-200 rounded-lg bg-slate-50 transition-colors shadow-sm"><Edit2 className="h-3.5 w-3.5"/></button>
+                  <button onClick={()=>handleDelete(s.id)} className="h-8 w-8 flex items-center justify-center text-slate-500 hover:text-red-600 border border-slate-200 rounded-lg bg-slate-50 transition-colors shadow-sm"><Trash2 className="h-3.5 w-3.5"/></button>
+                </div>
+              </div>
+              
+              {editingCapacityId === s.id ? (
+                <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Max Limit:</span>
+                  <input type="number" value={editCapValue} onChange={e=>setEditCapValue(Number(e.target.value))} className="w-16 border border-slate-300 rounded-lg p-1.5 text-xs text-center font-bold outline-none focus:border-[#14B8A6] focus:ring-[2px] focus:ring-[#14B8A6]/15 shadow-sm" />
+                  <button onClick={()=>handleUpdateCapacity(s.id)} className="bg-[#14B8A6] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-[#0f766e]">Save</button>
+                  <button onClick={()=>setEditingCapacityId(null)} className="text-[10px] font-bold text-slate-500 hover:text-slate-700">Cancel</button>
+                </div>
+              ) : (
+                <div className="mt-3 border-t border-slate-50 pt-2.5 dark:border-slate-700/50">
+                  <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1.5"><Users className="h-3 w-3 text-[#252a67] dark:text-blue-400"/> Limit: <span className="font-bold text-slate-700 dark:text-slate-300">{s.maxPatients} Patients</span></p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

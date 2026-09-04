@@ -3,6 +3,7 @@ import type { Doctor as SharedDoctor } from "@doctor-contract/shared";
 export type ExtendedDoctor = SharedDoctor & {
   isVerified?: boolean;
   isFeatured?: boolean;
+  avgConsultationMinutes?: number;
   experience?: number;
   rating?: number;
   reviewCount?: number;
@@ -15,6 +16,10 @@ export type ExtendedDoctor = SharedDoctor & {
     id: string;
     clinicName: string;
     city?: string;
+    address?: string; 
+    phone?: string;   
+    whatsapp?: string; 
+    logo?: string;    
     isPrimary: boolean;
     associationDetails: {
       fee?: number;

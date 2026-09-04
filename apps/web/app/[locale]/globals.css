@@ -323,3 +323,16 @@ body {
 .animate-leave {
   animation: leave 0.2s ease-in forwards;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee linear infinite;
+}
