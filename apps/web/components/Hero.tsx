@@ -3,8 +3,7 @@
 import { Search, MapPin, ChevronDown, Mic, Users } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import DoctorGrid from "./DoctorGrid";
+import { useRouter } from "@/i18n/routing";
 import { fetchSearchLocations } from "@/lib/api";
 
 interface Location {
@@ -20,13 +19,12 @@ const POPULAR_SEARCHES = ["Cardiologist", "Skin clinic", "Diabetes treatment", "
 export default function Hero() {
   const t = useTranslations("Hero");
   const locale = useLocale();
+  const router = useRouter();
 
   const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [appliedLocation, setAppliedLocation] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,11 +48,11 @@ export default function Hero() {
   };
 
   function runSearch(q: string, loc: string) {
-    setAppliedQuery(q);
-    setAppliedLocation(loc);
-    if (typeof document !== "undefined") {
-      document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    const params = new URLSearchParams();
+    if (q.trim()) params.set("q", q.trim());
+    if (loc.trim()) params.set("city", loc.trim());
+    const qs = params.toString();
+    router.push(qs ? `/doctors?${qs}` : "/doctors");
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -65,7 +63,7 @@ export default function Hero() {
   return (
     <section
       id="search"
-      className="relative overflow-hidden bg-gradient-to-b from-[#EBF3FF] via-[#F4F8FE] to-white dark:from-[#0C1526] dark:via-[#0C1526] dark:to-[var(--color-bg)] pt-8 pb-12 lg:pt-12 lg:pb-16"
+      className="relative overflow-hidden bg-gradient-to-b from-[#EBF3FF] via-[#F4F8FE] to-white dark:from-[#0C1526] dark:via-[#0C1526] dark:to-[var(--color-bg)] pt-4 pb-6 lg:pt-6 lg:pb-8"
     >
       {/* Soft ambient background glow */}
       <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-[#1C63E7]/10 blur-3xl" />
@@ -74,7 +72,7 @@ export default function Hero() {
       <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
         <div className="grid items-center gap-8 lg:grid-cols-12">
           {/* ================= LEFT: Copy + Search Bar ================= */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 lg:py-2">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1C63E7] dark:text-[var(--color-primary-text)]">
               {t("eyebrow") || "TRUSTED HEALTHCARE FOR A BRIGHTER TOMORROW"}
             </p>
@@ -164,7 +162,7 @@ export default function Hero() {
           </div>
 
           {/* ================= RIGHT: Doctor Cutout + Badge (Image 1 style) ================= */}
-          <div className="relative lg:col-span-5 flex justify-center items-center">
+          <div className="relative lg:col-span-5 flex justify-center items-center self-stretch">
             {/* Script Text on top right of doctor */}
             <div className="absolute right-2 top-2 z-20 hidden sm:block text-right select-none">
               <p className="font-serif italic font-extrabold text-[#1C63E7] text-2xl lg:text-[1.75rem] leading-[1.15] drop-shadow-sm">
@@ -175,9 +173,9 @@ export default function Hero() {
               </p>
             </div>
 
-            {/* Doctor Image Container */}
-            <div className="relative z-10 mx-auto w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[420px]">
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl">
+            {/* Doctor Image Container — bounded height so it never outgrows the copy */}
+            <div className="relative z-10 mx-auto w-full max-w-[320px] sm:max-w-[350px] lg:max-w-[370px]">
+              <div className="relative h-[360px] w-full overflow-hidden rounded-3xl sm:h-[420px] lg:h-[460px]">
                 <img
                   src="/assets/home/hero-doctor.jpg"
                   alt="Doctor"
@@ -203,12 +201,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* ================= SEARCH RESULTS (if searched) ================= */}
-      {(appliedQuery || appliedLocation) && (
-        <div id="search-results" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 pt-10 lg:px-8">
-          <DoctorGrid query={appliedQuery} city={appliedLocation} />
-        </div>
-      )}
     </section>
   );
 }
