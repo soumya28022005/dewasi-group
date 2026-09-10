@@ -3,11 +3,25 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
-import { Building2, MapPin, Navigation, Map, Hash, Save, Loader2, AlertCircle, Home } from "lucide-react";
+import { 
+  Building2, 
+  MapPin, 
+  Navigation, 
+  Map, 
+  Hash, 
+  Save, 
+  Loader2, 
+  AlertCircle, 
+  Home, 
+  Phone, 
+  MessageCircle, 
+  Link2, 
+  FileText 
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useUpdateDiagnosticCenterProfile } from "@/lib/hooks/useDiagnosticCenter";
 import { ProfileField } from "./ProfileField";
-import type { DiagnosticCenter, UpdateDiagnosticCenterProfileInput } from "@doctor-contract/shared";
+import type { DiagnosticCenter } from "@doctor-contract/shared";
 
 interface ProfileFormProps {
   center: DiagnosticCenter | null | undefined;
@@ -19,7 +33,11 @@ interface FormValues {
   city: string;
   state: string;
   pincode: string;
-  hasHomeService: boolean; // 🟢 নতুন যুক্ত করা হয়েছে
+  phone: string;
+  whatsapp: string;
+  googleMapsUrl: string;
+  authorizationNote: string;
+  hasHomeService: boolean; 
 }
 
 export function ProfileForm({ center }: ProfileFormProps) {
@@ -39,7 +57,11 @@ export function ProfileForm({ center }: ProfileFormProps) {
       city: center?.city || "",
       state: center?.state || "",
       pincode: center?.pincode || "",
-      hasHomeService: center?.hasHomeService ?? false, // 🟢 ডিফল্ট ভ্যালু
+      phone: center?.phone || "",
+      whatsapp: center?.whatsapp || "",
+      googleMapsUrl: center?.googleMapsUrl || "",
+      authorizationNote: center?.authorizationNote || "",
+      hasHomeService: center?.hasHomeService ?? false, 
     },
   });
 
@@ -52,7 +74,11 @@ export function ProfileForm({ center }: ProfileFormProps) {
         city: center.city || "",
         state: center.state || "",
         pincode: center.pincode || "",
-        hasHomeService: center.hasHomeService ?? false, // 🟢 ডাটাবেস থেকে পাওয়া ভ্যালু
+        phone: center.phone || "",
+        whatsapp: center.whatsapp || "",
+        googleMapsUrl: center.googleMapsUrl || "",
+        authorizationNote: center.authorizationNote || "",
+        hasHomeService: center.hasHomeService ?? false, 
       });
     }
   }, [center, reset]);
@@ -60,18 +86,24 @@ export function ProfileForm({ center }: ProfileFormProps) {
   async function onSubmit(data: FormValues) {
     setFormError(null);
 
-    // 🟢 payload-এ hasHomeService যোগ করা হয়েছে (as any দিয়ে টাইপ এরর বাইপাস করা হলো)
+    // 🟢 নতুন ফিল্ডগুলো পেলোডে পাঠানো হচ্ছে
     const payload = {
       centerName: data.centerName.trim(),
       address: data.address.trim() || undefined,
       city: data.city.trim() || undefined,
       state: data.state.trim() || undefined,
       pincode: data.pincode.trim() || undefined,
+      phone: data.phone.trim() || undefined,
+      whatsapp: data.whatsapp.trim() || undefined,
+      googleMapsUrl: data.googleMapsUrl.trim() || undefined,
+      authorizationNote: data.authorizationNote.trim() || undefined,
       hasHomeService: data.hasHomeService, 
     } as any; 
 
     try {
       await updateProfile.mutateAsync(payload);
+      // Reset the form with the new data so isDirty becomes false
+      reset(data);
       toast.success(t("updateSuccess") || "Profile updated successfully!");
     } catch (err: any) {
       const msg = err?.response?.data?.message || t("updateError") || "Failed to update profile";
@@ -87,7 +119,7 @@ export function ProfileForm({ center }: ProfileFormProps) {
           {t("detailsTitle") || "Center Details"}
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          {t("detailsSubtitle") || "Update your diagnostic center's core information."}
+          {t("detailsSubtitle") || "Update your diagnostic center's core information, contact details, and services."}
         </p>
       </div>
 
@@ -113,6 +145,43 @@ export function ProfileForm({ center }: ProfileFormProps) {
               message: t("minCharsError") || "At least 2 characters",
             },
           })}
+        />
+
+        {/* Contact Information */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ProfileField
+            label="Phone Number"
+            icon={Phone}
+            placeholder="e.g. +8801700000000"
+            error={errors.phone?.message}
+            {...register("phone")}
+          />
+
+          <ProfileField
+            label="WhatsApp Number"
+            icon={MessageCircle}
+            placeholder="e.g. 8801700000000"
+            error={errors.whatsapp?.message}
+            {...register("whatsapp")}
+          />
+        </div>
+
+        {/* Google Maps URL */}
+        <ProfileField
+          label="Google Maps URL"
+          icon={Link2}
+          placeholder="https://maps.app.goo.gl/..."
+          error={errors.googleMapsUrl?.message}
+          {...register("googleMapsUrl")}
+        />
+
+        {/* Authorization Note */}
+        <ProfileField
+          label="Authorization Note (Optional)"
+          icon={FileText}
+          placeholder='e.g. "আমরা লালবাবা থেকে করাই"'
+          error={errors.authorizationNote?.message}
+          {...register("authorizationNote")}
         />
 
         {/* Address */}

@@ -488,6 +488,8 @@ export type DiagnosticCenter = {
 
   createdAt?: string;
   updatedAt?: string;
+
+  googleMapsUrl: string;
 };
 
 export type DiagnosticCenterStaff = {

@@ -13,7 +13,8 @@ import {
   Plus,
   X,
   AlertTriangle,
-  Home, // 🟢 Home আইকন ইমপোর্ট করা হলো
+  Home,
+  CheckCircle, 
 } from "lucide-react";
 import {
   useAdminDiagnosticCenters,
@@ -52,19 +53,20 @@ export default function AdminDiagnosticCentersPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // Dialog states
   const [pendingApproveCenter, setPendingApproveCenter] =
     useState<AdminDiagnosticCenterRecord | null>(null);
   const [pendingRevokeCenter, setPendingRevokeCenter] =
     useState<AdminDiagnosticCenterRecord | null>(null);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
 
-  // 🟢 Create Center Form State (hasHomeService যুক্ত করা হয়েছে)
-  const [formData, setFormData] = useState<CreateDiagnosticCenterInput>({
+  // 🟢 Create Center Form State (All new fields added)
+  const [formData, setFormData] = useState<CreateDiagnosticCenterInput & { whatsapp?: string; googleMapsUrl?: string }>({
     name: "",
     email: "",
     password: "",
     phone: "",
+    whatsapp: "",
+    googleMapsUrl: "",
     centerName: "",
     address: "",
     city: "",
@@ -122,6 +124,8 @@ export default function AdminDiagnosticCentersPage() {
         email: "",
         password: "",
         phone: "",
+        whatsapp: "",
+        googleMapsUrl: "",
         centerName: "",
         address: "",
         city: "",
@@ -130,7 +134,7 @@ export default function AdminDiagnosticCentersPage() {
         hasHomeService: false,
       });
       setActionSuccess(t("successCreated") || "Center created successfully");
-      refetch(); // 🟢 নতুন ল্যাব অ্যাড হওয়ার পর লিস্ট রিফ্রেশ করবে
+      refetch();
     } catch (err: any) {
       setActionError(
         err?.response?.data?.message || "Failed to create diagnostic center"
@@ -201,7 +205,7 @@ export default function AdminDiagnosticCentersPage() {
       {actionSuccess && (
         <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>{actionSuccess}</span>
           </div>
           <button
@@ -478,14 +482,14 @@ export default function AdminDiagnosticCentersPage() {
       {/* Create Center Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs overflow-y-auto">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl transition-all dark:border-slate-800 dark:bg-slate-900 my-8">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl transition-all dark:border-slate-800 dark:bg-slate-900 my-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {t("createCenterTitle") || "Create Diagnostic Center"}
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  {t("createCenterDesc") || "Add a new diagnostic center to the platform."}
+                  {t("createCenterDesc") || "Add a new diagnostic center to the platform with full details."}
                 </p>
               </div>
               <button
@@ -576,6 +580,36 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    WhatsApp (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.whatsapp || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, whatsapp: e.target.value })
+                    }
+                    placeholder="e.g. 919876543210"
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    Google Maps URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.googleMapsUrl || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, googleMapsUrl: e.target.value })
+                    }
+                    placeholder="https://maps.app.goo.gl/..."
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     {t("city") || "City"}
                   </label>
                   <input
@@ -602,7 +636,7 @@ export default function AdminDiagnosticCentersPage() {
                   />
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     {t("pincode") || "Pincode"}
                   </label>
