@@ -5,6 +5,14 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@doctor-contract/shared"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
+  },
 };
 
 export default withNextIntl(nextConfig);

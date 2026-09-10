@@ -509,6 +509,17 @@
     "noHolidaysSub": "আপনার ক্লিনিক নিয়মমাফিক সাপ্তাহিক সময়সূচী অনুযায়ী চলবে।",
     "defaultReason": "ক্লিনিক বন্ধ"
   },
+
+  "DiagnosticCenter": {
+    "whatsappNumber": "হোয়াটসঅ্যাপ নম্বর",
+    "googleMapsUrl": "গুগল ম্যাপস লিংক",
+    "isOnline": "বর্তমানে অনলাইন আছেন",
+    "authorizationNote": "অথোরাইজেশন নোট (যেমন: আমরা লালবাবা থেকে টেস্ট করাই)",
+    "manageTests": "টেস্ট ম্যানেজ করুন",
+    "addTest": "নতুন টেস্ট যুক্ত করুন",
+    "testPrice": "টেস্টের মূল্য",
+    "phone": "ফোন নম্বর"
+  },
   "Days": {
     "MONDAY": "সোমবার",
     "TUESDAY": "মঙ্গলবার",
@@ -960,7 +971,8 @@
     "staff": "কর্মী",
     "referrals": "রেফারেল",
     "overview": "সংক্ষিপ্ত বিবরণ",
-    "portalTitle": "ডায়াগনস্টিক সেন্টার পোর্টাল"
+    "portalTitle": "ডায়াগনস্টিক সেন্টার পোর্টাল",
+    "schedule": "সময়সূচি"
   },
   "DiagnosticCenterDashboard": {
     "title": "ডায়াগনস্টিক সেন্টার ড্যাশবোর্ড",

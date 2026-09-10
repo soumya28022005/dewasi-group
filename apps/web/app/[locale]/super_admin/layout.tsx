@@ -20,6 +20,7 @@ import {
   Star,
   Megaphone,
   ClipboardList,
+  TestTube, // 🟢 নতুন আইকন যোগ করা হলো
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { LucideIcon } from "lucide-react";
@@ -45,7 +46,7 @@ const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
         href: "/super_admin/dashboard",
         label: "Dashboard",
         icon: LayoutDashboard,
-        exact: true, // Dashboard-এর জন্য exact true রাখা জরুরি
+        exact: true,
       },
     ],
   },
@@ -66,6 +67,11 @@ const SUPER_ADMIN_NAV_SECTIONS: NavSection[] = [
         href: "/super_admin/diagnostic-centers",
         label: "Diagnostic Centers",
         icon: Activity,
+      },
+      {
+        href: "/super_admin/diagnostic-tests", // 🟢 নতুন গ্লোবাল টেস্ট পেজের লিংক
+        label: "Global Tests",
+        icon: TestTube,
       },
       {
         href: "/super_admin/doctor-availability",

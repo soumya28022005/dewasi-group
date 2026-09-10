@@ -433,6 +433,7 @@ export type CreateDiagnosticCenterInput = {
   city?: string;
   state?: string;
   pincode?: string;
+  hasHomeService?: boolean; // 🟢 নতুন ফিল্ড
 };
 export type SetFeaturedDoctorInput = {
   doctorId: string;
@@ -461,6 +462,10 @@ export type UpdatePlatformSettingsInput = {
 // PHASE 01 — DIAGNOSTIC CENTER PORTAL CONTRACT TYPES
 // ============================================================
 
+// ============================================================
+// PHASE 01 — DIAGNOSTIC CENTER PORTAL CONTRACT TYPES
+// ============================================================
+
 export type DiagnosticCenter = {
   id: string;
   userId?: string;
@@ -471,6 +476,16 @@ export type DiagnosticCenter = {
   pincode: string | null;
   logo: string | null;
   isApproved: boolean;
+  
+  // 🟢 New Fields for Location and Service Status
+  latitude?: number | null;
+  longitude?: number | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  isOnline?: boolean;
+  hasHomeService?: boolean;
+  authorizationNote?: string | null;
+
   createdAt?: string;
   updatedAt?: string;
 };
@@ -616,4 +631,11 @@ export type PublishAnnouncementInput = {
   message: string;
 };
 
-
+export type DiagnosticCenterWorkingHours = {
+  id?: string;
+  diagnosticCenterId?: string;
+  dayOfWeek: DayOfWeek;
+  openTime: string | null;
+  closeTime: string | null;
+  isClosed: boolean;
+};

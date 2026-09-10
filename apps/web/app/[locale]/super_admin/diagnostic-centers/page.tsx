@@ -13,6 +13,7 @@ import {
   Plus,
   X,
   AlertTriangle,
+  Home, // 🟢 Home আইকন ইমপোর্ট করা হলো
 } from "lucide-react";
 import {
   useAdminDiagnosticCenters,
@@ -58,7 +59,7 @@ export default function AdminDiagnosticCentersPage() {
     useState<AdminDiagnosticCenterRecord | null>(null);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
 
-  // Create Center Form State
+  // 🟢 Create Center Form State (hasHomeService যুক্ত করা হয়েছে)
   const [formData, setFormData] = useState<CreateDiagnosticCenterInput>({
     name: "",
     email: "",
@@ -69,6 +70,7 @@ export default function AdminDiagnosticCentersPage() {
     city: "",
     state: "",
     pincode: "",
+    hasHomeService: false, 
   });
 
   const centerList = centers || [];
@@ -82,7 +84,7 @@ export default function AdminDiagnosticCentersPage() {
 
     try {
       await approveCenter.mutateAsync(centerId);
-      setActionSuccess(t("successApproved"));
+      setActionSuccess(t("successApproved") || "Approved successfully");
     } catch (err: any) {
       setActionError(
         err?.response?.data?.message || "Failed to approve diagnostic center"
@@ -99,7 +101,7 @@ export default function AdminDiagnosticCentersPage() {
 
     try {
       await revokeCenter.mutateAsync(centerId);
-      setActionSuccess(t("successRevoked"));
+      setActionSuccess(t("successRevoked") || "Revoked successfully");
     } catch (err: any) {
       setActionError(
         err?.response?.data?.message || "Failed to revoke diagnostic center approval"
@@ -125,8 +127,10 @@ export default function AdminDiagnosticCentersPage() {
         city: "",
         state: "",
         pincode: "",
+        hasHomeService: false,
       });
-      setActionSuccess(t("successCreated"));
+      setActionSuccess(t("successCreated") || "Center created successfully");
+      refetch(); // 🟢 নতুন ল্যাব অ্যাড হওয়ার পর লিস্ট রিফ্রেশ করবে
     } catch (err: any) {
       setActionError(
         err?.response?.data?.message || "Failed to create diagnostic center"
@@ -142,14 +146,14 @@ export default function AdminDiagnosticCentersPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-                {t("title")}
+                {t("title") || "Diagnostic Centers"}
               </h1>
               <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-300">
                 Diagnostic Center Network
               </span>
             </div>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {t("subtitle")}
+              {t("subtitle") || "Manage all diagnostic centers across the platform."}
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -159,7 +163,7 @@ export default function AdminDiagnosticCentersPage() {
               className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition hover:scale-105 active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>{t("addCenter")}</span>
+              <span>{t("addCenter") || "Add Center"}</span>
             </button>
             <button
               type="button"
@@ -170,7 +174,7 @@ export default function AdminDiagnosticCentersPage() {
               <RefreshCw
                 className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-blue-600" : ""}`}
               />
-              <span>{t("retry")}</span>
+              <span>{t("retry") || "Refresh"}</span>
             </button>
           </div>
         </div>
@@ -188,7 +192,7 @@ export default function AdminDiagnosticCentersPage() {
             onClick={() => setActionError(null)}
             className="text-[11px] font-bold underline"
           >
-            {t("dismiss")}
+            {t("dismiss") || "Dismiss"}
           </button>
         </div>
       )}
@@ -205,7 +209,7 @@ export default function AdminDiagnosticCentersPage() {
             onClick={() => setActionSuccess(null)}
             className="text-[11px] font-bold underline"
           >
-            {t("dismiss")}
+            {t("dismiss") || "Dismiss"}
           </button>
         </div>
       )}
@@ -222,7 +226,7 @@ export default function AdminDiagnosticCentersPage() {
                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            {t("all")}
+            {t("all") || "All"}
           </button>
           <button
             type="button"
@@ -233,7 +237,7 @@ export default function AdminDiagnosticCentersPage() {
                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            {t("approved")}
+            {t("approved") || "Approved"}
           </button>
           <button
             type="button"
@@ -244,7 +248,7 @@ export default function AdminDiagnosticCentersPage() {
                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            {t("pending")}
+            {t("pending") || "Pending"}
           </button>
         </div>
       </GradientCard>
@@ -255,14 +259,14 @@ export default function AdminDiagnosticCentersPage() {
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
             <div className="flex-1">
-              <h3 className="text-xs font-semibold">{t("errorTitle")}</h3>
+              <h3 className="text-xs font-semibold">{t("errorTitle") || "Failed to load"}</h3>
             </div>
             <button
               type="button"
               onClick={() => refetch()}
               className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-700"
             >
-              {t("retry")}
+              {t("retry") || "Retry"}
             </button>
           </div>
         </div>
@@ -289,10 +293,10 @@ export default function AdminDiagnosticCentersPage() {
                   <Activity className="h-6 w-6 text-slate-400" />
                 </div>
                 <h3 className="mt-3 text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {t("emptyTitle")}
+                  {t("emptyTitle") || "No centers found"}
                 </h3>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {t("emptyDesc")}
+                  {t("emptyDesc") || "There are no diagnostic centers available."}
                 </p>
               </div>
             ) : (
@@ -300,11 +304,11 @@ export default function AdminDiagnosticCentersPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-400">
                     <tr>
-                      <th className="px-4 py-3">{t("centerName")}</th>
-                      <th className="px-4 py-3">{t("owner")}</th>
-                      <th className="px-4 py-3">{t("location")}</th>
-                      <th className="px-4 py-3">{t("approvalStatus")}</th>
-                      <th className="px-4 py-3 text-right">{t("actions")}</th>
+                      <th className="px-4 py-3">{t("centerName") || "Center Name"}</th>
+                      <th className="px-4 py-3">{t("owner") || "Owner"}</th>
+                      <th className="px-4 py-3">{t("location") || "Location"}</th>
+                      <th className="px-4 py-3">{t("approvalStatus") || "Status"}</th>
+                      <th className="px-4 py-3 text-right">{t("actions") || "Actions"}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -343,12 +347,12 @@ export default function AdminDiagnosticCentersPage() {
                           {center.isApproved ? (
                             <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50">
                               <CheckCircle2 className="h-3 w-3" />
-                              <span>{t("approved")}</span>
+                              <span>{t("approved") || "Approved"}</span>
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50">
                               <XCircle className="h-3 w-3" />
-                              <span>{t("pending")}</span>
+                              <span>{t("pending") || "Pending"}</span>
                             </span>
                           )}
                         </td>
@@ -361,7 +365,7 @@ export default function AdminDiagnosticCentersPage() {
                               className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/50 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
                             >
                               <ShieldAlert className="h-3 w-3" />
-                              <span>{t("revoke")}</span>
+                              <span>{t("revoke") || "Revoke"}</span>
                             </button>
                           ) : (
                             <button
@@ -371,7 +375,7 @@ export default function AdminDiagnosticCentersPage() {
                               className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
                             >
                               <ShieldCheck className="h-3 w-3" />
-                              <span>{t("approve")}</span>
+                              <span>{t("approve") || "Approve"}</span>
                             </button>
                           )}
                         </td>
@@ -395,7 +399,7 @@ export default function AdminDiagnosticCentersPage() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {t("approveDialogTitle")}
+                  {t("approveDialogTitle") || "Approve Center"}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {pendingApproveCenter.centerName}
@@ -404,7 +408,7 @@ export default function AdminDiagnosticCentersPage() {
             </div>
 
             <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
-              {t("approveDialogDesc")}
+              {t("approveDialogDesc") || "Are you sure you want to approve this diagnostic center?"}
             </p>
 
             <div className="mt-5 flex items-center justify-end gap-2">
@@ -413,7 +417,7 @@ export default function AdminDiagnosticCentersPage() {
                 onClick={() => setPendingApproveCenter(null)}
                 className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
-                {t("cancel")}
+                {t("cancel") || "Cancel"}
               </button>
               <button
                 type="button"
@@ -421,7 +425,7 @@ export default function AdminDiagnosticCentersPage() {
                 disabled={approveCenter.isPending}
                 className="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
               >
-                {approveCenter.isPending ? t("saving") : t("confirm")}
+                {approveCenter.isPending ? (t("saving") || "Saving...") : (t("confirm") || "Confirm")}
               </button>
             </div>
           </div>
@@ -438,7 +442,7 @@ export default function AdminDiagnosticCentersPage() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {t("revokeDialogTitle")}
+                  {t("revokeDialogTitle") || "Revoke Approval"}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {pendingRevokeCenter.centerName}
@@ -447,7 +451,7 @@ export default function AdminDiagnosticCentersPage() {
             </div>
 
             <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
-              {t("revokeDialogDesc")}
+              {t("revokeDialogDesc") || "Are you sure you want to revoke this center's approval?"}
             </p>
 
             <div className="mt-5 flex items-center justify-end gap-2">
@@ -456,7 +460,7 @@ export default function AdminDiagnosticCentersPage() {
                 onClick={() => setPendingRevokeCenter(null)}
                 className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
-                {t("cancel")}
+                {t("cancel") || "Cancel"}
               </button>
               <button
                 type="button"
@@ -464,7 +468,7 @@ export default function AdminDiagnosticCentersPage() {
                 disabled={revokeCenter.isPending}
                 className="rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700"
               >
-                {revokeCenter.isPending ? t("saving") : t("confirm")}
+                {revokeCenter.isPending ? (t("saving") || "Saving...") : (t("confirm") || "Confirm")}
               </button>
             </div>
           </div>
@@ -478,10 +482,10 @@ export default function AdminDiagnosticCentersPage() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  {t("createCenterTitle")}
+                  {t("createCenterTitle") || "Create Diagnostic Center"}
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  {t("createCenterDesc")}
+                  {t("createCenterDesc") || "Add a new diagnostic center to the platform."}
                 </p>
               </div>
               <button
@@ -497,7 +501,7 @@ export default function AdminDiagnosticCentersPage() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("centerName")} *
+                    {t("centerName") || "Center Name"} *
                   </label>
                   <input
                     type="text"
@@ -512,7 +516,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("ownerName")} *
+                    {t("ownerName") || "Owner Name"} *
                   </label>
                   <input
                     type="text"
@@ -527,7 +531,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("ownerEmail")} *
+                    {t("ownerEmail") || "Email"} *
                   </label>
                   <input
                     type="email"
@@ -542,7 +546,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("password")} *
+                    {t("password") || "Password"} *
                   </label>
                   <input
                     type="password"
@@ -558,7 +562,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("ownerPhone")}
+                    {t("ownerPhone") || "Phone"}
                   </label>
                   <input
                     type="tel"
@@ -572,7 +576,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("city")}
+                    {t("city") || "City"}
                   </label>
                   <input
                     type="text"
@@ -586,7 +590,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("state")}
+                    {t("state") || "State"}
                   </label>
                   <input
                     type="text"
@@ -600,7 +604,7 @@ export default function AdminDiagnosticCentersPage() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    {t("pincode")}
+                    {t("pincode") || "Pincode"}
                   </label>
                   <input
                     type="text"
@@ -615,7 +619,7 @@ export default function AdminDiagnosticCentersPage() {
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                  {t("address")}
+                  {t("address") || "Address"}
                 </label>
                 <textarea
                   rows={2}
@@ -627,20 +631,42 @@ export default function AdminDiagnosticCentersPage() {
                 />
               </div>
 
+              {/* 🟢 Home Service Toggle Checkbox */}
+              <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="hasHomeService"
+                    checked={formData.hasHomeService}
+                    onChange={(e) =>
+                      setFormData({ ...formData, hasHomeService: e.target.checked })
+                    }
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-blue-600 dark:border-slate-600 dark:bg-slate-800"
+                  />
+                  <label
+                    htmlFor="hasHomeService"
+                    className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200"
+                  >
+                    <Home className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    Provide Home Sample Collection
+                  </label>
+                </div>
+              </div>
+
               <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                   className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
-                  {t("cancel")}
+                  {t("cancel") || "Cancel"}
                 </button>
                 <button
                   type="submit"
                   disabled={createCenter.isPending}
                   className="rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {createCenter.isPending ? t("saving") : t("saveCenter")}
+                  {createCenter.isPending ? (t("saving") || "Saving...") : (t("saveCenter") || "Save Center")}
                 </button>
               </div>
             </form>

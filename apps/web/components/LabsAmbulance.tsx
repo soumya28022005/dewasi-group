@@ -53,7 +53,7 @@ export default function LabsAmbulance() {
             {/* CTA Button */}
             <div className="mt-6">
               <Link
-                href="/clinics"
+                href="/labs"
                 className="inline-block rounded-xl bg-[#7C3AED] px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#6D28D9]"
               >
                 Book Test

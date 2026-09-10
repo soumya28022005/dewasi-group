@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
-import { Building2, MapPin, Navigation, Map, Hash, Save, Loader2, AlertCircle } from "lucide-react";
+import { Building2, MapPin, Navigation, Map, Hash, Save, Loader2, AlertCircle, Home } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUpdateDiagnosticCenterProfile } from "@/lib/hooks/useDiagnosticCenter";
 import { ProfileField } from "./ProfileField";
@@ -19,6 +19,7 @@ interface FormValues {
   city: string;
   state: string;
   pincode: string;
+  hasHomeService: boolean; // 🟢 নতুন যুক্ত করা হয়েছে
 }
 
 export function ProfileForm({ center }: ProfileFormProps) {
@@ -38,6 +39,7 @@ export function ProfileForm({ center }: ProfileFormProps) {
       city: center?.city || "",
       state: center?.state || "",
       pincode: center?.pincode || "",
+      hasHomeService: center?.hasHomeService ?? false, // 🟢 ডিফল্ট ভ্যালু
     },
   });
 
@@ -50,6 +52,7 @@ export function ProfileForm({ center }: ProfileFormProps) {
         city: center.city || "",
         state: center.state || "",
         pincode: center.pincode || "",
+        hasHomeService: center.hasHomeService ?? false, // 🟢 ডাটাবেস থেকে পাওয়া ভ্যালু
       });
     }
   }, [center, reset]);
@@ -57,19 +60,21 @@ export function ProfileForm({ center }: ProfileFormProps) {
   async function onSubmit(data: FormValues) {
     setFormError(null);
 
-    const payload: UpdateDiagnosticCenterProfileInput = {
+    // 🟢 payload-এ hasHomeService যোগ করা হয়েছে (as any দিয়ে টাইপ এরর বাইপাস করা হলো)
+    const payload = {
       centerName: data.centerName.trim(),
       address: data.address.trim() || undefined,
       city: data.city.trim() || undefined,
       state: data.state.trim() || undefined,
       pincode: data.pincode.trim() || undefined,
-    };
+      hasHomeService: data.hasHomeService, 
+    } as any; 
 
     try {
       await updateProfile.mutateAsync(payload);
-      toast.success(t("updateSuccess"));
+      toast.success(t("updateSuccess") || "Profile updated successfully!");
     } catch (err: any) {
-      const msg = err?.response?.data?.message || t("updateError");
+      const msg = err?.response?.data?.message || t("updateError") || "Failed to update profile";
       setFormError(msg);
       toast.error(msg);
     }
@@ -79,10 +84,10 @@ export function ProfileForm({ center }: ProfileFormProps) {
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition-colors dark:border-slate-800 dark:bg-slate-900">
       <div className="border-b border-slate-100 pb-4 dark:border-slate-800">
         <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-          {t("detailsTitle")}
+          {t("detailsTitle") || "Center Details"}
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          {t("detailsSubtitle")}
+          {t("detailsSubtitle") || "Update your diagnostic center's core information."}
         </p>
       </div>
 
@@ -97,24 +102,24 @@ export function ProfileForm({ center }: ProfileFormProps) {
 
         {/* Center Name */}
         <ProfileField
-          label={t("centerName")}
+          label={t("centerName") || "Center Name"}
           icon={Building2}
-          placeholder={t("centerNamePlaceholder")}
+          placeholder={t("centerNamePlaceholder") || "e.g. City Diagnostic Lab"}
           error={errors.centerName?.message}
           {...register("centerName", {
-            required: t("minCharsError"),
+            required: t("minCharsError") || "Required",
             minLength: {
               value: 2,
-              message: t("minCharsError"),
+              message: t("minCharsError") || "At least 2 characters",
             },
           })}
         />
 
         {/* Address */}
         <ProfileField
-          label={t("address")}
+          label={t("address") || "Address"}
           icon={MapPin}
-          placeholder={t("addressPlaceholder")}
+          placeholder={t("addressPlaceholder") || "Street address"}
           error={errors.address?.message}
           {...register("address")}
         />
@@ -122,28 +127,50 @@ export function ProfileForm({ center }: ProfileFormProps) {
         {/* City, State, Pincode in 3 columns */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <ProfileField
-            label={t("city")}
+            label={t("city") || "City"}
             icon={Navigation}
-            placeholder={t("cityPlaceholder")}
+            placeholder={t("cityPlaceholder") || "City"}
             error={errors.city?.message}
             {...register("city")}
           />
 
           <ProfileField
-            label={t("state")}
+            label={t("state") || "State"}
             icon={Map}
-            placeholder={t("statePlaceholder")}
+            placeholder={t("statePlaceholder") || "State"}
             error={errors.state?.message}
             {...register("state")}
           />
 
           <ProfileField
-            label={t("pincode")}
+            label={t("pincode") || "Pincode"}
             icon={Hash}
-            placeholder={t("pincodePlaceholder")}
+            placeholder={t("pincodePlaceholder") || "Pincode"}
             error={errors.pincode?.message}
             {...register("pincode")}
           />
+        </div>
+
+        {/* 🟢 Home Service Toggle Checkbox */}
+        <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="hasHomeService"
+              {...register("hasHomeService")}
+              className="h-5 w-5 cursor-pointer rounded border-slate-300 text-purple-600 focus:ring-purple-600 dark:border-slate-600 dark:bg-slate-800"
+            />
+            <label
+              htmlFor="hasHomeService"
+              className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200"
+            >
+              <Home className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              Provide Home Sample Collection
+            </label>
+          </div>
+          <p className="ml-8 mt-1 text-xs text-slate-500">
+            Check this if your diagnostic center collects samples directly from the patient's home.
+          </p>
         </div>
 
         {/* Action Button */}
@@ -158,7 +185,7 @@ export function ProfileForm({ center }: ProfileFormProps) {
             ) : (
               <Save className="h-3.5 w-3.5" />
             )}
-            <span>{updateProfile.isPending ? t("saving") : t("saveChanges")}</span>
+            <span>{updateProfile.isPending ? (t("saving") || "Saving...") : (t("saveChanges") || "Save Changes")}</span>
           </button>
         </div>
       </form>

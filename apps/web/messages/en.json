@@ -516,6 +516,15 @@
     "noHolidaysSub": "Your clinic is scheduled to run on its regular weekly routine.",
     "defaultReason": "Clinic Closed"
   },
+  "DiagnosticCenter": {
+  "whatsappNumber": "WhatsApp Number",
+  "googleMapsUrl": "Google Maps Link",
+  "isOnline": "Currently Online",
+  "authorizationNote": "Authorization Note (e.g., We process from Lalbaba)",
+  "manageTests": "Manage Tests",
+  "addTest": "Add New Test",
+  "testPrice": "Test Price"
+},
   "Days": {
     "MONDAY": "Monday",
     "TUESDAY": "Tuesday",
@@ -899,14 +908,15 @@
     "dismiss": "Dismiss",
     "successSaved": "Platform settings saved successfully."
   },
-  "DiagnosticCenterNav": {
-    "dashboard": "Dashboard",
-    "profile": "Profile",
-    "staff": "Staff",
-    "referrals": "Referrals",
-    "overview": "Overview",
-    "portalTitle": "Diagnostic Center Portal"
-  },
+ "DiagnosticCenterNav": {
+  "dashboard": "Dashboard",
+  "profile": "Profile",
+  "staff": "Staff",
+  "referrals": "Referrals",
+  "tests": "Manage Tests",
+  "portalTitle": "Diagnostic Center Portal",
+  "schedule": "Schedule"
+},
   "DiagnosticCenterDashboard": {
     "title": "Diagnostic Center Dashboard",
     "subtitle": "Monitor your center status, view verification details, and manage staff operations.",

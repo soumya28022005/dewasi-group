@@ -9,6 +9,8 @@ import {
   Inbox,
   ChevronRight,
   FlaskConical,
+  TestTube,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useTranslations } from "next-intl";
@@ -28,9 +30,21 @@ const ALL_NAV = [
     ownerOnly: true,
   },
   {
+    href: "/diagnosticCenter/schedule", // 🟢 নতুন Schedule পেজ
+    key: "schedule",
+    icon: Clock,
+    ownerOnly: true,
+  },
+  {
     href: "/diagnosticCenter/staff",
     key: "staff",
     icon: Users,
+    ownerOnly: true,
+  },
+  {
+    href: "/diagnosticCenter/tests",
+    key: "tests",
+    icon: TestTube,
     ownerOnly: true,
   },
   {

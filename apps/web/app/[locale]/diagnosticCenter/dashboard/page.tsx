@@ -46,10 +46,12 @@ export default function DiagnosticCenterDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header */}
+      {/* 1. Header (Updated with isOnline and hasHomeService) */}
       <DashboardHeader
         centerName={center?.centerName}
         isApproved={center?.isApproved}
+        isOnline={center?.isOnline} 
+        hasHomeService={center?.hasHomeService}
         isFetching={isFetching}
         onRefresh={handleRefreshAll}
       />

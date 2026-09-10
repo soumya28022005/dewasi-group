@@ -7,6 +7,8 @@ interface DashboardHeaderProps {
   centerName?: string;
   isApproved?: boolean;
   isFetching?: boolean;
+  isOnline?: boolean;
+  hasHomeService?: boolean;
   onRefresh: () => void;
 }
 
