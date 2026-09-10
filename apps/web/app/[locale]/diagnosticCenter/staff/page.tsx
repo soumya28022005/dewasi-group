@@ -20,49 +20,117 @@ export default function DiagnosticCenterStaffPage() {
     refetch,
   } = useDiagnosticCenterStaff();
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] =
+    useState(false);
+
   const [selectedStaffForPassword, setSelectedStaffForPassword] =
     useState<DiagnosticCenterStaff | null>(null);
 
+  const openAddStaffModal = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const closeAddStaffModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const openPasswordModal = (
+    staffMember: DiagnosticCenterStaff,
+  ) => {
+    setSelectedStaffForPassword(staffMember);
+  };
+
+  const closePasswordModal = () => {
+    setSelectedStaffForPassword(null);
+  };
+
+  const handleRefresh = () => {
+    void refetch();
+  };
+
+  /* =========================================
+     Initial Loading
+  ========================================= */
+
   if (isLoading) {
-    return <StaffSkeleton />;
+    return (
+      <main className="w-full">
+        <StaffSkeleton />
+      </main>
+    );
   }
+
+  /* =========================================
+     Error State
+  ========================================= */
 
   if (isError) {
-    return <StaffError onRetry={() => refetch()} />;
+    return (
+      <main className="w-full">
+        <StaffError
+          onRetry={handleRefresh}
+        />
+      </main>
+    );
   }
 
+  /* =========================================
+     Main Page
+  ========================================= */
+
   return (
-    <div className="space-y-6">
-      {/* 1. Header */}
+    <main
+      className="
+        w-full
+        space-y-5
+        pb-6
+      "
+    >
+      {/* =====================================
+          Page Header
+      ===================================== */}
+
       <StaffHeader
-        onAddStaff={() => setIsAddModalOpen(true)}
+        onAddStaff={openAddStaffModal}
         isFetching={isFetching}
-        onRefresh={() => refetch()}
+        onRefresh={handleRefresh}
       />
 
-      {/* 2. Staff Content / Empty State */}
+      {/* =====================================
+          Staff Content
+      ===================================== */}
+
       {staff.length === 0 ? (
-        <StaffEmptyState onAddStaff={() => setIsAddModalOpen(true)} />
+        <StaffEmptyState
+          onAddStaff={openAddStaffModal}
+        />
       ) : (
         <StaffList
           staff={staff}
-          onChangePassword={(s) => setSelectedStaffForPassword(s)}
+          onChangePassword={openPasswordModal}
         />
       )}
 
-      {/* 3. Add Staff Modal */}
+      {/* =====================================
+          Add Staff Modal
+      ===================================== */}
+
       <AddStaffModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={closeAddStaffModal}
       />
 
-      {/* 4. Change Password Modal */}
+      {/* =====================================
+          Change Password Modal
+      ===================================== */}
+
       <ChangeStaffPasswordModal
-        isOpen={!!selectedStaffForPassword}
+        isOpen={
+          selectedStaffForPassword !== null
+        }
         staff={selectedStaffForPassword}
-        onClose={() => setSelectedStaffForPassword(null)}
+        onClose={closePasswordModal}
       />
-    </div>
+    </main>
   );
 }

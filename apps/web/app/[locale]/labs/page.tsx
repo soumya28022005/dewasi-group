@@ -1,10 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, ShieldCheck, Loader2, Building2, Home, Search } from "lucide-react";
+import {
+  MapPin,
+  ShieldCheck,
+  Loader2,
+  Building2,
+  Home,
+  Search,
+  Phone,
+  MessageCircle,
+  Navigation,
+  ChevronRight,
+  FlaskConical,
+  X,
+  ChevronDown,
+  Check,
+} from "lucide-react";
+
 import { useAllDiagnosticCenters } from "@/lib/hooks/useDiagnosticCenter";
 import { fetchSearchLocations } from "@/lib/api";
 
@@ -19,19 +35,30 @@ interface Location {
 export default function AllLabsPage() {
   const t = useTranslations("DiagnosticCenter");
   const locale = useLocale();
-  const { data: centers = [], isLoading, error } = useAllDiagnosticCenters();
-  
-  // 🟢 States
+
+  const {
+    data: centers = [],
+    isLoading,
+    error,
+  } = useAllDiagnosticCenters();
+
   const [homeServiceOnly, setHomeServiceOnly] = useState(false);
   const [selectedCity, setSelectedCity] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [locationOpen, setLocationOpen] = useState(false);
+
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLocationsLoading, setIsLocationsLoading] = useState(true);
 
-  // 🟢 Fetch Locations from Backend
+  const locationRef = useRef<HTMLDivElement>(null);
+
+  /* =========================================================
+     FETCH LOCATIONS
+  ========================================================= */
+
   useEffect(() => {
     setIsLocationsLoading(true);
+
     fetchSearchLocations()
       .then((data) => {
         if (Array.isArray(data)) {
@@ -40,239 +67,1879 @@ export default function AllLabsPage() {
           setLocations(data.data);
         }
       })
-      .catch((err) => console.error("Failed to load locations", err))
-      .finally(() => setIsLocationsLoading(false));
+      .catch((err) => {
+        console.error("Failed to load locations", err);
+      })
+      .finally(() => {
+        setIsLocationsLoading(false);
+      });
   }, []);
+
+  /* =========================================================
+     CLOSE LOCATION DROPDOWN OUTSIDE CLICK
+  ========================================================= */
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        locationRef.current &&
+        !locationRef.current.contains(event.target as Node)
+      ) {
+        setLocationOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
+  }, []);
+
+  /* =========================================================
+     LOCALIZED LOCATION
+  ========================================================= */
 
   const getLocalizedName = (loc: Location) => {
     if (locale === "bn") return loc.nameBn;
     if (locale === "hi") return loc.nameHi;
+
     return loc.nameEn;
   };
 
-  // 🟢 Advanced Filter Logic
-  const filteredCenters = centers.filter((center: any) => {
-    if (homeServiceOnly && center.hasHomeService !== true) return false;
+  /* =========================================================
+     SELECTED LOCATION NAME
+  ========================================================= */
 
-    if (selectedCity !== "All") {
-      const selected = selectedCity.toLowerCase().trim();
-      const cityMatch = center.city?.toLowerCase().includes(selected);
-      const addressMatch = center.address?.toLowerCase().includes(selected);
-      
-      if (!cityMatch && !addressMatch) return false;
+  const selectedLocation =
+    locations.find(
+      (location) => location.nameEn === selectedCity
+    ) || null;
+
+  const selectedLocationName =
+    selectedCity === "All"
+      ? "All Locations"
+      : selectedLocation
+        ? getLocalizedName(selectedLocation)
+        : selectedCity;
+
+  /* =========================================================
+     FILTER CENTERS
+  ========================================================= */
+
+  const filteredCenters = centers.filter((center: any) => {
+    /* Home Service */
+
+    if (
+      homeServiceOnly &&
+      center.hasHomeService !== true
+    ) {
+      return false;
     }
 
+    /* Location */
+
+    if (selectedCity !== "All") {
+      const selected =
+        selectedCity.toLowerCase().trim();
+
+      const cityMatch = center.city
+        ?.toLowerCase()
+        .includes(selected);
+
+      const addressMatch = center.address
+        ?.toLowerCase()
+        .includes(selected);
+
+      if (!cityMatch && !addressMatch) {
+        return false;
+      }
+    }
+
+    /* Search */
+
     if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase().trim();
-      
-      const matchLabName = center.centerName?.toLowerCase().includes(query);
-      const matchTestName = center.centerTests?.some((ct: any) => {
-        return ct.diagnosticTest?.name?.toLowerCase().includes(query);
-      });
-      
-      if (!matchLabName && !matchTestName) return false;
+      const query =
+        searchQuery.toLowerCase().trim();
+
+      const matchLabName = center.centerName
+        ?.toLowerCase()
+        .includes(query);
+
+      const matchTestName =
+        center.centerTests?.some((ct: any) =>
+          ct.diagnosticTest?.name
+            ?.toLowerCase()
+            .includes(query)
+        );
+
+      if (!matchLabName && !matchTestName) {
+        return false;
+      }
     }
 
     return true;
   });
 
-  if (isLoading) return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-blue-600" /></div>;
-  if (error) return <div className="flex min-h-[60vh] flex-col items-center justify-center text-slate-500"><p>Failed to load diagnostic centers.</p></div>;
+  /* =========================================================
+     RESET FILTERS
+  ========================================================= */
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-10 flex flex-col items-center text-center">
-        <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl dark:text-white">
-          Available Diagnostic Centers
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
-          Find and book tests at our trusted and verified laboratory partners.
-        </p>
+  const clearFilters = () => {
+    setSelectedCity("All");
+    setSearchQuery("");
+    setHomeServiceOnly(false);
+    setLocationOpen(false);
+  };
 
-        {/* 🟢 Search & Filter Bar */}
-        <div className="mt-8 flex w-full max-w-4xl flex-col gap-4 sm:flex-row">
-          <div className="relative w-full sm:w-48">
-            <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              disabled={isLocationsLoading}
-              className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            >
-              <option value="All">All Locations</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.nameEn}>
-                  {getLocalizedName(loc)}
-                </option>
-              ))}
-            </select>
-          </div>
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by Test Name (e.g. CBC) or Lab Name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            />
-          </div>
-
-          <button
-            onClick={() => setHomeServiceOnly(!homeServiceOnly)}
-            className={`flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-6 text-sm font-semibold transition-all ${
-              homeServiceOnly
-                ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
-                : "bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400"
-            }`}
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className="
+              flex
+              h-11
+              w-11
+              items-center
+              justify-center
+              rounded-xl
+              bg-gradient-to-br
+              from-[#252a67]
+              via-[#3b4a8f]
+              to-[#14B8A6]
+              shadow-lg
+            "
           >
-            <Home className="h-4 w-4" />
-            {homeServiceOnly ? "Home Service Only" : "Home Service"}
-          </button>
+            <Loader2 className="h-5 w-5 animate-spin text-white" />
+          </div>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Loading diagnostic centers...
+          </p>
         </div>
       </div>
+    );
+  }
 
-      {filteredCenters.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-20 dark:border-slate-800 dark:bg-slate-900">
-          <Building2 className="mb-4 h-12 w-12 text-slate-300" />
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white">No Labs Found</h3>
-          <p className="text-slate-500">No diagnostic centers match your search criteria.</p>
+  /* =========================================================
+     ERROR
+  ========================================================= */
+
+  if (error) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center px-4">
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            p-8
+            text-center
+            shadow-sm
+            dark:border-slate-800
+            dark:bg-slate-900
+          "
+        >
+          <Building2 className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+
+          <h3 className="font-bold text-slate-900 dark:text-white">
+            Unable to load diagnostic centers
+          </h3>
+
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Please try again later.
+          </p>
         </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredCenters.map((center: any) => {
-            // 🟢 WhatsApp Number Formatting Logic
-            const cleanWa = center.whatsapp ? center.whatsapp.replace(/[^0-9]/g, '') : '';
-            const waNumber = cleanWa.length === 10 ? `91${cleanWa}` : cleanWa;
+      </div>
+    );
+  }
 
-            return (
-              <Link
-                key={center.id}
-                href={`/labs/${center.id}`}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+  return (
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+
+      {/* =======================================================
+          HERO
+      ======================================================= */}
+
+      <section
+        className="
+          relative
+          overflow-visible
+          bg-gradient-to-br
+          from-[#252a67]
+          via-[#3b4a8f]
+          to-[#14B8A6]
+        "
+      >
+
+        {/* Background decoration */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-24
+            -top-24
+            h-64
+            w-64
+            rounded-full
+            bg-white/10
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -bottom-24
+            -left-24
+            h-64
+            w-64
+            rounded-full
+            bg-teal-300/10
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            mx-auto
+            max-w-7xl
+            px-4
+            pb-7
+            pt-6
+            sm:px-6
+            sm:pb-8
+            sm:pt-7
+            lg:px-8
+          "
+        >
+
+          {/* ===================================================
+              HERO TITLE
+          =================================================== */}
+
+          <div className="mx-auto max-w-2xl text-center">
+
+            {/* Badge */}
+
+            <div
+              className="
+                mb-2
+                inline-flex
+                items-center
+                gap-1.5
+                rounded-full
+                border
+                border-white/20
+                bg-white/10
+                px-3
+                py-1
+                text-[8px]
+                font-bold
+                uppercase
+                tracking-wider
+                text-white
+                backdrop-blur-md
+                sm:text-[9px]
+              "
+            >
+              <FlaskConical className="h-3 w-3 text-teal-200" />
+
+              Trusted Diagnostic Network
+            </div>
+
+            {/* Heading */}
+
+            <h1
+              className="
+                text-2xl
+                font-black
+                leading-[1.08]
+                tracking-tight
+                text-white
+                sm:text-3xl
+                lg:text-[40px]
+              "
+            >
+              Find Trusted{" "}
+
+              <span
+                className="
+                  bg-gradient-to-r
+                  from-teal-200
+                  to-white
+                  bg-clip-text
+                  text-transparent
+                "
               >
-                <div className="flex h-40 items-center justify-center bg-slate-50 dark:bg-slate-800/50">
-                  {center.logo ? (
-                    <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-sm dark:border-slate-800">
-                      <Image 
-                        src={center.logo} 
-                        alt={center.centerName} 
-                        fill 
-                        sizes="96px"
-                        className="object-cover" 
+                Diagnostic Centers
+              </span>
+            </h1>
+
+            {/* Description */}
+
+            <p
+              className="
+                mx-auto
+                mt-2
+                max-w-lg
+                text-[11px]
+                leading-5
+                text-white/70
+                sm:text-xs
+              "
+            >
+              Find trusted laboratories, available tests and
+              convenient home sample collection services near you.
+            </p>
+
+          </div>
+
+          {/* ===================================================
+              SEARCH PANEL
+          =================================================== */}
+
+          <div className="mx-auto mt-5 max-w-5xl">
+
+            <div
+              className="
+                rounded-2xl
+                border
+                border-white/30
+                bg-white
+                p-1.5
+                shadow-2xl
+                shadow-black/10
+                dark:bg-slate-900
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  flex-col
+                  gap-1.5
+                  lg:flex-row
+                "
+              >
+
+                {/* =================================================
+                    LOCATION
+                ================================================= */}
+
+                <div
+                  ref={locationRef}
+                  className="
+                    relative
+                    lg:w-[210px]
+                    lg:shrink-0
+                  "
+                >
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLocationOpen(!locationOpen)
+                    }
+                    className="
+                      flex
+                      h-11
+                      w-full
+                      items-center
+                      rounded-xl
+                      bg-slate-50
+                      px-3
+                      text-left
+                      transition-all
+                      hover:bg-slate-100
+                      focus:outline-none
+                      focus:ring-2
+                      focus:ring-[#3b4a8f]/15
+                      dark:bg-slate-800
+                      dark:hover:bg-slate-750
+                    "
+                  >
+
+                    {/* Location icon */}
+
+                    <div
+                      className="
+                        flex
+                        h-7
+                        w-7
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-lg
+                        bg-white
+                        shadow-sm
+                        dark:bg-slate-700
+                      "
+                    >
+                      <MapPin
+                        className="
+                          h-3.5
+                          w-3.5
+                          text-[#3b4a8f]
+                          dark:text-teal-400
+                        "
                       />
                     </div>
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-blue-100 shadow-sm dark:border-slate-800 dark:bg-blue-900/30">
-                      <Building2 className="h-10 w-10 text-blue-600 dark:text-blue-400" />
-                    </div>
-                  )}
-                </div>
 
-                <div className="flex flex-1 flex-col p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-bold text-slate-900 line-clamp-1 dark:text-white group-hover:text-blue-600">
-                      {center.centerName}
-                    </h3>
-                    {center.isApproved && <ShieldCheck className="h-5 w-5 shrink-0 text-blue-500" />}
-                  </div>
+                    {/* Location text */}
 
-                  {(center.address || center.city) && (
-                    <div className="mt-2 flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p className="line-clamp-2">
-                        {center.address} {center.city ? `, ${center.city}` : ""}
+                    <div className="ml-2 min-w-0 flex-1">
+
+                      <p
+                        className="
+                          text-[8px]
+                          font-bold
+                          uppercase
+                          tracking-wider
+                          text-slate-400
+                        "
+                      >
+                        Location
                       </p>
+
+                      <p
+                        className="
+                          mt-0.5
+                          truncate
+                          text-xs
+                          font-bold
+                          text-slate-700
+                          dark:text-slate-200
+                        "
+                      >
+                        {selectedLocationName}
+                      </p>
+
                     </div>
-                  )}
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {center.isOnline && (
-                      <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span> Online
-                      </span>
-                    )}
-                    {center.hasHomeService && (
-                      <span className="flex items-center gap-1.5 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                        <Home className="h-3 w-3" /> Home Service
-                      </span>
-                    )}
-                  </div>
+                    {/* Arrow */}
 
-                  {/* 🟢 Quick Actions - Fixed Hydration Issue with <button> */}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {center.phone && (
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          window.location.href = `tel:${center.phone}`;
-                        }}
-                        className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-[11px] font-semibold hover:bg-blue-200 transition dark:bg-blue-900/30 dark:text-blue-400"
-                      >
-                        📞 Call
-                      </button>
-                    )}
-                    {center.whatsapp && (
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          window.open(`https://wa.me/${waNumber}`, '_blank');
-                        }}
-                        className="flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-[11px] font-semibold hover:bg-green-200 transition dark:bg-green-900/30 dark:text-green-400"
-                      >
-                        💬 WhatsApp
-                      </button>
-                    )}
-                    {center.googleMapsUrl && (
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          window.open(center.googleMapsUrl, '_blank');
-                        }}
-                        className="flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-[11px] font-semibold hover:bg-red-200 transition dark:bg-red-900/30 dark:text-red-400"
-                      >
-                        📍 Maps
-                      </button>
-                    )}
-                  </div>
+                    <ChevronDown
+                      className={`
+                        h-4
+                        w-4
+                        shrink-0
+                        text-slate-400
+                        transition-transform
+                        duration-200
+                        ${
+                          locationOpen
+                            ? "rotate-180 text-[#3b4a8f] dark:text-teal-400"
+                            : ""
+                        }
+                      `}
+                    />
 
-                  {/* 🟢 Display max 5 tests in the UI */}
-                  {center.centerTests && center.centerTests.length > 0 && (
-                    <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                      <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Available Tests:</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {center.centerTests.slice(0, 5).map((ct: any) => (
-                          <span 
-                            key={ct.id} 
-                            className="inline-flex items-center rounded bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50"
+                  </button>
+
+                  {/* =================================================
+                      LOCATION DROPDOWN
+                  ================================================= */}
+
+                  {locationOpen && (
+
+                    <div
+                      className="
+                        absolute
+                        left-0
+                        right-0
+                        top-[calc(100%+7px)]
+                        z-[100]
+                        overflow-hidden
+                        rounded-xl
+                        border
+                        border-slate-200
+                        bg-white
+                        p-1.5
+                        shadow-2xl
+                        shadow-slate-900/20
+                        dark:border-slate-700
+                        dark:bg-slate-900
+                      "
+                    >
+
+                      {/* All Locations */}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCity("All");
+                          setLocationOpen(false);
+                        }}
+                        className={`
+                          flex
+                          w-full
+                          items-center
+                          gap-2.5
+                          rounded-lg
+                          px-3
+                          py-2.5
+                          text-left
+                          transition
+                          ${
+                            selectedCity === "All"
+                              ? "bg-gradient-to-r from-[#252a67]/10 to-[#14B8A6]/10"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                          }
+                        `}
+                      >
+
+                        <div
+                          className="
+                            flex
+                            h-7
+                            w-7
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-lg
+                            bg-slate-100
+                            dark:bg-slate-800
+                          "
+                        >
+                          <MapPin
+                            className="
+                              h-3.5
+                              w-3.5
+                              text-[#3b4a8f]
+                              dark:text-teal-400
+                            "
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+
+                          <p
+                            className="
+                              text-xs
+                              font-bold
+                              text-slate-700
+                              dark:text-slate-200
+                            "
                           >
-                            {ct.diagnosticTest?.name}
-                          </span>
-                        ))}
-                        {center.centerTests.length > 5 && (
-                          <span className="inline-flex items-center rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                            +{center.centerTests.length - 5} more
-                          </span>
+                            All Locations
+                          </p>
+
+                          <p
+                            className="
+                              text-[9px]
+                              text-slate-400
+                            "
+                          >
+                            Show all diagnostic centers
+                          </p>
+
+                        </div>
+
+                        {selectedCity === "All" && (
+                          <Check
+                            className="
+                              h-4
+                              w-4
+                              shrink-0
+                              text-[#14B8A6]
+                            "
+                          />
                         )}
+
+                      </button>
+
+                      {/* Divider */}
+
+                      {locations.length > 0 && (
+                        <div
+                          className="
+                            my-1
+                            border-t
+                            border-slate-100
+                            dark:border-slate-800
+                          "
+                        />
+                      )}
+
+                      {/* Location List */}
+
+                      <div className="max-h-64 overflow-y-auto">
+
+                        {locations.map((loc) => {
+
+                          const isSelected =
+                            selectedCity === loc.nameEn;
+
+                          return (
+                            <button
+                              key={loc.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCity(loc.nameEn);
+                                setLocationOpen(false);
+                              }}
+                              className={`
+                                flex
+                                w-full
+                                items-center
+                                gap-2.5
+                                rounded-lg
+                                px-3
+                                py-2.5
+                                text-left
+                                transition
+                                ${
+                                  isSelected
+                                    ? "bg-gradient-to-r from-[#252a67]/10 to-[#14B8A6]/10"
+                                    : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                                }
+                              `}
+                            >
+
+                              {/* Icon */}
+
+                              <div
+                                className={`
+                                  flex
+                                  h-7
+                                  w-7
+                                  shrink-0
+                                  items-center
+                                  justify-center
+                                  rounded-lg
+                                  ${
+                                    isSelected
+                                      ? "bg-[#14B8A6]/10"
+                                      : "bg-slate-100 dark:bg-slate-800"
+                                  }
+                                `}
+                              >
+
+                                <MapPin
+                                  className={`
+                                    h-3.5
+                                    w-3.5
+                                    ${
+                                      isSelected
+                                        ? "text-[#14B8A6]"
+                                        : "text-slate-400"
+                                    }
+                                  `}
+                                />
+
+                              </div>
+
+                              {/* Name */}
+
+                              <div className="min-w-0 flex-1">
+
+                                <p
+                                  className={`
+                                    truncate
+                                    text-xs
+                                    font-bold
+                                    ${
+                                      isSelected
+                                        ? "text-[#252a67] dark:text-teal-400"
+                                        : "text-slate-700 dark:text-slate-200"
+                                    }
+                                  `}
+                                >
+                                  {getLocalizedName(loc)}
+                                </p>
+
+                                {loc.nameEn !==
+                                  getLocalizedName(loc) && (
+                                  <p
+                                    className="
+                                      truncate
+                                      text-[9px]
+                                      text-slate-400
+                                    "
+                                  >
+                                    {loc.nameEn}
+                                  </p>
+                                )}
+
+                              </div>
+
+                              {/* Selected */}
+
+                              {isSelected && (
+                                <Check
+                                  className="
+                                    h-4
+                                    w-4
+                                    shrink-0
+                                    text-[#14B8A6]
+                                  "
+                                />
+                              )}
+
+                            </button>
+                          );
+                        })}
+
                       </div>
+
+                      {/* Loading */}
+
+                      {isLocationsLoading && (
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                            px-3
+                            py-3
+                            text-[10px]
+                            text-slate-400
+                          "
+                        >
+                          <Loader2
+                            className="
+                              h-3.5
+                              w-3.5
+                              animate-spin
+                            "
+                          />
+
+                          Loading locations...
+                        </div>
+                      )}
+
+                      {/* Empty */}
+
+                      {!isLocationsLoading &&
+                        locations.length === 0 && (
+                          <div
+                            className="
+                              px-3
+                              py-4
+                              text-center
+                              text-[10px]
+                              text-slate-400
+                            "
+                          >
+                            No locations available
+                          </div>
+                        )}
+
                     </div>
+
                   )}
 
-                  <div className="mt-auto pt-5">
-                    <span className="inline-flex w-full items-center justify-center rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-slate-800 dark:text-white dark:group-hover:bg-blue-600">
-                      View Tests & Details
-                    </span>
-                  </div>
                 </div>
-              </Link>
-            );
-          })}
+
+                {/* =================================================
+                    SEARCH
+                ================================================= */}
+
+                <div
+                  className="
+                    relative
+                    flex
+                    h-11
+                    flex-1
+                    items-center
+                    rounded-xl
+                    bg-slate-50
+                    px-3
+                    transition
+                    focus-within:ring-2
+                    focus-within:ring-[#3b4a8f]/10
+                    dark:bg-slate-800
+                  "
+                >
+
+                  {/* Search Icon */}
+
+                  <div
+                    className="
+                      flex
+                      h-7
+                      w-7
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-lg
+                      bg-white
+                      shadow-sm
+                      dark:bg-slate-700
+                    "
+                  >
+                    <Search
+                      className="
+                        h-3.5
+                        w-3.5
+                        text-[#3b4a8f]
+                        dark:text-teal-400
+                      "
+                    />
+                  </div>
+
+                  {/* Input */}
+
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) =>
+                      setSearchQuery(e.target.value)
+                    }
+                    placeholder="Search tests, laboratories or diagnostic centers..."
+                    className="
+                      ml-2
+                      h-full
+                      w-full
+                      bg-transparent
+                      text-xs
+                      font-medium
+                      text-slate-700
+                      outline-none
+                      placeholder:text-slate-400
+                      dark:text-slate-200
+                    "
+                  />
+
+                  {/* Clear */}
+
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="
+                        ml-2
+                        flex
+                        h-6
+                        w-6
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-slate-200
+                        text-slate-500
+                        transition
+                        hover:bg-slate-300
+                        hover:text-slate-800
+                        dark:bg-slate-700
+                        dark:hover:bg-slate-600
+                        dark:hover:text-white
+                      "
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+
+                </div>
+
+                {/* =================================================
+                    HOME SERVICE
+                ================================================= */}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setHomeServiceOnly(!homeServiceOnly)
+                  }
+                  className={`
+                    flex
+                    h-11
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    px-5
+                    text-xs
+                    font-bold
+                    transition-all
+                    lg:w-[175px]
+                    lg:shrink-0
+                    ${
+                      homeServiceOnly
+                        ? "bg-gradient-to-r from-[#252a67] to-[#14B8A6] text-white shadow-md shadow-[#252a67]/20"
+                        : "bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    }
+                  `}
+                >
+
+                  <div
+                    className={`
+                      flex
+                      h-7
+                      w-7
+                      items-center
+                      justify-center
+                      rounded-lg
+                      ${
+                        homeServiceOnly
+                          ? "bg-white/15"
+                          : "bg-white shadow-sm dark:bg-slate-700"
+                      }
+                    `}
+                  >
+                    <Home className="h-3.5 w-3.5" />
+                  </div>
+
+                  <span>
+                    {homeServiceOnly
+                      ? "Home Service On"
+                      : "Home Service"}
+                  </span>
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
-      )}
-    </div>
+
+      </section>
+
+      {/* =========================================================
+          CONTENT
+      ========================================================= */}
+
+      <section
+        className="
+          mx-auto
+          max-w-7xl
+          px-4
+          py-5
+          sm:px-6
+          sm:py-6
+          lg:px-8
+        "
+      >
+
+        {/* =======================================================
+            RESULT HEADER
+        ======================================================= */}
+
+        <div
+          className="
+            mb-4
+            flex
+            items-end
+            justify-between
+          "
+        >
+
+          <div>
+
+            <div className="flex items-center gap-1.5">
+
+              <FlaskConical
+                className="
+                  h-3.5
+                  w-3.5
+                  text-[#14B8A6]
+                "
+              />
+
+              <span
+                className="
+                  text-[9px]
+                  font-bold
+                  uppercase
+                  tracking-[0.16em]
+                  text-[#3b4a8f]
+                  dark:text-teal-400
+                "
+              >
+                Diagnostic Network
+              </span>
+
+            </div>
+
+            <h2
+              className="
+                mt-1
+                text-xl
+                font-black
+                tracking-tight
+                text-slate-900
+                dark:text-white
+                sm:text-2xl
+              "
+            >
+              {filteredCenters.length} Diagnostic Centers
+            </h2>
+
+          </div>
+
+          {/* Clear filters */}
+
+          {(selectedCity !== "All" ||
+            searchQuery ||
+            homeServiceOnly) && (
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="
+                inline-flex
+                items-center
+                gap-1
+                rounded-lg
+                border
+                border-slate-200
+                bg-white
+                px-2.5
+                py-1.5
+                text-[9px]
+                font-bold
+                text-slate-500
+                transition
+                hover:border-[#3b4a8f]
+                hover:text-[#3b4a8f]
+                dark:border-slate-700
+                dark:bg-slate-900
+                dark:text-slate-400
+              "
+            >
+              <X className="h-3 w-3" />
+
+              Clear
+            </button>
+
+          )}
+
+        </div>
+
+        {/* =======================================================
+            EMPTY STATE
+        ======================================================= */}
+
+        {filteredCenters.length === 0 ? (
+
+          <div
+            className="
+              rounded-2xl
+              border
+              border-slate-200
+              bg-white
+              px-5
+              py-14
+              text-center
+              dark:border-slate-800
+              dark:bg-slate-900
+            "
+          >
+
+            <div
+              className="
+                mx-auto
+                flex
+                h-14
+                w-14
+                items-center
+                justify-center
+                rounded-2xl
+                bg-gradient-to-br
+                from-[#252a67]/10
+                to-[#14B8A6]/10
+              "
+            >
+              <Search
+                className="
+                  h-6
+                  w-6
+                  text-[#3b4a8f]
+                  dark:text-teal-400
+                "
+              />
+            </div>
+
+            <h3
+              className="
+                mt-4
+                text-lg
+                font-bold
+                text-slate-900
+                dark:text-white
+              "
+            >
+              No Diagnostic Centers Found
+            </h3>
+
+            <p
+              className="
+                mt-1
+                text-xs
+                text-slate-500
+                dark:text-slate-400
+              "
+            >
+              Try changing your search or location filters.
+            </p>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="
+                mt-5
+                rounded-lg
+                bg-gradient-to-r
+                from-[#252a67]
+                to-[#14B8A6]
+                px-5
+                py-2.5
+                text-xs
+                font-bold
+                text-white
+                shadow-md
+              "
+            >
+              View All Centers
+            </button>
+
+          </div>
+
+        ) : (
+
+          /* =====================================================
+             LAB GRID
+          ===================================================== */
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-4
+              sm:grid-cols-2
+              lg:grid-cols-3
+              xl:grid-cols-4
+            "
+          >
+
+            {filteredCenters.map((center: any) => {
+
+              /* =================================================
+                 WHATSAPP NUMBER
+              ================================================= */
+
+              const cleanWa = center.whatsapp
+                ? center.whatsapp.replace(
+                    /[^0-9]/g,
+                    ""
+                  )
+                : "";
+
+              const waNumber =
+                cleanWa.length === 10
+                  ? `91${cleanWa}`
+                  : cleanWa;
+
+              return (
+
+                /* =================================================
+                   GRADIENT BORDER
+                ================================================= */
+
+                <div
+                  key={center.id}
+                  className="
+                    group
+                    rounded-2xl
+                    bg-gradient-to-br
+                    from-[#252a67]
+                    via-[#3b4a8f]
+                    to-[#14B8A6]
+                    p-[3px]
+                    transition-all
+                    duration-300
+                    hover:-translate-y-1
+                    hover:shadow-xl
+                    hover:shadow-[#252a67]/15
+                  "
+                >
+
+                  <Link
+                    href={`/labs/${center.id}`}
+                    className="
+                      flex
+                      h-full
+                      flex-col
+                      overflow-hidden
+                      rounded-[13px]
+                      bg-white
+                      dark:bg-slate-900
+                    "
+                  >
+
+                    {/* =================================================
+                        FULL PHOTO AREA
+                    ================================================= */}
+
+                    <div
+                      className="
+                        relative
+                        h-36
+                        w-full
+                        overflow-hidden
+                        bg-slate-100
+                        dark:bg-slate-800
+                        sm:h-40
+                      "
+                    >
+
+                      {/* =================================================
+                          FULL IMAGE
+
+                          IMPORTANT:
+                          object-cover = image fills entire area
+                          object-top   = TOP NEVER GETS CROPPED
+                          extra portion crops from BOTTOM
+                      ================================================= */}
+
+                      {center.logo ? (
+
+                        <Image
+                          src={center.logo}
+                          alt={center.centerName}
+                          fill
+                          priority={false}
+                          sizes="
+                            (max-width: 640px) 100vw,
+                            (max-width: 1024px) 50vw,
+                            (max-width: 1280px) 33vw,
+                            25vw
+                          "
+                          className="
+                            object-cover
+                            object-top
+                            transition-transform
+                            duration-500
+                            group-hover:scale-[1.02]
+                          "
+                        />
+
+                      ) : (
+
+                        <div
+                          className="
+                            absolute
+                            inset-0
+                            flex
+                            items-center
+                            justify-center
+                            bg-gradient-to-br
+                            from-slate-100
+                            via-slate-50
+                            to-slate-100
+                            dark:from-slate-800
+                            dark:via-slate-800/80
+                            dark:to-slate-900
+                          "
+                        >
+
+                          <Building2
+                            className="
+                              h-12
+                              w-12
+                              text-[#3b4a8f]
+                              dark:text-teal-400
+                            "
+                          />
+
+                        </div>
+
+                      )}
+
+                      {/* =================================================
+                          SUBTLE IMAGE OVERLAY
+                      ================================================= */}
+
+                      <div
+                        className="
+                          pointer-events-none
+                          absolute
+                          inset-0
+                          bg-gradient-to-t
+                          from-black/20
+                          via-transparent
+                          to-transparent
+                        "
+                      />
+
+                      {/* =================================================
+                          VERIFIED
+                      ================================================= */}
+
+                      {center.isApproved && (
+
+                        <div
+                          className="
+                            absolute
+                            right-3
+                            top-3
+                            flex
+                            items-center
+                            gap-1
+                            rounded-full
+                            border
+                            border-white/80
+                            bg-white/95
+                            px-2
+                            py-1
+                            text-[8px]
+                            font-bold
+                            text-[#252a67]
+                            shadow-md
+                            backdrop-blur
+                            dark:border-slate-700
+                            dark:bg-slate-900/95
+                            dark:text-teal-400
+                          "
+                        >
+
+                          <ShieldCheck className="h-3 w-3" />
+
+                          Verified
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+                    {/* =================================================
+                        DETAILS
+                    ================================================= */}
+
+                    <div
+                      className="
+                        flex
+                        flex-1
+                        flex-col
+                        p-3.5
+                      "
+                    >
+
+                      {/* =================================================
+                          NAME
+                      ================================================= */}
+
+                      <div className="flex items-start gap-2">
+
+                        <h3
+                          className="
+                            line-clamp-2
+                            flex-1
+                            text-sm
+                            font-extrabold
+                            leading-5
+                            text-slate-900
+                            transition-colors
+                            group-hover:text-[#3b4a8f]
+                            dark:text-white
+                            dark:group-hover:text-teal-400
+                          "
+                        >
+                          {center.centerName}
+                        </h3>
+
+                        {center.isApproved && (
+                          <ShieldCheck
+                            className="
+                              mt-0.5
+                              h-4
+                              w-4
+                              shrink-0
+                              text-[#14B8A6]
+                            "
+                          />
+                        )}
+
+                      </div>
+
+                      {/* =================================================
+                          LOCATION
+                      ================================================= */}
+
+                      {(center.address ||
+                        center.city) && (
+
+                        <div
+                          className="
+                            mt-2
+                            flex
+                            items-start
+                            gap-1.5
+                          "
+                        >
+
+                          <MapPin
+                            className="
+                              mt-0.5
+                              h-3.5
+                              w-3.5
+                              shrink-0
+                              text-[#14B8A6]
+                            "
+                          />
+
+                          <p
+                            className="
+                              line-clamp-2
+                              text-[10px]
+                              leading-4
+                              text-slate-500
+                              dark:text-slate-400
+                            "
+                          >
+                            {center.address}
+
+                            {center.city
+                              ? `, ${center.city}`
+                              : ""}
+                          </p>
+
+                        </div>
+
+                      )}
+
+                      {/* =================================================
+                          BADGES
+                      ================================================= */}
+
+                      <div
+                        className="
+                          mt-2.5
+                          flex
+                          flex-wrap
+                          gap-1.5
+                        "
+                      >
+
+                        {/* ONLINE */}
+
+                        {center.isOnline && (
+
+                          <span
+                            className="
+                              inline-flex
+                              items-center
+                              gap-1
+                              rounded-full
+                              border
+                              border-emerald-200
+                              bg-emerald-50
+                              px-2
+                              py-1
+                              text-[8px]
+                              font-bold
+                              text-emerald-700
+                              dark:border-emerald-800/40
+                              dark:bg-emerald-900/20
+                              dark:text-emerald-400
+                            "
+                          >
+
+                            <span
+                              className="
+                                h-1.5
+                                w-1.5
+                                animate-pulse
+                                rounded-full
+                                bg-emerald-500
+                              "
+                            />
+
+                            ONLINE
+
+                          </span>
+
+                        )}
+
+                        {/* HOME COLLECTION */}
+
+                        {center.hasHomeService && (
+
+                          <span
+                            className="
+                              inline-flex
+                              items-center
+                              gap-1
+                              rounded-full
+                              border
+                              border-teal-200
+                              bg-teal-50
+                              px-2
+                              py-1
+                              text-[8px]
+                              font-bold
+                              text-teal-700
+                              dark:border-teal-800/40
+                              dark:bg-teal-900/20
+                              dark:text-teal-400
+                            "
+                          >
+
+                            <Home className="h-2.5 w-2.5" />
+
+                            HOME COLLECTION
+
+                          </span>
+
+                        )}
+
+                      </div>
+
+                      {/* =================================================
+                          QUICK ACTIONS
+                      ================================================= */}
+
+                      {(center.phone ||
+                        center.whatsapp ||
+                        center.googleMapsUrl) && (
+
+                        <div
+                          className="
+                            mt-2.5
+                            flex
+                            flex-wrap
+                            gap-1.5
+                          "
+                        >
+
+                          {/* CALL */}
+
+                          {center.phone && (
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                window.location.href =
+                                  `tel:${center.phone}`;
+                              }}
+                              className="
+                                inline-flex
+                                items-center
+                                gap-1
+                                rounded-lg
+                                border
+                                border-blue-100
+                                bg-blue-50
+                                px-2
+                                py-1.5
+                                text-[9px]
+                                font-bold
+                                text-blue-700
+                                transition
+                                hover:bg-blue-100
+                                dark:border-blue-900/40
+                                dark:bg-blue-900/20
+                                dark:text-blue-400
+                              "
+                            >
+
+                              <Phone className="h-3 w-3" />
+
+                              Call
+
+                            </button>
+
+                          )}
+
+                          {/* WHATSAPP */}
+
+                          {center.whatsapp && (
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                window.open(
+                                  `https://wa.me/${waNumber}`,
+                                  "_blank"
+                                );
+                              }}
+                              className="
+                                inline-flex
+                                items-center
+                                gap-1
+                                rounded-lg
+                                border
+                                border-emerald-100
+                                bg-emerald-50
+                                px-2
+                                py-1.5
+                                text-[9px]
+                                font-bold
+                                text-emerald-700
+                                transition
+                                hover:bg-emerald-100
+                                dark:border-emerald-900/40
+                                dark:bg-emerald-900/20
+                                dark:text-emerald-400
+                              "
+                            >
+
+                              <MessageCircle className="h-3 w-3" />
+
+                              WhatsApp
+
+                            </button>
+
+                          )}
+
+                          {/* MAP */}
+
+                          {center.googleMapsUrl && (
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                window.open(
+                                  center.googleMapsUrl,
+                                  "_blank"
+                                );
+                              }}
+                              className="
+                                inline-flex
+                                items-center
+                                gap-1
+                                rounded-lg
+                                border
+                                border-red-100
+                                bg-red-50
+                                px-2
+                                py-1.5
+                                text-[9px]
+                                font-bold
+                                text-red-700
+                                transition
+                                hover:bg-red-100
+                                dark:border-red-900/40
+                                dark:bg-red-900/20
+                                dark:text-red-400
+                              "
+                            >
+
+                              <Navigation className="h-3 w-3" />
+
+                              Maps
+
+                            </button>
+
+                          )}
+
+                        </div>
+
+                      )}
+
+                      {/* =================================================
+                          AVAILABLE TESTS
+                      ================================================= */}
+
+                      {center.centerTests &&
+                        center.centerTests.length > 0 && (
+
+                        <div
+                          className="
+                            mt-3
+                            border-t
+                            border-slate-100
+                            pt-3
+                            dark:border-slate-800
+                          "
+                        >
+
+                          <div
+                            className="
+                              mb-2
+                              flex
+                              items-center
+                              justify-between
+                            "
+                          >
+
+                            <p
+                              className="
+                                text-[9px]
+                                font-bold
+                                uppercase
+                                tracking-wide
+                                text-slate-400
+                              "
+                            >
+                              Available Tests
+                            </p>
+
+                            <span
+                              className="
+                                text-[9px]
+                                font-bold
+                                text-[#14B8A6]
+                              "
+                            >
+                              {center.centerTests.length}
+                            </span>
+
+                          </div>
+
+                          <div
+                            className="
+                              flex
+                              flex-wrap
+                              gap-1
+                            "
+                          >
+
+                            {center.centerTests
+                              .slice(0, 3)
+                              .map((ct: any) => (
+
+                                <span
+                                  key={ct.id}
+                                  className="
+                                    max-w-full
+                                    rounded-md
+                                    border
+                                    border-slate-100
+                                    bg-slate-50
+                                    px-1.5
+                                    py-1
+                                    text-[9px]
+                                    font-medium
+                                    text-slate-600
+                                    dark:border-slate-800
+                                    dark:bg-slate-800
+                                    dark:text-slate-300
+                                  "
+                                >
+
+                                  <span
+                                    className="
+                                      block
+                                      max-w-[120px]
+                                      truncate
+                                    "
+                                  >
+                                    {ct.diagnosticTest?.name}
+                                  </span>
+
+                                </span>
+
+                              ))}
+
+                            {center.centerTests.length > 3 && (
+
+                              <span
+                                className="
+                                  rounded-md
+                                  bg-gradient-to-r
+                                  from-[#252a67]/10
+                                  to-[#14B8A6]/10
+                                  px-1.5
+                                  py-1
+                                  text-[9px]
+                                  font-bold
+                                  text-[#3b4a8f]
+                                  dark:text-teal-400
+                                "
+                              >
+                                +{center.centerTests.length - 3}
+                              </span>
+
+                            )}
+
+                          </div>
+
+                        </div>
+
+                      )}
+
+                      {/* =================================================
+                          CTA
+                      ================================================= */}
+
+                      <div className="mt-3 pt-1">
+
+                        <div
+                          className="
+                            flex
+                            items-center
+                            justify-between
+                            rounded-lg
+                            bg-slate-50
+                            px-3
+                            py-2.5
+                            transition-all
+                            group-hover:bg-gradient-to-r
+                            group-hover:from-[#252a67]
+                            group-hover:to-[#14B8A6]
+                            dark:bg-slate-800
+                          "
+                        >
+
+                          <span
+                            className="
+                              text-[10px]
+                              font-extrabold
+                              text-slate-700
+                              transition-colors
+                              group-hover:text-white
+                              dark:text-slate-200
+                            "
+                          >
+                            View Tests & Details
+                          </span>
+
+                          <ChevronRight
+                            className="
+                              h-3.5
+                              w-3.5
+                              text-[#3b4a8f]
+                              transition-all
+                              group-hover:translate-x-0.5
+                              group-hover:text-white
+                              dark:text-teal-400
+                            "
+                          />
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </Link>
+
+                </div>
+              );
+            })}
+
+          </div>
+        )}
+
+      </section>
+
+    </main>
   );
 }
