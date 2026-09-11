@@ -18,9 +18,6 @@ export const metadata: Metadata = {
   description: "Doctor Appointment & Clinic Management System",
 };
 
-// Temporarily disabled: dark mode will be configured later
-const themeScript = `(function(){try{document.documentElement.classList.remove("dark");}catch(e){}})()`;
-
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -42,10 +39,12 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="h-full antialiased" suppressHydrationWarning data-scroll-behavior="smooth">
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
+    <html
+      lang={locale}
+      className="h-full antialiased"
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+    >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
