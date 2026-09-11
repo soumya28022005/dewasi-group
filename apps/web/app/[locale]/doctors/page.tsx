@@ -3,12 +3,30 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { 
-  MapPin, Loader2, Pencil, X, Navigation, CheckCircle2, 
-  Building2, Sparkles, Search, Radio, CalendarCheck, Users 
+import {
+  MapPin,
+  Loader2,
+  Navigation,
+  Search,
+  Radio,
+  CalendarCheck,
+  Users,
+  ChevronDown,
+  X,
+  Sparkles,
 } from "lucide-react";
+
 import DoctorGrid from "@/components/DoctorGrid";
 import { useLocationCity } from "@/lib/hooks/useLocationCity";
+import { fetchSearchLocations } from "@/lib/api";
+
+interface Location {
+  id: string;
+  nameEn: string;
+  nameBn: string;
+  nameHi: string;
+  isActive?: boolean;
+}
 
 function GradientCard({
   children,
@@ -20,15 +38,22 @@ function GradientCard({
   gradient?: string;
 }) {
   return (
-    <div className={`relative rounded-[20px] p-[3px] bg-gradient-to-r ${gradient} shadow-[0_4px_15px_-6px_rgba(37,42,103,0.3)] transition-all duration-300 ${className}`}>
-      <div className="rounded-[calc(20px-3px)] bg-white dark:bg-slate-900 h-full">
+    <div
+      className={`
+        relative rounded-[22px] p-[1px]
+        bg-gradient-to-r ${gradient}
+        shadow-[0_8px_30px_-14px_rgba(37,42,103,0.35)]
+        ${className}
+      `}
+    >
+      <div className="h-full rounded-[21px] bg-white dark:bg-slate-900">
         {children}
       </div>
     </div>
   );
 }
 
-export default function DoctorsPage() {
+function DoctorsPage() {
   return (
     <Suspense fallback={null}>
       <DoctorsPageContent />
@@ -38,65 +63,177 @@ export default function DoctorsPage() {
 
 function DoctorsPageContent() {
   const t = useTranslations("DoctorSearch");
+
   const { city, status, setManualCity } = useLocationCity();
   const searchParams = useSearchParams();
-  
-  // Default Tab Setup based on URL parameter (if any)
-  const initialTab = searchParams.get("live") === "true" ? "LIVE" 
-                   : searchParams.get("available") === "true" ? "AVAILABLE" 
-                   : "ALL";
 
-  const [activeTab, setActiveTab] = useState<"ALL" | "AVAILABLE" | "LIVE">(initialTab);
+  const initialTab =
+    searchParams.get("live") === "true"
+      ? "LIVE"
+      : searchParams.get("available") === "true"
+        ? "AVAILABLE"
+        : "ALL";
+
+  const [activeTab, setActiveTab] = useState<
+    "ALL" | "AVAILABLE" | "LIVE"
+  >(initialTab);
+
   const [query, setQuery] = useState(
     searchParams.get("q") ??
       searchParams.get("specialty") ??
       searchParams.get("treatment") ??
-      "",
+      ""
   );
-  const [editingLocation, setEditingLocation] = useState(false);
-  const [manualInput, setManualInput] = useState("");
 
-  // Seed the city filter from a ?city= param (e.g. coming from the home hero search)
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+
   const cityParam = searchParams.get("city");
+
+  /*
+   * ---------------------------------------------------------
+   * LOAD LOCATIONS
+   * ---------------------------------------------------------
+   */
+
   useEffect(() => {
-    if (cityParam && cityParam.trim()) setManualCity(cityParam.trim());
+    let mounted = true;
+
+    setLocationsLoading(true);
+
+    fetchSearchLocations()
+      .then((data) => {
+        if (!mounted) return;
+
+        if (Array.isArray(data)) {
+          setLocations(data);
+        } else if (data && Array.isArray(data.data)) {
+          setLocations(data.data);
+        } else {
+          setLocations([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load locations:", error);
+
+        if (mounted) {
+          setLocations([]);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setLocationsLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /*
+   * ---------------------------------------------------------
+   * INITIAL CITY FROM URL
+   * ---------------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (cityParam?.trim()) {
+      setManualCity(cityParam.trim());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityParam]);
 
-  function applyManualLocation(e: React.FormEvent) {
-    e.preventDefault();
-    if (manualInput.trim()) {
-      setManualCity(manualInput.trim());
-      setEditingLocation(false);
-    }
+  /*
+   * ---------------------------------------------------------
+   * LOCATION CHANGE
+   * ---------------------------------------------------------
+   */
+
+  function handleLocationChange(
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) {
+    const value = e.target.value.trim();
+
+    setManualCity(value);
   }
+
+  /*
+   * ---------------------------------------------------------
+   * CLEAR LOCATION
+   * ---------------------------------------------------------
+   */
 
   function clearLocation() {
     setManualCity("");
-    setManualInput("");
-    setEditingLocation(false);
   }
 
-  function cancelEditing() {
-    setEditingLocation(false);
-    setManualInput("");
+  /*
+   * ---------------------------------------------------------
+   * LOCALIZED LOCATION NAME
+   * ---------------------------------------------------------
+   */
+
+  function getLocalizedName(location: Location) {
+    const locale = t("locale");
+
+    if (locale === "bn") {
+      return location.nameBn;
+    }
+
+    if (locale === "hi") {
+      return location.nameHi;
+    }
+
+    return location.nameEn;
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * SEARCH
+   * ---------------------------------------------------------
+   *
+   * Query is intentionally passed directly to DoctorGrid.
+   * This keeps the existing backend/search behaviour intact.
+   *
+   * Doctor name
+   * Clinic name
+   * Specialization
+   * Treatment
+   * etc.
+   * are handled by the existing DoctorGrid/data layer.
+   */
+
+  function handleSearchChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    setQuery(e.target.value);
+  }
+
+  function clearSearch() {
+    setQuery("");
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      
-      {/* ================= COMPACT HEADER ================= */}
-      <GradientCard>
-        <div className="relative overflow-hidden p-5 sm:p-6">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gradient-to-br from-[#252a67]/[0.06] to-[#14B8A6]/[0.06] blur-3xl" />
+    <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
-          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <GradientCard>
+        <div className="relative overflow-hidden px-5 py-5 sm:px-6 sm:py-6">
+          {/* Soft background accents */}
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#252a67]/5 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-[#14B8A6]/5 blur-3xl" />
+
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#252a67] to-[#3b4a8f] text-white shadow-sm">
-                  <Building2 className="h-3.5 w-3.5" />
+              <div className="mb-2.5 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-sm">
+                  <Users className="h-4 w-4" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#252a67] dark:text-blue-300">
+
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#252a67] dark:text-blue-300">
                   {t("findDoctors") || "Find Doctors"}
                 </p>
               </div>
@@ -104,16 +241,20 @@ function DoctorsPageContent() {
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
                 {t("heading") || "Doctor Directory"}
               </h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {t("subheading") || "Search and book trusted doctors near you"}
+
+              <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                {t("subheading") ||
+                  "Search trusted doctors, clinics and specialists near you"}
               </p>
             </div>
 
             <div className="hidden shrink-0 sm:block">
-              <div className="flex items-center gap-2 rounded-full bg-slate-50 dark:bg-slate-800 px-3 py-1.5 border border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-3.5 py-2 dark:border-slate-700 dark:bg-slate-800">
                 <Sparkles className="h-3.5 w-3.5 text-[#14B8A6]" />
-                <span className="text-xs font-semibold text-[#252a67] dark:text-blue-300">
-                  {t("trustedNetwork") || "Trusted Healthcare Network"}
+
+                <span className="text-[11px] font-semibold text-[#252a67] dark:text-blue-300">
+                  {t("trustedNetwork") ||
+                    "Trusted Healthcare Network"}
                 </span>
               </div>
             </div>
@@ -121,159 +262,252 @@ function DoctorsPageContent() {
         </div>
       </GradientCard>
 
-      {/* ================= SEARCH & LOCATION BAR ================= */}
+      {/* =====================================================
+          SEARCH AREA
+      ===================================================== */}
+
       <div className="mt-5">
-        <GradientCard gradient="from-[#252a67] via-[#3b4a8f] to-[#14B8A6]">
-          <div className="p-4 flex flex-col md:flex-row gap-4 items-center">
-            
-            {/* Location Section */}
-            <div className="flex flex-1 items-center gap-3 w-full">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-md">
-                <MapPin className="h-4 w-4" />
-              </div>
+        <GradientCard>
+          <div className="p-3 sm:p-4">
+            <div className="grid gap-3 md:grid-cols-[minmax(230px,0.8fr)_1px_minmax(320px,1.4fr)] md:items-center">
+              {/* =================================================
+                  LOCATION
+              ================================================= */}
 
-              <div className="min-w-0 flex-1">
-                {status === "loading" && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Loader2 className="h-4 w-4 animate-spin text-[#14B8A6]" />
-                    {t("locationDetecting") || "Detecting..."}
-                  </div>
-                )}
-
-                {status !== "loading" && !editingLocation && city && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm text-slate-600">
-                      <strong className="text-[#252a67] dark:text-white">{city}</strong>
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#252a67] to-[#14B8A6] px-2 py-0.5 text-[9px] font-bold text-white shadow-sm">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Active
-                    </span>
-                  </div>
-                )}
-
-                {status !== "loading" && !editingLocation && !city && (
-                  <span className="flex items-center gap-2 text-sm text-slate-600">
-                    <Navigation className="h-4 w-4 text-[#14B8A6]" />
-                    {t("locationPrompt") || "Set Location"}
-                  </span>
-                )}
-
-                {editingLocation && (
-                  <form onSubmit={applyManualLocation} className="flex items-center gap-2 w-full">
-                    <input
-                      autoFocus
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
-                      placeholder={t("locationInputPlaceholder") || "Enter city..."}
-                      className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[#14B8A6] dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                    />
-                    <button type="submit" className="rounded-lg bg-[#252a67] px-3 py-1.5 text-xs text-white">Apply</button>
-                    <button type="button" onClick={cancelEditing} className="text-xs text-slate-500 dark:text-slate-400">Cancel</button>
-                  </form>
-                )}
-              </div>
-
-              {status !== "loading" && !editingLocation && (
-                <div className="flex shrink-0 gap-1.5">
-                  {city ? (
-                    <>
-                      <button onClick={() => { setManualInput(city); setEditingLocation(true); }} className="p-2 text-[#0f766e] bg-[#14B8A6]/10 rounded-lg hover:bg-[#14B8A6]/20">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={clearLocation} className="p-2 text-red-500 bg-red-50 dark:bg-red-500/10 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => setEditingLocation(true)} className="px-3 py-1.5 bg-[#252a67] text-white text-xs rounded-lg">
-                      Change
-                    </button>
-                  )}
+              <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5 transition-colors focus-within:border-[#14B8A6]/50 focus-within:bg-white dark:border-slate-700 dark:bg-slate-800/60 dark:focus-within:bg-slate-800">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#252a67] to-[#14B8A6] text-white shadow-sm">
+                  <MapPin className="h-4 w-4" />
                 </div>
-              )}
+
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                    Location
+                  </p>
+
+                  <div className="relative">
+                    {status === "loading" || locationsLoading ? (
+                      <div className="flex items-center gap-2 py-0.5 text-sm font-medium text-slate-600 dark:text-slate-300">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-[#14B8A6]" />
+                        <span>
+                          {t("locationDetecting") || "Detecting..."}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <select
+                          value={city || ""}
+                          onChange={handleLocationChange}
+                          className="
+                            w-full cursor-pointer appearance-none
+                            bg-transparent pr-6
+                            text-sm font-semibold
+                            text-[#252a67]
+                            outline-none
+                            dark:text-white
+                          "
+                        >
+                          <option value="">
+                            {t("locationPrompt") ||
+                              "Choose your location"}
+                          </option>
+
+                          {locations
+                            .filter((location) => location?.isActive !== false)
+                            .map((location) => (
+                              <option
+                                key={location.id}
+                                value={location.nameEn}
+                              >
+                                {getLocalizedName(location)}
+                              </option>
+                            ))}
+                        </select>
+
+                        <ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {city && status !== "loading" && (
+                  <button
+                    type="button"
+                    onClick={clearLocation}
+                    aria-label="Clear location"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Desktop divider */}
+              <div className="hidden h-10 w-px bg-slate-200 md:block dark:bg-slate-700" />
+
+              {/* =================================================
+                  SEARCH
+              ================================================= */}
+
+              <div
+                className="
+                  flex min-w-0 items-center gap-3
+                  rounded-2xl border border-slate-200/90
+                  bg-slate-50/70 px-3.5 py-2.5
+                  transition-all
+                  focus-within:border-[#14B8A6]/50
+                  focus-within:bg-white
+                  dark:border-slate-700
+                  dark:bg-slate-800/60
+                  dark:focus-within:bg-slate-800
+                "
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm dark:bg-slate-700 dark:text-slate-300">
+                  <Search className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                    Search
+                  </p>
+
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={handleSearchChange}
+                    placeholder="Doctor name, clinic, specialization, treatment..."
+                    className="
+                      w-full bg-transparent
+                      text-sm font-medium
+                      text-slate-800
+                      outline-none
+                      placeholder:text-slate-400
+                      dark:text-slate-100
+                      dark:placeholder:text-slate-500
+                    "
+                  />
+                </div>
+
+                {query && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Divider for Desktop */}
-            <div className="hidden md:block w-px h-10 bg-slate-200 dark:bg-slate-700" />
-
-            {/* Name Search Section */}
-            <div className="flex-1 w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-[#14B8A6] focus-within:bg-white dark:bg-slate-800 dark:border-slate-700">
-              <Search className="h-4 w-4 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by doctor or clinic name..."
-                className="w-full bg-transparent text-sm outline-none text-slate-800 dark:text-slate-200"
-              />
-              {query && (
-                <button onClick={() => setQuery("")} className="text-slate-400 hover:text-slate-600">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
+            {/* Search helper */}
+            <div className="mt-2.5 flex items-center gap-1.5 px-1 text-[10px] text-slate-400">
+              <Search className="h-3 w-3" />
+              <span>
+                Search by doctor name, clinic, specialty or treatment
+              </span>
             </div>
-
           </div>
         </GradientCard>
       </div>
 
-      {/* ================= FILTER TABS ================= */}
-      <div className="mt-6 flex flex-wrap items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <button 
+      {/* =====================================================
+          FILTER TABS
+      ===================================================== */}
+
+      <div className="mt-6 flex flex-wrap items-center gap-2.5 border-b border-slate-200 pb-4 dark:border-slate-800">
+        {/* ALL */}
+        <button
+          type="button"
           onClick={() => setActiveTab("ALL")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-            activeTab === "ALL" 
-            ? "bg-[#252a67] text-white shadow-md" 
-            : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 border border-slate-200 dark:border-slate-700"
-          }`}
+          className={`
+            flex items-center gap-2 rounded-full
+            px-4 py-2 text-sm font-semibold
+            transition-all duration-200
+            ${
+              activeTab === "ALL"
+                ? "bg-[#252a67] text-white shadow-md shadow-[#252a67]/20"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-[#252a67]/30 hover:text-[#252a67] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            }
+          `}
         >
           <Users className="h-4 w-4" />
           All Doctors
         </button>
 
-        <button 
+        {/* AVAILABLE */}
+        <button
+          type="button"
           onClick={() => setActiveTab("AVAILABLE")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-            activeTab === "AVAILABLE" 
-            ? "bg-[#14B8A6] text-white shadow-md" 
-            : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 border border-slate-200 dark:border-slate-700"
-          }`}
+          className={`
+            flex items-center gap-2 rounded-full
+            px-4 py-2 text-sm font-semibold
+            transition-all duration-200
+            ${
+              activeTab === "AVAILABLE"
+                ? "bg-[#14B8A6] text-white shadow-md shadow-[#14B8A6]/20"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-[#14B8A6]/30 hover:text-[#0f766e] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            }
+          `}
         >
           <CalendarCheck className="h-4 w-4" />
           Available Today
         </button>
 
-        <button 
+        {/* LIVE */}
+        <button
+          type="button"
           onClick={() => setActiveTab("LIVE")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-            activeTab === "LIVE" 
-            ? "bg-red-500 text-white shadow-md" 
-            : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 border border-slate-200 dark:border-slate-700"
-          }`}
+          className={`
+            flex items-center gap-2 rounded-full
+            px-4 py-2 text-sm font-semibold
+            transition-all duration-200
+            ${
+              activeTab === "LIVE"
+                ? "bg-red-500 text-white shadow-md shadow-red-500/20"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:text-red-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            }
+          `}
         >
-          <Radio className={`h-4 w-4 ${activeTab === "LIVE" ? "animate-pulse text-white" : "text-red-500"}`} />
+          <Radio
+            className={`h-4 w-4 ${
+              activeTab === "LIVE"
+                ? "animate-pulse text-white"
+                : "text-red-500"
+            }`}
+          />
+
           Live Now
         </button>
       </div>
 
-      {/* Live Now Warning banner */}
+      {/* =====================================================
+          LIVE BANNER
+      ===================================================== */}
+
       {activeTab === "LIVE" && (
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
           <Radio className="h-4 w-4 animate-pulse" />
-          {t("liveNowBanner") || "Showing doctors currently live in session right now"}
+
+          {t("liveNowBanner") ||
+            "Showing doctors currently live in session right now"}
         </div>
       )}
 
-      {/* ================= DOCTOR GRID ================= */}
+      {/* =====================================================
+          DOCTOR RESULTS
+      ===================================================== */}
+
       <div className="mt-6">
-        <DoctorGrid 
-          query={query} 
-          city={city ?? undefined} 
-          liveNow={activeTab === "LIVE"} 
-          availableToday={activeTab === "AVAILABLE"} 
+        <DoctorGrid
+          query={query}
+          city={city ?? undefined}
+          liveNow={activeTab === "LIVE"}
+          availableToday={activeTab === "AVAILABLE"}
         />
       </div>
     </main>
   );
 }
+
+export default DoctorsPage;

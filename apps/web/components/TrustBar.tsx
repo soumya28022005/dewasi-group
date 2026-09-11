@@ -6,13 +6,13 @@ import {
   ShieldCheck,
   Headphones,
   HeartHandshake,
-} from "lucide-react";
+} from "lucide-react"; 
 
 const ITEMS = [
   { icon: UserCheck, label: "Verified Doctors & Clinics" },
   { icon: CalendarCheck, label: "Easy Online Booking" },
   { icon: ShieldCheck, label: "Safe & Secure" },
-  { icon: Headphones, label: "24×7 Support" },
+  { icon: Headphones, label: "24x7 Support" },
   { icon: HeartHandshake, label: "Better Healthcare for All" },
 ];
 

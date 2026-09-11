@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Star,
@@ -37,14 +37,11 @@ function FeaturedDoctorCard({
   const [isFavorite, setIsFavorite] = useState(false);
 
   const name = doctor.user?.name || "Doctor";
-
   const specialization =
     doctor.specialization || "General Physician";
 
   const experience = doctor.experience ?? 0;
-
   const rating = doctor.rating ?? null;
-
   const reviews = doctor.reviewCount ?? null;
 
   const avatar =
@@ -58,33 +55,25 @@ function FeaturedDoctorCard({
     null;
 
   return (
-    <div
+    <article
       className="
         group
         relative
         h-full
-
+        overflow-hidden
         rounded-[22px]
-        p-[3px]
-
         bg-gradient-to-br
-        from-[#252a67]
-        via-[#3b4a8f]
+        from-[#252A67]
+        via-[#3B4A8F]
         to-[#14B8A6]
-
-        shadow-[0_8px_30px_rgba(37,42,103,0.10)]
-
+        p-[3px]
+        shadow-[0_8px_24px_rgba(37,42,103,0.09)]
         transition-all
         duration-300
-        ease-out
-
         hover:-translate-y-1
-        hover:shadow-[0_18px_45px_rgba(20,184,166,0.18)]
+        hover:shadow-[0_18px_38px_rgba(20,184,166,0.16)]
       "
     >
-      {/* =====================================================
-          INNER CARD
-      ====================================================== */}
       <div
         className="
           relative
@@ -92,23 +81,20 @@ function FeaturedDoctorCard({
           h-full
           min-w-0
           flex-col
-
           overflow-hidden
           rounded-[19px]
-
           bg-white
-
           dark:bg-slate-900
         "
       >
-        {/* =====================================================
-            FAVORITE
-        ====================================================== */}
+        {/* Favorite */}
+
         <button
           type="button"
-          onClick={() =>
-            setIsFavorite((prev) => !prev)
-          }
+          onClick={(e) => {
+            e.preventDefault();
+            setIsFavorite((prev) => !prev);
+          }}
           aria-label={
             isFavorite
               ? "Remove from favorites"
@@ -118,44 +104,31 @@ function FeaturedDoctorCard({
             absolute
             right-3
             top-3
-            z-20
-
+            z-30
             flex
-            h-9
-            w-9
+            h-8
+            w-8
             items-center
             justify-center
-
             rounded-full
-
             border
             border-white/80
-
             bg-white/90
-
             text-slate-400
-
-            shadow-md
+            shadow-[0_4px_12px_rgba(0,0,0,0.11)]
             backdrop-blur-md
-
             transition-all
-            duration-200
-
             hover:scale-105
             hover:text-red-500
-
             dark:border-slate-700
             dark:bg-slate-800/90
           "
         >
           <Heart
             className={`
-              h-[17px]
-              w-[17px]
-
+              h-[15px]
+              w-[15px]
               transition-all
-              duration-200
-
               ${
                 isFavorite
                   ? "scale-110 fill-red-500 text-red-500"
@@ -165,19 +138,24 @@ function FeaturedDoctorCard({
           />
         </button>
 
-        {/* =====================================================
-            IMAGE
-        ====================================================== */}
+        {/* Doctor Image */}
+
         <div
           className="
             relative
-            h-44
-
+            h-[174px]
             overflow-hidden
-
             bg-slate-100
 
-            sm:h-48
+            sm:h-[190px]
+
+            md:h-[184px]
+
+            lg:h-[172px]
+
+            xl:h-[180px]
+
+            2xl:h-[185px]
 
             dark:bg-slate-800
           "
@@ -190,14 +168,11 @@ function FeaturedDoctorCard({
               className="
                 h-full
                 w-full
-
                 object-cover
                 object-top
-
                 transition-transform
                 duration-700
                 ease-out
-
                 group-hover:scale-[1.04]
               "
             />
@@ -209,13 +184,11 @@ function FeaturedDoctorCard({
                 w-full
                 items-center
                 justify-center
-
                 bg-gradient-to-br
-                from-[#252a67]
-                via-[#3b4a8f]
+                from-[#252A67]
+                via-[#3B4A8F]
                 to-[#14B8A6]
-
-                text-5xl
+                text-4xl
                 font-bold
                 text-white
               "
@@ -224,63 +197,50 @@ function FeaturedDoctorCard({
             </div>
           )}
 
-          {/* Image bottom overlay */}
           <div
             className="
               pointer-events-none
               absolute
               inset-x-0
               bottom-0
-
               h-24
-
               bg-gradient-to-t
-              from-black/30
+              from-black/35
               via-black/5
               to-transparent
             "
           />
 
-          {/* =====================================================
-              VERIFIED
-          ====================================================== */}
+          {/* Verified */}
+
           <div className="absolute left-3 top-3">
             <span
               className="
                 inline-flex
                 items-center
                 gap-1.5
-
                 rounded-full
-
                 bg-gradient-to-r
                 from-emerald-500
                 to-teal-500
-
                 px-2.5
-                py-1
-
-                text-[10px]
-                font-bold
-                tracking-wide
-
+                py-1.5
+                text-[8px]
+                font-extrabold
+                tracking-[0.08em]
                 text-white
-
                 shadow-lg
                 shadow-emerald-500/20
-
                 backdrop-blur-md
               "
             >
-              <BadgeCheck className="h-3.5 w-3.5" />
-
+              <BadgeCheck className="h-3 w-3" />
               VERIFIED
             </span>
           </div>
 
-          {/* =====================================================
-              EXPERIENCE ON IMAGE
-          ====================================================== */}
+          {/* Experience */}
+
           {experience > 0 && (
             <div className="absolute bottom-3 left-3">
               <span
@@ -288,25 +248,16 @@ function FeaturedDoctorCard({
                   inline-flex
                   items-center
                   gap-1.5
-
                   rounded-full
-
                   border
                   border-white/20
-
                   bg-slate-950/65
-
                   px-2.5
                   py-1.5
-
-                  text-[10px]
-                  font-semibold
-                  tracking-wide
-
+                  text-[8px]
+                  font-bold
                   text-white
-
                   shadow-sm
-
                   backdrop-blur-md
                 "
               >
@@ -318,86 +269,69 @@ function FeaturedDoctorCard({
                   "
                 />
 
-                {experience}+ Years Experience
+                {experience}+ Years
               </span>
             </div>
           )}
         </div>
 
-        {/* =====================================================
-            CONTENT
-        ====================================================== */}
+        {/* Content */}
+
         <div
           className="
             flex
             flex-1
             flex-col
+            px-3.5
+            pb-3.5
+            pt-3.5
 
-            px-4
-            pb-4
-            pt-4
+            lg:px-4
+            lg:pb-4
+            lg:pt-3.5
           "
         >
-          {/* ===================================================
-              DOCTOR NAME
-          ==================================================== */}
           <h3
             className="
               truncate
-
-              text-[17px]
+              text-[16px]
               font-extrabold
               leading-5
-
-              tracking-[-0.01em]
-
+              tracking-[-0.02em]
               text-[#182153]
-
               dark:text-white
             "
           >
             {name}
           </h3>
 
-          {/* ===================================================
-              SPECIALIZATION
-          ==================================================== */}
           <p
             className="
               mt-1
-
               truncate
-
-              text-[13px]
+              text-[12px]
               font-semibold
               leading-5
-
               text-[#3B4A8F]
-
               dark:text-indigo-300
             "
           >
             {specialization}
           </p>
 
-          {/* ===================================================
-              RATING + REVIEWS
-          ==================================================== */}
+          {/* Rating */}
+
           {rating != null && (
-            <div className="mt-3 flex items-center">
+            <div className="mt-2.5">
               <div
                 className="
                   inline-flex
                   items-center
                   gap-1.5
-
                   rounded-lg
-
                   bg-amber-50
-
                   px-2
-                  py-1
-
+                  py-1.5
                   dark:bg-amber-500/10
                 "
               >
@@ -405,7 +339,6 @@ function FeaturedDoctorCard({
                   className="
                     h-3.5
                     w-3.5
-
                     fill-amber-400
                     text-amber-400
                   "
@@ -413,11 +346,9 @@ function FeaturedDoctorCard({
 
                 <span
                   className="
-                    text-[12px]
+                    text-[11px]
                     font-bold
-
                     text-amber-700
-
                     dark:text-amber-400
                   "
                 >
@@ -427,11 +358,9 @@ function FeaturedDoctorCard({
                 {reviews != null && (
                   <span
                     className="
-                      text-[11px]
+                      text-[10px]
                       font-medium
-
                       text-amber-600/70
-
                       dark:text-amber-400/70
                     "
                   >
@@ -442,14 +371,12 @@ function FeaturedDoctorCard({
             </div>
           )}
 
-          {/* ===================================================
-              LOCATION
-          ==================================================== */}
+          {/* Location */}
+
           {location && (
             <div
               className="
-                mt-3
-
+                mt-2.5
                 flex
                 min-w-0
                 items-center
@@ -464,19 +391,15 @@ function FeaturedDoctorCard({
                   shrink-0
                   items-center
                   justify-center
-
                   rounded-md
-
                   bg-slate-100
-
                   dark:bg-slate-800
                 "
               >
                 <MapPin
                   className="
-                    h-3.5
-                    w-3.5
-
+                    h-3
+                    w-3
                     text-[#3B4A8F]
                   "
                 />
@@ -485,12 +408,9 @@ function FeaturedDoctorCard({
               <span
                 className="
                   truncate
-
-                  text-[11px]
+                  text-[10px]
                   font-medium
-
                   text-slate-500
-
                   dark:text-slate-400
                 "
               >
@@ -499,31 +419,23 @@ function FeaturedDoctorCard({
             </div>
           )}
 
-          {/* ===================================================
-              AVAILABILITY
-          ==================================================== */}
-          <div className="mt-3">
+          {/* Available */}
+
+          <div className="mt-2.5">
             <span
               className="
                 inline-flex
                 items-center
                 gap-1.5
-
                 rounded-full
-
                 border
                 border-emerald-100
-
                 bg-emerald-50
-
                 px-2.5
-                py-1
-
-                text-[10px]
+                py-1.5
+                text-[9px]
                 font-bold
-
                 text-emerald-700
-
                 dark:border-emerald-500/20
                 dark:bg-emerald-500/10
                 dark:text-emerald-400
@@ -533,11 +445,8 @@ function FeaturedDoctorCard({
                 className="
                   h-1.5
                   w-1.5
-
                   animate-pulse
-
                   rounded-full
-
                   bg-emerald-500
                 "
               />
@@ -546,48 +455,36 @@ function FeaturedDoctorCard({
             </span>
           </div>
 
-          {/* ===================================================
-              CTA
-          ==================================================== */}
-          <div className="mt-auto pt-4">
+          {/* Button */}
+
+          <div className="mt-auto pt-3.5">
             <Link
               href={`/doctors/${doctor.id}`}
               className="
                 group/btn
-
                 flex
                 w-full
                 items-center
                 justify-center
                 gap-2
-
                 rounded-xl
-
                 bg-gradient-to-r
-                from-[#252a67]
-                via-[#3b4a8f]
-                to-[#3b4a8f]
-
+                from-[#252A67]
+                via-[#3B4A8F]
+                to-[#3B4A8F]
                 py-2.5
-
-                text-[13px]
+                text-[12px]
                 font-bold
-
                 text-white
-
                 shadow-md
-                shadow-[#252a67]/15
-
+                shadow-[#252A67]/15
                 transition-all
                 duration-300
-
-                hover:from-[#252a67]
-                hover:via-[#3b4a8f]
+                hover:from-[#252A67]
+                hover:via-[#3B4A8F]
                 hover:to-[#14B8A6]
-
                 hover:shadow-lg
                 hover:shadow-[#14B8A6]/20
-
                 active:scale-[0.98]
               "
             >
@@ -595,12 +492,10 @@ function FeaturedDoctorCard({
 
               <ArrowRight
                 className="
-                  h-4
-                  w-4
-
+                  h-3.5
+                  w-3.5
                   transition-transform
                   duration-300
-
                   group-hover/btn:translate-x-1
                 "
               />
@@ -608,7 +503,7 @@ function FeaturedDoctorCard({
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -625,24 +520,93 @@ export default function FeaturedDoctors() {
       (doctor) => doctor?.id
     );
 
+  const carouselRef =
+    useRef<HTMLDivElement>(null);
+
+  const [isInteracting, setIsInteracting] =
+    useState(false);
+
+  /* =========================================================
+     AUTO SLIDE — EVERY 3 SECONDS
+  ========================================================== */
+
+  useEffect(() => {
+    if (
+      isLoading ||
+      featured.length <= 1
+    ) {
+      return;
+    }
+
+    const container =
+      carouselRef.current;
+
+    if (!container) return;
+
+    const interval = window.setInterval(() => {
+      if (isInteracting) return;
+
+      const cards =
+        container.querySelectorAll<HTMLElement>(
+          "[data-doctor-card]"
+        );
+
+      if (!cards.length) return;
+
+      const currentScroll =
+        container.scrollLeft;
+
+      let nextCard: HTMLElement | null = null;
+
+      for (const card of cards) {
+        if (
+          card.offsetLeft >
+          currentScroll + 10
+        ) {
+          nextCard = card;
+          break;
+        }
+      }
+
+      if (!nextCard) {
+        container.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
+
+        return;
+      }
+
+      container.scrollTo({
+        left: nextCard.offsetLeft,
+        behavior: "smooth",
+      });
+    }, 3000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [
+    featured.length,
+    isLoading,
+    isInteracting,
+  ]);
+
   /* =========================================================
      LOADING
   ========================================================== */
+
   if (isLoading) {
     return (
       <section
         className="
           mx-auto
           max-w-7xl
-
           border-b
           border-slate-100
-
           px-5
-          py-7
-
+          py-6
           lg:px-8
-
           dark:border-slate-800
         "
       >
@@ -656,31 +620,29 @@ export default function FeaturedDoctors() {
 
         <div
           className="
+            -mx-1
             flex
-            gap-5
+            gap-4
             overflow-hidden
+            px-1
           "
         >
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className="
-                h-[390px]
-
+                h-[430px]
                 shrink-0
-
                 basis-[82%]
-
                 animate-pulse
-
                 rounded-[22px]
-
                 bg-slate-100
 
                 sm:basis-[48%]
-                md:basis-[32%]
-                lg:basis-[calc((100%-60px)/4)]
-                xl:basis-[calc((100%-80px)/5)]
+
+                md:basis-[31%]
+
+                lg:basis-[calc((100%-48px)/4)]
 
                 dark:bg-slate-800
               "
@@ -700,21 +662,16 @@ export default function FeaturedDoctors() {
       className="
         mx-auto
         max-w-7xl
-
         border-b
         border-slate-100
-
         px-5
-        py-7
-
+        py-6
         lg:px-8
-
         dark:border-slate-800
       "
     >
-      {/* =====================================================
-          HEADER
-      ====================================================== */}
+      {/* HEADER */}
+
       <SectionHeader
         title={
           t("featuredDoctors") ||
@@ -728,50 +685,67 @@ export default function FeaturedDoctors() {
       />
 
       {/* =====================================================
-          HORIZONTAL DOCTOR ROW
+          RESPONSIVE CAROUSEL
       ====================================================== */}
+
       <div
+        ref={carouselRef}
+        onMouseEnter={() =>
+          setIsInteracting(true)
+        }
+        onMouseLeave={() =>
+          setIsInteracting(false)
+        }
+        onTouchStart={() =>
+          setIsInteracting(true)
+        }
+        onTouchEnd={() => {
+          window.setTimeout(() => {
+            setIsInteracting(false);
+          }, 1200);
+        }}
         className="
           -mx-1
-
           flex
-          gap-5
-
+          gap-4
           overflow-x-auto
           overflow-y-hidden
-
           px-1
-          pb-4
-
+          pb-3
           snap-x
           snap-mandatory
-
           scroll-smooth
-
           overscroll-x-contain
-
           [scrollbar-width:none]
           [-ms-overflow-style:none]
-
           [&::-webkit-scrollbar]:hidden
         "
       >
         {featured.map((doctor) => (
           <div
             key={doctor.id}
+            data-doctor-card
             className="
               shrink-0
               snap-start
 
+              /* MOBILE — keep the good 1.2 card view */
               basis-[82%]
 
+              /* TABLET */
               sm:basis-[48%]
 
-              md:basis-[32%]
+              /* DESKTOP — wide professional cards */
+              md:basis-[34%]
 
-              lg:basis-[calc((100%-60px)/4)]
+              /* LARGE DESKTOP */
+              lg:basis-[calc((100%-48px)/4)]
 
-              xl:basis-[calc((100%-80px)/5)]
+              /* VERY LARGE */
+              xl:basis-[calc((100%-64px)/5)]
+
+              /* ULTRA WIDE — prevents cards becoming too narrow */
+              2xl:basis-[calc((100%-64px)/5)]
             "
           >
             <FeaturedDoctorCard
@@ -781,24 +755,19 @@ export default function FeaturedDoctors() {
         ))}
       </div>
 
-      {/* =====================================================
-          MOBILE SWIPE HINT
-      ====================================================== */}
+      {/* Mobile hint */}
+
       {featured.length > 1 && (
         <div
           className="
             mt-1
-
             flex
             items-center
             justify-center
             gap-1.5
-
             text-[10px]
             font-medium
-
             text-slate-400
-
             sm:hidden
           "
         >

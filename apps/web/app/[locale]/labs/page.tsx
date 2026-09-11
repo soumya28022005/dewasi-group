@@ -317,11 +317,11 @@ export default function AllLabsPage() {
             mx-auto
             max-w-7xl
             px-4
-            pb-7
-            pt-6
+            pb-5
+            pt-5
             sm:px-6
-            sm:pb-8
-            sm:pt-7
+            sm:pb-7
+            sm:pt-6
             lg:px-8
           "
         >
@@ -370,7 +370,7 @@ export default function AllLabsPage() {
                 tracking-tight
                 text-white
                 sm:text-3xl
-                lg:text-[40px]
+                lg:text-[38px]
               "
             >
               Find Trusted{" "}
@@ -411,7 +411,7 @@ export default function AllLabsPage() {
               SEARCH PANEL
           =================================================== */}
 
-          <div className="mx-auto mt-5 max-w-5xl">
+          <div className="mx-auto mt-4 max-w-5xl">
 
             <div
               className="
@@ -455,7 +455,7 @@ export default function AllLabsPage() {
                     }
                     className="
                       flex
-                      h-11
+                      h-10
                       w-full
                       items-center
                       rounded-xl
@@ -852,7 +852,7 @@ export default function AllLabsPage() {
                   className="
                     relative
                     flex
-                    h-11
+                    h-10
                     flex-1
                     items-center
                     rounded-xl
@@ -1256,12 +1256,12 @@ export default function AllLabsPage() {
                   key={center.id}
                   className="
                     group
-                    rounded-2xl
+                    rounded-[18px]
                     bg-gradient-to-br
                     from-[#252a67]
                     via-[#3b4a8f]
                     to-[#14B8A6]
-                    p-[3px]
+                    p-[2px]
                     transition-all
                     duration-300
                     hover:-translate-y-1
@@ -1277,7 +1277,7 @@ export default function AllLabsPage() {
                       h-full
                       flex-col
                       overflow-hidden
-                      rounded-[13px]
+                      rounded-[16px]
                       bg-white
                       dark:bg-slate-900
                     "
@@ -1290,133 +1290,50 @@ export default function AllLabsPage() {
                     <div
                       className="
                         relative
-                        h-36
+                        h-[142px]
                         w-full
                         overflow-hidden
                         bg-slate-100
                         dark:bg-slate-800
-                        sm:h-40
+                        sm:h-[160px]
                       "
                     >
-
-                      {/* =================================================
-                          FULL IMAGE
-
-                          IMPORTANT:
-                          object-cover = image fills entire area
-                          object-top   = TOP NEVER GETS CROPPED
-                          extra portion crops from BOTTOM
-                      ================================================= */}
-
                       {center.logo ? (
-
-                        <Image
-                          src={center.logo}
-                          alt={center.centerName}
-                          fill
-                          priority={false}
-                          sizes="
-                            (max-width: 640px) 100vw,
-                            (max-width: 1024px) 50vw,
-                            (max-width: 1280px) 33vw,
-                            25vw
-                          "
-                          className="
-                            object-cover
-                            object-top
-                            transition-transform
-                            duration-500
-                            group-hover:scale-[1.02]
-                          "
-                        />
-
-                      ) : (
-
-                        <div
-                          className="
-                            absolute
-                            inset-0
-                            flex
-                            items-center
-                            justify-center
-                            bg-gradient-to-br
-                            from-slate-100
-                            via-slate-50
-                            to-slate-100
-                            dark:from-slate-800
-                            dark:via-slate-800/80
-                            dark:to-slate-900
-                          "
-                        >
-
-                          <Building2
-                            className="
-                              h-12
-                              w-12
-                              text-[#3b4a8f]
-                              dark:text-teal-400
-                            "
+                        <>
+                          <Image
+                            src={center.logo}
+                            alt=""
+                            fill
+                            aria-hidden="true"
+                            sizes="100vw"
+                            className="scale-125 object-cover opacity-25 blur-2xl"
                           />
 
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/40 px-3 py-3 dark:bg-slate-900/40 sm:px-4 sm:py-4">
+                            <Image
+                              src={center.logo}
+                              alt={center.centerName}
+                              fill
+                              priority={false}
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                              className="object-contain object-center drop-shadow-[0_8px_18px_rgba(15,23,42,0.12)] transition-transform duration-500 group-hover:scale-[1.012]"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-800/80 dark:to-slate-900">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/85 shadow-lg dark:bg-slate-900/75">
+                            <Building2 className="h-7 w-7 text-[#3b4a8f] dark:text-teal-400" />
+                          </div>
                         </div>
-
                       )}
-
-                      {/* =================================================
-                          SUBTLE IMAGE OVERLAY
-                      ================================================= */}
-
-                      <div
-                        className="
-                          pointer-events-none
-                          absolute
-                          inset-0
-                          bg-gradient-to-t
-                          from-black/20
-                          via-transparent
-                          to-transparent
-                        "
-                      />
-
-                      {/* =================================================
-                          VERIFIED
-                      ================================================= */}
 
                       {center.isApproved && (
-
-                        <div
-                          className="
-                            absolute
-                            right-3
-                            top-3
-                            flex
-                            items-center
-                            gap-1
-                            rounded-full
-                            border
-                            border-white/80
-                            bg-white/95
-                            px-2
-                            py-1
-                            text-[8px]
-                            font-bold
-                            text-[#252a67]
-                            shadow-md
-                            backdrop-blur
-                            dark:border-slate-700
-                            dark:bg-slate-900/95
-                            dark:text-teal-400
-                          "
-                        >
-
+                        <div className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full border border-white/80 bg-white/95 px-2 py-1 text-[8px] font-bold text-[#252a67] shadow-md backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-teal-400">
                           <ShieldCheck className="h-3 w-3" />
-
                           Verified
-
                         </div>
-
                       )}
-
                     </div>
 
                     {/* =================================================
