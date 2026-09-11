@@ -31,7 +31,7 @@ function getInitials(name?: string) {
 
 /* =========================================================
    CLINIC IMAGE
-   ========================================================= */
+========================================================= */
 
 function ClinicImage({
   src,
@@ -68,22 +68,13 @@ function ClinicImage({
 
       {/* Small image shade for better badge visibility */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/15 to-transparent sm:h-20" />
-
-      {/* Doctors badge — same app style */}
-      <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-lg bg-[#0D9488]/95 px-2 py-[3px] shadow-sm backdrop-blur-sm sm:bottom-2.5 sm:right-2.5 sm:px-2.5 sm:py-[5px]">
-        <Stethoscope className="h-[10px] w-[10px] text-white sm:h-[12px] sm:w-[12px]" />
-
-        <span className="text-[9px] font-extrabold leading-none text-white sm:text-[11px]">
-          {name ? "" : ""}
-        </span>
-      </div>
     </div>
   );
 }
 
 /* =========================================================
    FEATURED CLINIC CARD
-   ========================================================= */
+========================================================= */
 
 function FeaturedClinicCard({
   clinic,
@@ -147,13 +138,10 @@ function FeaturedClinicCard({
 
       <div className="overflow-hidden rounded-[19px] bg-white dark:bg-surface sm:rounded-[21px] lg:rounded-[23px]">
         {/* IMAGE */}
-        <div className="relative h-[120px] w-full overflow-hidden bg-[#F1F5F9] sm:h-[145px] lg:h-[175px]">
-          <ClinicImage
-            src={clinic.logo}
-            name={name}
-          />
+        <div className="relative">
+          <ClinicImage src={clinic.logo} name={name} />
 
-          {/* Doctors Badge */}
+          {/* Doctors Badge — only here, no duplicates */}
           <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-lg bg-[#0D9488]/95 px-2 py-[4px] shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:bottom-2.5 sm:right-2.5 sm:px-2.5 sm:py-[5px]">
             <Stethoscope className="h-[10px] w-[10px] text-white sm:h-[12px] sm:w-[12px]" />
 
@@ -240,38 +228,48 @@ function FeaturedClinicCard({
 
 /* =========================================================
    MAIN COMPONENT
-   ========================================================= */
+========================================================= */
 
 export default function FeaturedClinics() {
   const t = useTranslations("HomePage");
 
   const { data, isLoading } = usePublicFeaturedClinics();
 
-  const featured = (data ?? []).filter(
-    (clinic) => clinic?.id
-  );
+  const featured = (data ?? []).filter((clinic) => clinic?.id);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
 
   /* =======================================================
      UPDATE ARROW STATE
-     ======================================================= */
+  ======================================================= */
 
   const updateScrollState = () => {
     const element = scrollRef.current;
 
     if (!element) return;
 
-    const maxScroll =
-      element.scrollWidth - element.clientWidth;
+    const maxScroll = element.scrollWidth - element.clientWidth;
 
     setCanScrollLeft(element.scrollLeft > 5);
-    setCanScrollRight(
-      element.scrollLeft < maxScroll - 5
-    );
+    setCanScrollRight(element.scrollLeft < maxScroll - 5);
+  };
+
+  /* =======================================================
+     GET SCROLL STEP BASED ON SCREEN
+  ======================================================= */
+
+  const getScrollStep = () => {
+    if (typeof window === "undefined") return 240;
+
+    const width = window.innerWidth;
+
+    if (width >= 1024) return 335; // lg — 320px card + 15px gap
+    if (width >= 640) return 285; // sm — 270px card + 15px gap
+    return 240; // mobile — 224px card + 16px gap
   };
 
   /* =======================================================
@@ -283,17 +281,7 @@ export default function FeaturedClinics() {
 
     if (!element) return;
 
-    /* Detect current card width based on screen */
-    const isDesktop =
-      typeof window !== "undefined" &&
-      window.innerWidth >= 1024;
-
-    const isTablet =
-      typeof window !== "undefined" &&
-      window.innerWidth >= 640 &&
-      window.innerWidth < 1024;
-
-    const amount = isDesktop ? 335 : isTablet ? 285 : 240;
+    const amount = getScrollStep();
 
     element.scrollBy({
       left: direction === "right" ? amount : -amount,
@@ -304,81 +292,37 @@ export default function FeaturedClinics() {
   };
 
   /* =======================================================
-     AUTO SWIPE — EVERY 3 SECONDS
+     AUTO SWIPE — every 3s, pauses on hover (FIXED)
   ======================================================= */
 
   useEffect(() => {
-    const element = scrollRef.current;
+    if (featured.length <= 1 || isHovered) return;
 
-    if (!element || featured.length <= 1) return;
+    const interval = setInterval(() => {
+      if (!scrollRef.current) return;
 
-    let interval: ReturnType<typeof setInterval>;
+      const current = scrollRef.current;
+      const maxScroll = current.scrollWidth - current.clientWidth;
+      const step = getScrollStep();
+      const nextPosition = current.scrollLeft + step;
 
-    const startAutoScroll = () => {
-      interval = setInterval(() => {
-        if (!scrollRef.current) return;
+      if (nextPosition >= maxScroll - 10) {
+        current.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
+      } else {
+        current.scrollBy({
+          left: step,
+          behavior: "smooth",
+        });
+      }
 
-        const current = scrollRef.current;
+      window.setTimeout(updateScrollState, 400);
+    }, 3000);
 
-        const maxScroll =
-          current.scrollWidth - current.clientWidth;
-
-        /* Detect card width for scroll step */
-        const isDesktop =
-          typeof window !== "undefined" &&
-          window.innerWidth >= 1024;
-
-        const isTablet =
-          typeof window !== "undefined" &&
-          window.innerWidth >= 640 &&
-          window.innerWidth < 1024;
-
-        const step = isDesktop ? 335 : isTablet ? 285 : 240;
-
-        const nextPosition = current.scrollLeft + step;
-
-        /*
-         * When reached the end,
-         * smoothly return to the beginning.
-         */
-        if (nextPosition >= maxScroll - 10) {
-          current.scrollTo({
-            left: 0,
-            behavior: "smooth",
-          });
-        } else {
-          current.scrollBy({
-            left: step,
-            behavior: "smooth",
-          });
-        }
-
-        window.setTimeout(updateScrollState, 400);
-      }, 3000);
-    };
-
-    startAutoScroll();
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [featured.length]);
-
-  /* =======================================================
-     PAUSE AUTO-SCROLL WHILE HOVERING
-  ======================================================= */
-
-  const [isHovered, setIsHovered] = useState(false);
-
-  useEffect(() => {
-    const element = scrollRef.current;
-
-    if (!element || featured.length <= 1 || isHovered) {
-      return;
-    }
-
-    return;
-  }, [isHovered, featured.length]);
+    return () => clearInterval(interval);
+  }, [featured.length, isHovered]);
 
   /* =======================================================
      LOADING
@@ -388,15 +332,10 @@ export default function FeaturedClinics() {
     return (
       <section className="mx-auto max-w-7xl border-b border-slate-100 px-5 py-6 dark:border-soft-200 lg:px-8">
         <SectionHeader
-          title={
-            t("featuredClinics") ||
-            "Featured Clinics"
-          }
+          title={t("featuredClinics") || "Featured Clinics"}
           subtitle="Modern facilities & live token queues"
           viewAllHref="/clinics/featured"
-          viewAllLabel={
-            t("viewAll") || "View All"
-          }
+          viewAllLabel={t("viewAll") || "View All"}
         />
 
         <div className="relative">
@@ -453,15 +392,10 @@ export default function FeaturedClinics() {
       {/* SECTION HEADER */}
 
       <SectionHeader
-        title={
-          t("featuredClinics") ||
-          "Featured Clinics"
-        }
+        title={t("featuredClinics") || "Featured Clinics"}
         subtitle="Modern facilities & live token queues"
         viewAllHref="/clinics/featured"
-        viewAllLabel={
-          t("viewAll") || "View All"
-        }
+        viewAllLabel={t("viewAll") || "View All"}
       />
 
       {/* =================================================
@@ -520,6 +454,7 @@ export default function FeaturedClinics() {
           type="button"
           aria-label="Next clinics"
           onClick={() => scroll("right")}
+          disabled={!canScrollRight}
           className="
             absolute
             right-0
@@ -543,6 +478,8 @@ export default function FeaturedClinics() {
             hover:scale-105
             hover:border-[#1C63E7]/30
             hover:text-[#1C63E7]
+            disabled:pointer-events-none
+            disabled:opacity-30
             md:flex
             dark:border-soft-300
             dark:bg-surface
@@ -551,8 +488,6 @@ export default function FeaturedClinics() {
         >
           <ChevronRight className="h-4 w-4" />
         </button>
-
-        {/* ✅ No fade/blur edges — clean view */}
 
         {/* SCROLL AREA */}
 
@@ -572,13 +507,8 @@ export default function FeaturedClinics() {
           "
         >
           {featured.slice(0, 12).map((clinic) => (
-            <div
-              key={clinic.id}
-              className="snap-start"
-            >
-              <FeaturedClinicCard
-                clinic={clinic}
-              />
+            <div key={clinic.id} className="snap-start">
+              <FeaturedClinicCard clinic={clinic} />
             </div>
           ))}
         </div>

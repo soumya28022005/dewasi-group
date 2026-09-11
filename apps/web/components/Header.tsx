@@ -171,27 +171,38 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors dark:border-soft-300 dark:bg-surface/95">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* ================= LOGO ================= */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-soft-300 dark:bg-surface">
-            <Image
-              src="/logo-icon.png"
-              alt="Doctor Contact"
-              width={36}
-              height={36}
-              priority
-              className="h-full w-full object-contain"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base font-extrabold tracking-tight text-[#0F1B33] dark:text-ink-900 leading-none">
-              Doctor<span className="text-[#1C63E7]">Contact</span>
-            </span>
-            <span className="mt-0.5 text-[9px] font-medium text-slate-400 leading-none">
-              Healthier People, Happier Lives
-            </span>
-          </div>
-        </Link>
+       {/* ================= LOGO ================= */}
+<Link href="/" className="flex items-center gap-2.5 shrink-0">
+  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-soft-300 dark:bg-surface">
+    <Image
+      src="/logo-icon.png"
+      alt="Doctor Contact"
+      width={36}
+      height={36}
+      priority
+      className="h-full w-full object-contain"
+    />
+  </div>
+
+  {/* Logo image instead of DoctorContact text */}
+  <div className="flex items-center">
+   <Image
+  src="/logo.png"
+  alt="Doctor Contact"
+  width={130}
+  height={36}
+  priority
+  className="
+    h-8
+    w-auto
+    max-w-[130px]
+    object-contain
+    sm:h-9
+    sm:max-w-[145px]
+  "
+/>
+  </div>
+</Link>
 
         {/* ================= CENTER NAV (Treatments, Labs, Ambulance visible directly) ================= */}
         <nav className="hidden items-center gap-5 xl:gap-6 lg:flex">

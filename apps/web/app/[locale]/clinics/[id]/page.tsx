@@ -21,7 +21,6 @@ import {
   IndianRupee,
   Search,
   X,
-  Filter,
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
@@ -407,40 +406,57 @@ export default function ClinicProfilePage() {
         </div>
 
         {/* =============================================
-            SEARCH BAR — Prominent, modern
+            SEARCH BAR — matches the site-wide pattern used on /doctors
         ============================================= */}
         <div className="mb-4">
-          <div className="group relative flex items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all focus-within:border-[#3B4A8F] focus-within:shadow-[0_4px_14px_rgba(59,74,143,0.10)] dark:border-slate-700 dark:bg-slate-900 dark:focus-within:border-blue-500">
-            {/* Left icon container */}
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center sm:h-12 sm:w-12">
-              <Search className="h-4 w-4 text-slate-400 transition-colors group-focus-within:text-[#3B4A8F] dark:group-focus-within:text-blue-400 sm:h-[18px] sm:w-[18px]" />
+          <div
+            className="
+              flex min-w-0 items-center gap-3
+              rounded-[18px]
+              border border-slate-200/90
+              bg-slate-50/75
+              px-3.5 py-3
+              transition-all duration-200
+              focus-within:border-[#14B8A6]/45
+              focus-within:bg-white
+              focus-within:shadow-[0_5px_20px_-12px_rgba(20,184,166,0.3)]
+              dark:border-slate-700
+              dark:bg-slate-800/70
+              dark:focus-within:bg-slate-800
+            "
+          >
+            {/* Icon */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm dark:bg-slate-700 dark:text-slate-300">
+              <Search className="h-[17px] w-[17px]" />
             </div>
 
             {/* Input */}
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search doctors, specialties..."
-              className="h-11 flex-1 bg-transparent pr-2 text-[13.5px] font-medium text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-400 dark:text-slate-100 sm:h-12 sm:text-sm"
-            />
+            <div className="min-w-0 flex-1">
+              <p className="mb-0.5 text-[9px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
+                Search
+              </p>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search doctors, specialties..."
+                className="w-full bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
 
-            {/* Clear button */}
+            {/* Clear */}
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
                 aria-label="Clear search"
-                className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
-
-            {/* Right filter icon — visual hint */}
-            <div className="mr-2 hidden h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-400 dark:bg-slate-800/60 sm:flex">
-              <Filter className="h-3.5 w-3.5" />
-            </div>
           </div>
 
           {/* Active search hint */}
@@ -459,10 +475,10 @@ export default function ClinicProfilePage() {
           )}
         </div>
 
-        {/* Doctor grid */}
+        {/* Doctor grid — elevated card treatment */}
         {clinic.allDoctors && clinic.allDoctors.length > 0 ? (
           filteredDoctors.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {filteredDoctors.map((doctor: any) => {
                 const doctorFee =
                   doctor.associationDetails?.fee || doctor.fee || null;
@@ -470,9 +486,9 @@ export default function ClinicProfilePage() {
                 return (
                   <div
                     key={doctor.id}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#14B8A6]/40 hover:shadow-[0_12px_28px_-10px_rgba(20,184,166,0.35)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-500/30"
                   >
-                    <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
                       {doctor.user?.avatar ? (
                         <img
                           src={doctor.user.avatar}
@@ -488,7 +504,7 @@ export default function ClinicProfilePage() {
                         </div>
                       )}
 
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent" />
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent" />
 
                       {doctor.isPrimary && (
                         <div className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-white/95 px-1.5 py-0.5 text-[8px] font-extrabold text-[#252a67] shadow-md backdrop-blur-sm sm:gap-1 sm:px-2 sm:py-1 sm:text-[9px]">
@@ -505,12 +521,12 @@ export default function ClinicProfilePage() {
                       )}
                     </div>
 
-                    <div className="flex flex-1 flex-col p-2.5 sm:p-3">
-                      <h3 className="truncate text-[12px] font-bold leading-tight text-slate-900 dark:text-white sm:text-[13.5px]">
+                    <div className="flex flex-1 flex-col p-3 sm:p-3.5">
+                      <h3 className="truncate text-[12.5px] font-bold leading-tight text-slate-900 dark:text-white sm:text-[14px]">
                         {doctor.user?.name || "Doctor"}
                       </h3>
 
-                      <p className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold text-[#0F766E] dark:text-teal-400 sm:text-[11px]">
+                      <p className="mt-1 flex items-center gap-1 truncate text-[10px] font-semibold text-[#0F766E] dark:text-teal-400 sm:text-[11px]">
                         <Stethoscope className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
                         <span className="truncate">
                           {doctor.specialization || "General Physician"}
@@ -535,13 +551,13 @@ export default function ClinicProfilePage() {
                         </div>
                       )}
 
-                      <div className="mt-auto pt-2.5">
+                      <div className="mt-auto pt-3">
                         <Link
                           href={`/doctors/${doctor.id}`}
-                          className="flex h-8 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-[#252a67] to-[#3B4A8F] text-[10.5px] font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:h-9 sm:text-[11.5px]"
+                          className="flex h-8 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-[#252a67] to-[#3B4A8F] text-[10.5px] font-bold text-white shadow-sm transition-all group-hover:shadow-md sm:h-9 sm:text-[11.5px]"
                         >
                           Book
-                          <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
                         </Link>
                       </div>
                     </div>

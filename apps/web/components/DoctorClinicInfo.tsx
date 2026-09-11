@@ -1,13 +1,28 @@
 import { MapPin } from "lucide-react";
 import { ExtendedDoctor } from "@/types/doctor";
 
-export default function DoctorClinicInfo({ doctor }: { doctor: ExtendedDoctor }) {
+export default function DoctorClinicInfo({
+  doctor,
+  compact = false,
+}: {
+  doctor: ExtendedDoctor;
+  /** When true, shows only the primary (or first) clinic plus a "+N more" chip,
+   * so cards in a grid stay a consistent height regardless of how many clinics
+   * a doctor is associated with. */
+  compact?: boolean;
+}) {
   const location = doctor.clinic?.city ?? doctor.clinic?.clinicName;
 
   if (doctor.allClinics && doctor.allClinics.length > 0) {
+    const sorted = compact
+      ? [...doctor.allClinics].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0))
+      : doctor.allClinics;
+    const visible = compact ? sorted.slice(0, 1) : sorted;
+    const remaining = compact ? sorted.length - visible.length : 0;
+
     return (
       <div className="mt-2 flex flex-col gap-2 w-full">
-        {doctor.allClinics.map((clinicItem) => (
+        {visible.map((clinicItem) => (
           <div key={clinicItem.id} className="flex flex-wrap items-center justify-start gap-1.5 text-xs">
             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
               <MapPin className="h-3.5 w-3.5 text-[#0F766E]" />
@@ -27,6 +42,11 @@ export default function DoctorClinicInfo({ doctor }: { doctor: ExtendedDoctor })
             )}
           </div>
         ))}
+        {remaining > 0 && (
+          <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            +{remaining} more location{remaining === 1 ? "" : "s"}
+          </span>
+        )}
       </div>
     );
   }

@@ -128,7 +128,7 @@ const locale = useLocale();
 
         <div className="relative mt-3 flex flex-col items-center text-center">
           <h3 className="truncate text-base font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-[#422995] to-[#4a9860] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#252a67] to-[#0F766E] bg-clip-text text-transparent">
               {doctor.user.name}
             </span>
           </h3>
@@ -308,7 +308,7 @@ export default function FeaturedDoctorsPage() {
       </div>
 
       {/* ================= GRID ================= */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
         {isLoading && (
           <div className="col-span-full flex flex-col items-center justify-center py-16">
             <div className="relative">
