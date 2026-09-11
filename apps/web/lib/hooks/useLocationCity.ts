@@ -24,7 +24,7 @@ export function useLocationCity() {
         try {
           const { latitude, longitude } = position.coords;
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
           );
           const data = await res.json();
           const address = data?.address ?? {};

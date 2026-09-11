@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  CalendarCheck,
 } from "lucide-react";
 
 import { Link } from "@/i18n/routing";
@@ -167,8 +168,7 @@ function AllDoctorCard({
     null;
 
   return (
-    <Link
-      href={`/doctors/${doctor.id}`}
+    <div
       className="
         group
         relative
@@ -192,8 +192,6 @@ function AllDoctorCard({
 
         hover:-translate-y-1
         hover:shadow-[0_15px_35px_rgba(20,184,166,0.18)]
-
-        active:scale-[0.99]
       "
     >
       <div
@@ -202,7 +200,8 @@ function AllDoctorCard({
           flex
           h-full
           min-h-[148px]
-          items-center
+          flex-col
+          justify-between
           gap-3
 
           overflow-hidden
@@ -212,12 +211,26 @@ function AllDoctorCard({
           px-3.5
           py-3.5
 
-          sm:min-h-[152px]
+          sm:min-h-[156px]
           sm:px-4
 
           dark:bg-slate-900
         "
       >
+        {/* =================================================
+            TOP: PHOTO + DETAILS (clickable -> profile)
+        ================================================== */}
+
+        <Link
+          href={`/doctors/${doctor.id}`}
+          className="
+            flex
+            items-center
+            gap-3
+
+            active:scale-[0.99]
+          "
+        >
         {/* =================================================
             DOCTOR PHOTO
         ================================================== */}
@@ -306,85 +319,123 @@ function AllDoctorCard({
                 </span>
               </div>
             )}
-
-            {/* Bottom row */}
-            <div
-              className="
-                mt-2.5
-                flex
-                items-center
-                justify-between
-                gap-2
-              "
-            >
-              {/* Rating */}
-              {rating != null ? (
-                <span
-                  className="
-                    inline-flex
-                    shrink-0
-                    items-center
-                    gap-1
-                    rounded-md
-                    bg-amber-50
-                    px-1.5
-                    py-1
-
-                    text-[10px]
-                    font-bold
-                    text-amber-700
-
-                    sm:text-[11px]
-
-                    dark:bg-amber-500/10
-                    dark:text-amber-400
-                  "
-                >
-                  <Star
-                    className="
-                      h-3
-                      w-3
-                      fill-amber-400
-                      text-amber-400
-                    "
-                  />
-
-                  {rating}
-                </span>
-              ) : (
-                <span
-                  className="
-                    text-[10px]
-                    font-medium
-                    text-slate-400
-                  "
-                >
-                  Verified doctor
-                </span>
-              )}
-
-              {/* Fee */}
-              {consultationFee != null && (
-                <span
-                  className="
-                    shrink-0
-                    text-[13px]
-                    font-extrabold
-                    text-[#182153]
-
-                    sm:text-[14px]
-
-                    dark:text-white
-                  "
-                >
-                  ₹{consultationFee}
-                </span>
-              )}
-            </div>
           </div>
         </div>
+        </Link>
+
+        {/* =================================================
+            BOTTOM: RATING / FEE + BOOK NOW
+        ================================================== */}
+
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+            gap-2
+          "
+        >
+          {/* Rating / fee */}
+          <div className="flex min-w-0 items-center gap-1.5">
+            {rating != null ? (
+              <span
+                className="
+                  inline-flex
+                  shrink-0
+                  items-center
+                  gap-1
+                  rounded-md
+                  bg-amber-50
+                  px-1.5
+                  py-1
+
+                  text-[10px]
+                  font-bold
+                  text-amber-700
+
+                  sm:text-[11px]
+
+                  dark:bg-amber-500/10
+                  dark:text-amber-400
+                "
+              >
+                <Star
+                  className="
+                    h-3
+                    w-3
+                    fill-amber-400
+                    text-amber-400
+                  "
+                />
+
+                {rating}
+              </span>
+            ) : (
+              <span
+                className="
+                  truncate
+                  text-[10px]
+                  font-medium
+                  text-slate-400
+                "
+              >
+                Verified doctor
+              </span>
+            )}
+
+            {consultationFee != null && (
+              <span
+                className="
+                  shrink-0
+                  text-[12px]
+                  font-extrabold
+                  text-[#182153]
+
+                  sm:text-[13px]
+
+                  dark:text-white
+                "
+              >
+                ₹{consultationFee}
+              </span>
+            )}
+          </div>
+
+          {/* Book Now */}
+          <Link
+            href={`/doctors/${doctor.id}`}
+            className="
+              inline-flex
+              shrink-0
+              items-center
+              gap-1
+              rounded-full
+              bg-gradient-to-r
+              from-[#252A67]
+              to-[#14B8A6]
+              px-3
+              py-1.5
+
+              text-[11px]
+              font-bold
+              text-white
+
+              shadow-sm
+              shadow-[#252A67]/20
+
+              transition-all
+              hover:opacity-90
+              active:scale-95
+
+              sm:text-[11.5px]
+            "
+          >
+            <CalendarCheck className="h-3.5 w-3.5" />
+            Book Now
+          </Link>
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

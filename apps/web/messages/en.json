@@ -1073,6 +1073,7 @@
   },
   "ClinicSearch": {
     "heading": "Available Clinics",
+    "subheading": "Search trusted healthcare facilities near you",
     "searchPlaceholder": "Search clinics by name or city...",
     "noResults": "No clinics found. Try a different search.",
     "loadError": "Could not load clinics right now. Please try again shortly."

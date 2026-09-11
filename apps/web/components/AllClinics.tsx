@@ -31,8 +31,9 @@ function ClinicCard({ clinic }: { clinic: PublicClinic }) {
   const [broken, setBroken] = useState(false);
 
   const name = clinic.clinicName || "Health Center";
-  const city = clinic.city || "Dubrajpur";
-  const address = clinic.address || "Birbhum";
+  const city = clinic.city || null;
+  const address = clinic.address || null;
+  const location = [city, address].filter(Boolean).join(", ") || null;
   const image = clinic.logo;
 
   const doctorsCount =
@@ -196,29 +197,30 @@ function ClinicCard({ clinic }: { clinic: PublicClinic }) {
         </h3>
 
         {/* Location */}
-        <div className="mt-1.5 flex min-w-0 items-center gap-1">
-          <MapPin
-            className="
-              h-3
-              w-3
-              shrink-0
-              text-[#16A34A]
-            "
-          />
+        {location && (
+          <div className="mt-1.5 flex min-w-0 items-center gap-1">
+            <MapPin
+              className="
+                h-3
+                w-3
+                shrink-0
+                text-[#16A34A]
+              "
+            />
 
-          <span
-            className="
-              truncate
-              text-[9px]
-              font-medium
-              text-slate-500
-              dark:text-ink-500
-            "
-          >
-            {city}
-            {address && `, ${address}`}
-          </span>
-        </div>
+            <span
+              className="
+                truncate
+                text-[9px]
+                font-medium
+                text-slate-500
+                dark:text-ink-500
+              "
+            >
+              {location}
+            </span>
+          </div>
+        )}
 
         {/* Specialty tags */}
         {specialties.length > 0 && (
