@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Calendar,
   Star,
@@ -201,6 +201,7 @@ export default function DoctorGrid({
   availableToday?: boolean;
 }) {
   const t = useTranslations("DoctorSearch");
+const locale = useLocale();
 
   /*
    * Search is handled locally so specialization,
@@ -331,6 +332,7 @@ function DoctorCard({
   doctor: ExtendedDoctor;
 }) {
   const t = useTranslations("DoctorSearch");
+const locale = useLocale();
 
   const { user } = useAuth();
   const router = useRouter();

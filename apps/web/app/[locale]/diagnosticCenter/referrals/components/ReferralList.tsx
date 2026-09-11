@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Search, Filter } from "lucide-react";
 import { ReferralCard } from "./ReferralCard";
 import type { DiagnosticCenterIncomingReferral } from "@doctor-contract/shared";

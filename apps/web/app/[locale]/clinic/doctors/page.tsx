@@ -7,7 +7,7 @@ import {
   Loader2, Award, Clock, Users, Trash2, Edit2, CalendarDays, Check,
   BadgeCheck
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useClinicProfile, useClinicDoctors, useAddDoctor, useEditDoctor, type ClinicDoctor } from "@/lib/hooks/useClinic";
 import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";

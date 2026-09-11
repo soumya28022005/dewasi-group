@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   MapPin,
   Loader2,
@@ -12,6 +12,7 @@ import {
   CalendarCheck,
   Users,
   ChevronDown,
+  Check,
   X,
   Sparkles,
 } from "lucide-react";
@@ -63,6 +64,7 @@ function DoctorsPage() {
 
 function DoctorsPageContent() {
   const t = useTranslations("DoctorSearch");
+const locale = useLocale();
 
   const { city, status, setManualCity } = useLocationCity();
   const searchParams = useSearchParams();
@@ -175,18 +177,16 @@ function DoctorsPageContent() {
    */
 
   function getLocalizedName(location: Location) {
-    const locale = t("locale");
+  const localizedNames: Record<string, string | undefined> = {
+    en: location.nameEn,
+    bn: location.nameBn,
+    hi: location.nameHi,
+    // notun language add korle eikhane shudhu ekta line barabe:
+    // bho: location.nameBho,
+  };
 
-    if (locale === "bn") {
-      return location.nameBn;
-    }
-
-    if (locale === "hi") {
-      return location.nameHi;
-    }
-
-    return location.nameEn;
-  }
+  return localizedNames[locale] ?? location.nameEn;
+}
 
   /*
    * ---------------------------------------------------------

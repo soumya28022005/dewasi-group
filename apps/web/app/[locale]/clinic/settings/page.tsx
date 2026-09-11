@@ -19,7 +19,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "@/i18n/routing";
 import toast from "react-hot-toast";

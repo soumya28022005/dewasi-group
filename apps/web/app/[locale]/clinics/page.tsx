@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { MapPin, Loader2, Building2, BadgeCheck, Wifi, Users, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useLocationCity } from "@/lib/hooks/useLocationCity";

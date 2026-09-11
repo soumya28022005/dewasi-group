@@ -7,7 +7,7 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function HowItWorks() {
   const t = useTranslations("HowItWorks");

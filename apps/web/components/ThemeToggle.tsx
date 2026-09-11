@@ -1,7 +1,7 @@
 "use client";
 
 import { Moon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function ThemeToggle() {
   const t = useTranslations("Theme");

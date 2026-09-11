@@ -12,7 +12,7 @@ import {
   CalendarOff,
   Sparkles,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   useWorkingHours,
   useSetWorkingHours,

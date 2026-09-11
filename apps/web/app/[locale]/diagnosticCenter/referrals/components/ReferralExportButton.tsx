@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Download } from "lucide-react";
 import type { DiagnosticCenterIncomingReferral } from "@doctor-contract/shared";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { useMyAppointments } from "@/lib/hooks/useAppointments";
 import { Link } from "@/i18n/routing";

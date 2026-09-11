@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Building2, Sparkles, MapPin, BadgeCheck, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { usePublicFeaturedClinics } from "@/lib/hooks/usePublicDirectory";

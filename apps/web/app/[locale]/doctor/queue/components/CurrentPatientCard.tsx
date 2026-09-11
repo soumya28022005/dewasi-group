@@ -2,7 +2,7 @@
 
 import type { QueueToken } from "@doctor-contract/shared";
 import { User, Clock, Calendar, Stethoscope } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { GradientCard } from "@/components/ui/GradientCard";
 
 interface CurrentPatientCardProps {

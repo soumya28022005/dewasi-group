@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Inbox } from "lucide-react";
 
 export function ReferralEmptyState() {

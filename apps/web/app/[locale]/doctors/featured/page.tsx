@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Calendar, Star, Heart, Clock, BadgeCheck, Stethoscope, Award, Loader2, CalendarCheck, Building2, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, Link } from "@/i18n/routing";
@@ -40,6 +40,7 @@ function ExperienceBadge({ years }: { years: number }) {
 
 function DoctorCard({ doctor }: { doctor: ExtendedDoctor }) {
   const t = useTranslations("DoctorSearch");
+const locale = useLocale();
   const { user } = useAuth();
   const router = useRouter();
 

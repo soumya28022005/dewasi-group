@@ -8,7 +8,7 @@ import {
   Building2,
   Stethoscope,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useDoctorDashboard } from "@/lib/hooks/useDoctor";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { StatCard } from "./components/StatCard";

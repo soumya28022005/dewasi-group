@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, Calendar, RefreshCw, Activity } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { GradientCard } from "../../dashboard/components/GradientCard";
 
 interface ClinicOption {

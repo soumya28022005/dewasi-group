@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertCircle, Loader2, Send, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useNotifyDoctorDelay } from "@/lib/hooks/useDoctor";
 import toast from "react-hot-toast";
 import { GradientCard } from "@/components/ui/GradientCard";

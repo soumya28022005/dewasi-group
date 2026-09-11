@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, RotateCcw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface AdminDashboardErrorProps {
   onRetry: () => void;
