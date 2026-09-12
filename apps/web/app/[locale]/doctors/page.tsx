@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  Suspense,
   type ReactNode,
 } from "react";
 
@@ -72,7 +73,9 @@ function GradientCard({
 
 function DoctorsPage() {
   return (
-    <DoctorsPageContent />
+    <Suspense fallback={null}>
+      <DoctorsPageContent />
+    </Suspense>
   );
 }
 

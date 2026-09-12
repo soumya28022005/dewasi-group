@@ -1,9 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { useMyAppointments } from "@/lib/hooks/useAppointments";
+import { useMyAppointments, useMyBookingStatus, useCancelAppointment } from "@/lib/hooks/useAppointments";
 import { Link } from "@/i18n/routing";
+import toast from "react-hot-toast";
+import type { Appointment } from "@doctor-contract/shared";
 
 import {
   Calendar,
@@ -17,6 +20,9 @@ import {
   ChevronRight,
   HeartPulse,
   Shield,
+  XCircle,
+  Lock,
+  Radio,
 } from "lucide-react";
 
 // ============================================================
@@ -105,6 +111,25 @@ export default function DashboardPage() {
     isLoading,
   } = useMyAppointments();
 
+  const { data: bookingStatus } = useMyBookingStatus();
+  const cancelMutation = useCancelAppointment();
+
+  const [activeTab, setActiveTab] = useState<"UPCOMING" | "TODAY" | "HISTORY">("UPCOMING");
+  const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  async function confirmCancel() {
+    if (!cancelTarget) return;
+    try {
+      await cancelMutation.mutateAsync({ appointmentId: cancelTarget.id, reason: cancelReason || undefined });
+      toast.success(t("cancelSuccess"));
+      setCancelTarget(null);
+      setCancelReason("");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || t("cancelError"));
+    }
+  }
+
   // ============================================================
   // STATS
   // ============================================================
@@ -126,6 +151,28 @@ export default function DashboardPage() {
     (appointment) =>
       appointment.status === "CANCELLED"
   ).length;
+
+  // ============================================================
+  // TABS (Part 4: UPCOMING / TODAY / HISTORY) — the backend already
+  // computes `bucket` per appointment (see appointment.service.js), so this
+  // is a straightforward client-side filter, not re-derived business logic.
+  // ============================================================
+
+  const bucketed = useMemo(() => {
+    const list = appointments ?? [];
+    return {
+      UPCOMING: list.filter((a) => a.bucket === "UPCOMING"),
+      TODAY: list.filter((a) => a.bucket === "TODAY"),
+      HISTORY: list.filter((a) => a.bucket === "HISTORY"),
+    };
+  }, [appointments]);
+
+  const visibleAppointments = bucketed[activeTab];
+
+  const isRestricted = !!bookingStatus?.bookingRestrictedUntil;
+  const restrictedUntilLabel = bookingStatus?.bookingRestrictedUntil
+    ? new Date(bookingStatus.bookingRestrictedUntil).toLocaleDateString()
+    : null;
 
   // ============================================================
   // RENDER
@@ -304,23 +351,77 @@ export default function DashboardPage() {
       </div>
 
       {/* ======================================================
+          BOOKING RESTRICTION BANNER (Part 8)
+          ====================================================== */}
+
+      {isRestricted && (
+        <GradientCard gradient="from-[#f59e0b] via-[#f97316] to-[#ef4444]">
+          <div className="flex items-start gap-3 p-3.5 sm:p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#f59e0b] to-[#f97316] text-white shadow-md">
+              <Lock className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 sm:text-sm">
+                {t("bookingRestrictedTitle")}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600 sm:text-xs">
+                {t("bookingRestrictedBody", { date: restrictedUntilLabel ?? "" })}
+              </p>
+            </div>
+          </div>
+        </GradientCard>
+      )}
+
+      {/* ======================================================
           APPOINTMENTS
           ====================================================== */}
 
       <section className="space-y-3.5 sm:space-y-4">
 
-        {/* Section title */}
+        {/* Section title + active-slot usage */}
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
 
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-[#252a67] to-[#14B8A6] text-white shadow-md">
-            <Calendar className="h-4 w-4" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-[#252a67] to-[#14B8A6] text-white shadow-md">
+              <Calendar className="h-4 w-4" />
+            </div>
+
+            <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+              {t("myAppointments")}
+            </h2>
+
           </div>
 
-          <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-            {t("myAppointments")}
-          </h2>
+          {bookingStatus && (
+            <span className="text-[10px] font-semibold text-slate-500 sm:text-xs">
+              {t("activeAppointmentsUsed", {
+                used: bookingStatus.activeAppointments,
+                max: bookingStatus.maxActiveAppointments,
+              })}
+            </span>
+          )}
+        </div>
 
+        {/* Tabs — Part 4: UPCOMING / TODAY / HISTORY */}
+
+        <div className="flex gap-1.5 rounded-xl bg-slate-100 p-1 sm:gap-2 sm:p-1.5">
+          {(["UPCOMING", "TODAY", "HISTORY"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 rounded-lg px-2 py-2 text-[11px] font-bold transition sm:text-sm ${
+                activeTab === tab
+                  ? "bg-white text-[#252a67] shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {t(tab === "UPCOMING" ? "tabUpcoming" : tab === "TODAY" ? "tabToday" : "tabHistory")}
+              <span className="ml-1 text-[10px] font-semibold text-slate-400">
+                ({bucketed[tab].length})
+              </span>
+            </button>
+          ))}
         </div>
 
         {/* ====================================================
@@ -344,7 +445,7 @@ export default function DashboardPage() {
         )}
 
         {/* ====================================================
-            EMPTY
+            EMPTY (no appointments at all)
             ==================================================== */}
 
         {!isLoading &&
@@ -384,10 +485,24 @@ export default function DashboardPage() {
           )}
 
         {/* ====================================================
+            EMPTY (this tab has nothing, but other tabs might)
+            ==================================================== */}
+
+        {!isLoading &&
+          (appointments?.length ?? 0) > 0 &&
+          visibleAppointments.length === 0 && (
+            <div className="rounded-[20px] border border-slate-100 bg-slate-50/60 px-5 py-8 text-center sm:rounded-3xl sm:p-10">
+              <p className="text-xs font-medium text-slate-500 sm:text-sm">
+                {t(activeTab === "UPCOMING" ? "noUpcoming" : activeTab === "TODAY" ? "noToday" : "noHistory")}
+              </p>
+            </div>
+          )}
+
+        {/* ====================================================
             APPOINTMENT CARDS
             ==================================================== */}
 
-        {appointments?.map((appt) => {
+        {visibleAppointments.map((appt) => {
 
           const doctorName = formatDoctorName(
             appt.doctor?.user?.name
@@ -406,10 +521,13 @@ export default function DashboardPage() {
                 "statusWaiting"
             );
 
+          const isActive = appt.status === "WAITING" || appt.status === "CHECKED_IN";
+          const canCancel = appt.status === "WAITING";
+
           return (
             <GradientCard
               key={appt.id}
-              gradient="from-[#252a67] via-[#3b4a8f] to-[#14B8A6]"
+              gradient={appt.isYourTurn ? "from-[#059669] via-[#10b981] to-[#34d399]" : "from-[#252a67] via-[#3b4a8f] to-[#14B8A6]"}
             >
 
               <div className="p-3.5 sm:p-5">
@@ -511,7 +629,7 @@ export default function DashboardPage() {
 
                   </span>
 
-                  {/* Queue information */}
+                  {/* Live queue information (Part 13-19) */}
 
                   {appt.queueMode === "PRIVATE" ? (
 
@@ -520,36 +638,54 @@ export default function DashboardPage() {
                     </span>
 
                   ) : (
-                    appt.status === "WAITING" && (
-                      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px] text-slate-500 sm:text-xs">
-
-                        <span className="flex items-center gap-1">
-
-                          <Users className="h-3.5 w-3.5 shrink-0 text-[#14B8A6]" />
-
-                          {appt.patientsAhead}{" "}
-                          {t("patientsAhead")}
-
+                    isActive && appt.queue?.currentToken != null && (
+                      appt.isYourTurn ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#059669] to-[#10b981] px-2.5 py-1.5 text-[10px] font-bold text-white shadow-sm sm:px-3 sm:text-xs">
+                          <Radio className="h-3 w-3 animate-pulse sm:h-3.5 sm:w-3.5" />
+                          {t("yourTurn")}
                         </span>
+                      ) : (
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px] text-slate-500 sm:text-xs">
 
-                        {appt.estimatedWaitMinutes != null && (
+                          <span className="flex items-center gap-1">
+                            <Activity className="h-3.5 w-3.5 shrink-0 text-[#252a67]" />
+                            {t("currentlyServing")} #{appt.queue.currentToken}
+                          </span>
+
                           <span className="flex items-center gap-1">
 
-                            <Clock className="h-3.5 w-3.5 shrink-0 text-[#f59e0b]" />
+                            <Users className="h-3.5 w-3.5 shrink-0 text-[#14B8A6]" />
 
-                            {t("estimatedWait")}:
-
-                            {" "}
-
-                            {appt.estimatedWaitMinutes}{" "}
-
-                            {t("minutes")}
+                            {appt.patientsAhead}{" "}
+                            {t("patientsAhead")}
 
                           </span>
-                        )}
 
-                      </div>
+                          {appt.estimatedWaitLabel && (
+                            <span className="flex items-center gap-1">
+
+                              <Clock className="h-3.5 w-3.5 shrink-0 text-[#f59e0b]" />
+
+                              {t("estimatedWait")}: {appt.estimatedWaitLabel}
+
+                            </span>
+                          )}
+
+                        </div>
+                      )
                     )
+                  )}
+
+                  {/* Cancel action (Part 7) */}
+
+                  {canCancel && (
+                    <button
+                      onClick={() => setCancelTarget(appt)}
+                      className="ml-auto inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-[10px] font-bold text-red-600 transition hover:bg-red-50 sm:px-3 sm:text-xs"
+                    >
+                      <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      {t("cancelAppointment")}
+                    </button>
                   )}
 
                 </div>
@@ -560,6 +696,48 @@ export default function DashboardPage() {
         })}
 
       </section>
+
+      {/* ======================================================
+          CANCEL CONFIRMATION MODAL
+          ====================================================== */}
+
+      {cancelTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-900">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white sm:text-base">
+              {t("cancelConfirmTitle")}
+            </h3>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              {t("cancelConfirmBody")}
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder={t("cancelReasonPlaceholder")}
+              rows={2}
+              className="mt-3 w-full resize-none rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-[#252a67] dark:border-slate-700 dark:bg-slate-800"
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => {
+                  setCancelTarget(null);
+                  setCancelReason("");
+                }}
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+              >
+                {t("cancelKeep")}
+              </button>
+              <button
+                onClick={confirmCancel}
+                disabled={cancelMutation.isPending}
+                className="flex-1 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
+              >
+                {cancelMutation.isPending ? t("cancelling") : t("cancelSubmit")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

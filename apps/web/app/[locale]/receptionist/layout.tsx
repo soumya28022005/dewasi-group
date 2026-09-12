@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, Link, useRouter } from "@/i18n/routing";
-import { LayoutDashboard, Stethoscope, Users, LogOut, Loader2, ClipboardList, FlaskConical } from "lucide-react";
+import { LayoutDashboard, Stethoscope, Users, LogOut, Loader2, ClipboardList, FlaskConical, CalendarClock } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { LucideIcon } from "lucide-react";
 
@@ -16,6 +16,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/receptionist/dashboard", label: "Doctors", icon: LayoutDashboard, exact: true },
   { href: "/receptionist/queue", label: "Queue", icon: ClipboardList },
+  { href: "/receptionist/appointments", label: "Appointments", icon: CalendarClock },
   { href: "/receptionist/patients", label: "Patients", icon: Users },
   { href: "/receptionist/test-recommendations", label: "Test Recs", icon: FlaskConical },
 ];

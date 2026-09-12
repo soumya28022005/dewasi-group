@@ -162,7 +162,28 @@
     "doctorPanel": "Doctor Panel",
     "clinicPanel": "Clinic Panel",
     "dashboard": "Dashboard",
-    "profile": "Profile"
+    "profile": "Profile",
+    "tabUpcoming": "Upcoming",
+    "tabToday": "Today",
+    "tabHistory": "History",
+    "noUpcoming": "No upcoming appointments.",
+    "noToday": "No appointments today.",
+    "noHistory": "No past appointments yet.",
+    "yourTurn": "YOUR TURN",
+    "currentlyServing": "Currently Serving",
+    "yourToken": "Your Token",
+    "activeAppointmentsUsed": "{used} of {max} active appointments used",
+    "cancelAppointment": "Cancel Appointment",
+    "cancelConfirmTitle": "Cancel this appointment?",
+    "cancelConfirmBody": "This will free up your slot and cannot be undone. If you're at your 3-appointment limit, cancelling will pause new bookings for 2 days.",
+    "cancelReasonPlaceholder": "Reason (optional)",
+    "cancelSubmit": "Yes, Cancel",
+    "cancelKeep": "Keep Appointment",
+    "cancelling": "Cancelling...",
+    "cancelSuccess": "Appointment cancelled",
+    "cancelError": "Could not cancel appointment",
+    "bookingRestrictedTitle": "New bookings paused",
+    "bookingRestrictedBody": "You recently cancelled an appointment while at your active-appointment limit. You can book again after {date}."
   },
   "DoctorSearch": {
     "heading": "All Doctors",
@@ -239,7 +260,8 @@
     "reports": "Reports",
     "settings": "Settings",
     "addPatient": "Queue / Add Patient",
-    "followUps": "Follow-ups"
+    "followUps": "Follow-ups",
+    "appointments": "Appointments"
   },
   "ClinicDashboard": {
     "title": "Operational Dashboard",
@@ -517,14 +539,14 @@
     "defaultReason": "Clinic Closed"
   },
   "DiagnosticCenter": {
-  "whatsappNumber": "WhatsApp Number",
-  "googleMapsUrl": "Google Maps Link",
-  "isOnline": "Currently Online",
-  "authorizationNote": "Authorization Note (e.g., We process from Lalbaba)",
-  "manageTests": "Manage Tests",
-  "addTest": "Add New Test",
-  "testPrice": "Test Price"
-},
+    "whatsappNumber": "WhatsApp Number",
+    "googleMapsUrl": "Google Maps Link",
+    "isOnline": "Currently Online",
+    "authorizationNote": "Authorization Note (e.g., We process from Lalbaba)",
+    "manageTests": "Manage Tests",
+    "addTest": "Add New Test",
+    "testPrice": "Test Price"
+  },
   "Days": {
     "MONDAY": "Monday",
     "TUESDAY": "Tuesday",
@@ -908,15 +930,15 @@
     "dismiss": "Dismiss",
     "successSaved": "Platform settings saved successfully."
   },
- "DiagnosticCenterNav": {
-  "dashboard": "Dashboard",
-  "profile": "Profile",
-  "staff": "Staff",
-  "referrals": "Referrals",
-  "tests": "Manage Tests",
-  "portalTitle": "Diagnostic Center Portal",
-  "schedule": "Schedule"
-},
+  "DiagnosticCenterNav": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "staff": "Staff",
+    "referrals": "Referrals",
+    "tests": "Manage Tests",
+    "portalTitle": "Diagnostic Center Portal",
+    "schedule": "Schedule"
+  },
   "DiagnosticCenterDashboard": {
     "title": "Diagnostic Center Dashboard",
     "subtitle": "Monitor your center status, view verification details, and manage staff operations.",

@@ -54,11 +54,52 @@ export type Appointment = {
   status: AppointmentStatus;
   doctorId: string;
   clinicId: string;
+  queueId?: string;
+  cancelReason?: string | null;
+  bookingSource?: "ONLINE" | "RECEPTION" | "WALK_IN" | "PHONE";
   queueMode?: "LIVE" | "PRIVATE";
+  // Part 4: which section of the patient dashboard this appointment belongs
+  // in, computed by the backend from status + date.
+  bucket?: "UPCOMING" | "TODAY" | "HISTORY";
   patientsAhead?: number;
+  isYourTurn?: boolean;
   estimatedWaitMinutes?: number | null;
+  // Human-friendly version of estimatedWaitMinutes, e.g. "~25 min", "~1 hr 5 min".
+  estimatedWaitLabel?: string | null;
   doctor?: { user?: { name: string } };
   clinic?: { clinicName: string };
+  patient?: { id?: string; name?: string; user?: { name?: string; phone?: string | null } };
+  queue?: { id?: string; currentToken?: number; status?: string; scheduleId?: string | null };
+};
+
+// Part 4/8: patient's active-appointment count vs the max-3 cap, and any
+// active post-cancellation booking freeze. Returned by
+// GET /appointments/me/booking-status.
+export type BookingStatus = {
+  activeAppointments: number;
+  maxActiveAppointments: number;
+  canBookMore: boolean;
+  bookingRestrictedUntil: string | null;
+};
+
+// Part 13/21: single-appointment live queue view, returned by
+// GET /appointments/:id/live.
+export type AppointmentLiveView = {
+  appointmentId: string;
+  status: AppointmentStatus;
+  token: number;
+  date: string;
+  doctorName?: string;
+  clinicName?: string;
+  session?: { startTime: string; endTime: string } | null;
+  queueMode: "LIVE" | "PRIVATE";
+  queueStatus?: string;
+  currentToken?: number;
+  yourToken?: number;
+  patientsAhead?: number;
+  isYourTurn: boolean;
+  estimatedWaitMinutes?: number | null;
+  estimatedWaitLabel?: string | null;
 };
 
 export type DoctorScheduleSlot = {

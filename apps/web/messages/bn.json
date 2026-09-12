@@ -162,7 +162,28 @@
     "doctorPanel": "Doctor Panel",
     "clinicPanel": "Clinic Panel",
     "dashboard": "Dashboard",
-    "profile": "Profile"
+    "profile": "Profile",
+    "tabUpcoming": "আসন্ন",
+    "tabToday": "আজ",
+    "tabHistory": "ইতিহাস",
+    "noUpcoming": "কোনো আসন্ন অ্যাপয়েন্টমেন্ট নেই।",
+    "noToday": "আজ কোনো অ্যাপয়েন্টমেন্ট নেই।",
+    "noHistory": "এখনও কোনো পুরনো অ্যাপয়েন্টমেন্ট নেই।",
+    "yourTurn": "আপনার পালা",
+    "currentlyServing": "বর্তমানে চলছে",
+    "yourToken": "আপনার টোকেন",
+    "activeAppointmentsUsed": "{max}-টির মধ্যে {used}টি সক্রিয় অ্যাপয়েন্টমেন্ট ব্যবহৃত",
+    "cancelAppointment": "অ্যাপয়েন্টমেন্ট বাতিল করুন",
+    "cancelConfirmTitle": "এই অ্যাপয়েন্টমেন্টটি বাতিল করবেন?",
+    "cancelConfirmBody": "এটি আপনার স্লট খালি করে দেবে এবং পূর্বাবস্থায় ফেরানো যাবে না। আপনি যদি ৩টি অ্যাপয়েন্টমেন্টের সীমায় থাকেন, তাহলে বাতিল করলে ২ দিনের জন্য নতুন বুকিং বন্ধ থাকবে।",
+    "cancelReasonPlaceholder": "কারণ (ঐচ্ছিক)",
+    "cancelSubmit": "হ্যাঁ, বাতিল করুন",
+    "cancelKeep": "অ্যাপয়েন্টমেন্ট রাখুন",
+    "cancelling": "বাতিল হচ্ছে...",
+    "cancelSuccess": "অ্যাপয়েন্টমেন্ট বাতিল হয়েছে",
+    "cancelError": "অ্যাপয়েন্টমেন্ট বাতিল করা যায়নি",
+    "bookingRestrictedTitle": "নতুন বুকিং সাময়িকভাবে বন্ধ",
+    "bookingRestrictedBody": "আপনি সাম্প্রতিক সময়ে ৩টি সক্রিয় অ্যাপয়েন্টমেন্টের সীমায় থাকা অবস্থায় একটি বাতিল করেছেন। আপনি {date} এর পরে আবার বুক করতে পারবেন।"
   },
   "DoctorSearch": {
     "heading": "All Doctors",
@@ -239,7 +260,8 @@
     "reports": "Reports",
     "settings": "Settings",
     "addPatient": "Queue / Add Patient",
-    "followUps": "Follow-ups"
+    "followUps": "Follow-ups",
+    "appointments": "অ্যাপয়েন্টমেন্ট"
   },
   "ClinicDashboard": {
     "title": "Operational Dashboard",
@@ -517,14 +539,14 @@
     "defaultReason": "Clinic Closed"
   },
   "DiagnosticCenter": {
-  "whatsappNumber": "WhatsApp Number",
-  "googleMapsUrl": "Google Maps Link",
-  "isOnline": "Currently Online",
-  "authorizationNote": "Authorization Note (e.g., We process from Lalbaba)",
-  "manageTests": "Manage Tests",
-  "addTest": "Add New Test",
-  "testPrice": "Test Price"
-},
+    "whatsappNumber": "WhatsApp Number",
+    "googleMapsUrl": "Google Maps Link",
+    "isOnline": "Currently Online",
+    "authorizationNote": "Authorization Note (e.g., We process from Lalbaba)",
+    "manageTests": "Manage Tests",
+    "addTest": "Add New Test",
+    "testPrice": "Test Price"
+  },
   "Days": {
     "MONDAY": "Monday",
     "TUESDAY": "Tuesday",
@@ -908,15 +930,15 @@
     "dismiss": "Dismiss",
     "successSaved": "Platform settings saved successfully."
   },
- "DiagnosticCenterNav": {
-  "dashboard": "Dashboard",
-  "profile": "Profile",
-  "staff": "Staff",
-  "referrals": "Referrals",
-  "tests": "Manage Tests",
-  "portalTitle": "Diagnostic Center Portal",
-  "schedule": "Schedule"
-},
+  "DiagnosticCenterNav": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "staff": "Staff",
+    "referrals": "Referrals",
+    "tests": "Manage Tests",
+    "portalTitle": "Diagnostic Center Portal",
+    "schedule": "Schedule"
+  },
   "DiagnosticCenterDashboard": {
     "title": "Diagnostic Center Dashboard",
     "subtitle": "Monitor your center status, view verification details, and manage staff operations.",
