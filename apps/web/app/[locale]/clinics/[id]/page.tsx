@@ -553,7 +553,7 @@ export default function ClinicProfilePage() {
 
                       <div className="mt-auto pt-3">
                         <Link
-                          href={`/doctors/${doctor.id}`}
+                          href={`/doctors/${doctor.id}?clinicId=${clinicId}`}
                           className="flex h-8 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-[#252a67] to-[#3B4A8F] text-[10.5px] font-bold text-white shadow-sm transition-all group-hover:shadow-md sm:h-9 sm:text-[11.5px]"
                         >
                           Book

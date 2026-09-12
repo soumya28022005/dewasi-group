@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "@/i18n/routing";
 import { ExtendedDoctor } from "@/types/doctor";
@@ -16,8 +16,6 @@ import {
   PhoneCall,
   Loader2,
   Mail,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   BadgeCheck,
   Stethoscope,
@@ -37,6 +35,7 @@ function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 export default function DoctorProfilePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const doctorId = params.id as string;
@@ -53,9 +52,12 @@ export default function DoctorProfilePage() {
   const [isFetchingSchedules, setIsFetchingSchedules] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Calendar state
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  // Date-strip state — replaces the old full month calendar. Only real,
+  // actually-bookable dates (from the backend's availability engine) are
+  // ever shown here, so there's no way to land on an empty day.
+  type AvailableDateEntry = { date: string; sessions: any[] };
+  const [availableDates, setAvailableDates] = useState<AvailableDateEntry[]>([]);
+  const [isFetchingDates, setIsFetchingDates] = useState(false);
 
   const bookMutation = useBookAppointment();
 
@@ -73,6 +75,51 @@ export default function DoctorProfilePage() {
     if (doctorId) fetchDoctor();
   }, [doctorId]);
 
+  // Completes the Clinic -> Doctor -> Appointment flow: if the patient
+  // arrived here from a specific clinic's page (?clinicId=...), jump
+  // straight into that clinic's booking flow instead of making them find
+  // and re-click the same clinic again from the chamber list below. Reuses
+  // the exact same date-strip / availability fetch as opening the modal
+  // manually — no separate code path, so it can't drift out of sync.
+  useEffect(() => {
+    if (!doctor) return;
+    const requestedClinicId = searchParams.get("clinicId");
+    if (!requestedClinicId) return;
+    const match = (doctor as any).allClinics?.find((c: any) => c.id === requestedClinicId);
+    if (match) openBookingModal(match);
+  }, [doctor, searchParams]);
+
+  // Step 1: once a clinic is chosen, fetch the doctor's next real available
+  // dates AT THAT EXACT CLINIC — never a shared/merged list across clinics.
+  useEffect(() => {
+    async function fetchAvailableDates() {
+      if (!selectedClinic) return;
+      setIsFetchingDates(true);
+      setAvailableDates([]);
+      setDate("");
+      setSchedules([]);
+      setSelectedScheduleId("");
+      try {
+        const res = await api.get(`/doctors/${doctorId}/clinics/${selectedClinic.id}/schedules/available-dates?limit=10`);
+        if (res.data?.success) {
+          const dates: AvailableDateEntry[] = res.data.data.dates || [];
+          setAvailableDates(dates);
+          // Auto-select the very next available date so the patient sees
+          // sessions immediately instead of an empty "pick a date" state.
+          if (dates.length > 0) setDate(dates[0].date);
+        }
+      } catch (err) {
+        setAvailableDates([]);
+      } finally {
+        setIsFetchingDates(false);
+      }
+    }
+    fetchAvailableDates();
+  }, [selectedClinic, doctorId]);
+
+  // Step 2: once a specific date is picked from the strip, fetch that
+  // date's sessions (still the backend's live capacity — the frontend
+  // never assumes a slot is open just because it appeared in the date list).
   useEffect(() => {
     async function fetchClinicSchedules() {
       if (!selectedClinic || !date) return;
@@ -99,8 +146,25 @@ export default function DoctorProfilePage() {
     setSelectedScheduleId("");
     setMessage(null);
     setIsModalOpen(true);
-    setCurrentMonth(new Date());
-    setSelectedDate(null);
+    setAvailableDates([]);
+  };
+
+  // Formats a "YYYY-MM-DD" into the "Today" / "13 Sep" label the date-strip
+  // shows, entirely from the string (no timezone re-derivation needed since
+  // the backend already resolved it against IST).
+  const formatDateStripLabel = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    const todayStr = new Date();
+    const isToday =
+      dt.getFullYear() === todayStr.getFullYear() &&
+      dt.getMonth() === todayStr.getMonth() &&
+      dt.getDate() === todayStr.getDate();
+    if (isToday) return { top: "Today", bottom: dt.toLocaleDateString("en-US", { day: "numeric", month: "short" }) };
+    return {
+      top: dt.toLocaleDateString("en-US", { weekday: "short" }),
+      bottom: dt.toLocaleDateString("en-US", { day: "numeric", month: "short" }),
+    };
   };
 
   const handleConfirmBooking = () => {
@@ -130,49 +194,6 @@ export default function DoctorProfilePage() {
       }
     );
   };
-
-  // Calendar helpers
-  const getDaysInMonth = (month: Date) => {
-    const year = month.getFullYear();
-    const monthIndex = month.getMonth();
-    const firstDay = new Date(year, monthIndex, 1);
-    const lastDay = new Date(year, monthIndex + 1, 0);
-    const days = [];
-    for (let d = firstDay.getDate(); d <= lastDay.getDate(); d++) {
-      days.push(new Date(year, monthIndex, d));
-    }
-    return days;
-  };
-
-  const getWeekdayOffset = (month: Date) => {
-    const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
-    return firstDay.getDay();
-  };
-
-  const isDateDisabled = (date: Date) => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return date < today;
-  };
-
- const handleDateSelect = (date: Date) => {
-    if (isDateDisabled(date)) return;
-
-    // 🛑 TIMEZONE BUG FIX
-    // DO NOT USE .toISOString() because it converts to UTC and shifts the date backwards for IST!
-    // Extract local year, month, and day directly from the Date object.
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-
-    setSelectedDate(date);
-    setDate(dateStr);
-    setMessage(null);
-  };
-
-  const handlePrevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  const handleNextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
 
   if (isLoading) {
     return (
@@ -413,54 +434,43 @@ export default function DoctorProfilePage() {
             </div>
 
             <div className="p-6">
-              {/* Custom Calendar */}
+              {/* Date strip — only real, actually-bookable dates ever appear here */}
               <div className="mb-6">
                 <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">Step 1: Choose Date</p>
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
-                  <div className="mb-4 flex items-center justify-between">
-                    <button onClick={handlePrevMonth} className="rounded-lg p-1 text-slate-600 transition hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700">
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                      {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </span>
-                    <button onClick={handleNextMonth} className="rounded-lg p-1 text-slate-600 transition hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700">
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="mb-2 grid grid-cols-7 gap-1">
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-                      <div key={day} className="text-center text-[10px] font-bold text-slate-400">{day}</div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {Array.from({ length: getWeekdayOffset(currentMonth) }).map((_, index) => (
-                      <div key={`empty-${index}`} />
-                    ))}
-                    {getDaysInMonth(currentMonth).map((day) => {
-                      const dayDate = day.getDate();
-                      const isDisabled = isDateDisabled(day);
-                      const isSelected = selectedDate && day.toDateString() === selectedDate.toDateString();
-                      const isToday = day.toDateString() === new Date().toDateString();
+                {isFetchingDates ? (
+                  <p className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Finding next available dates...
+                  </p>
+                ) : availableDates.length === 0 ? (
+                  <p className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-bold text-red-500 dark:border-red-900/40 dark:bg-red-500/10">
+                    No upcoming availability found for this doctor at this clinic.
+                  </p>
+                ) : (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {availableDates.map((entry) => {
+                      const isSelected = date === entry.date;
+                      const label = formatDateStripLabel(entry.date);
                       return (
                         <button
-                          key={day.toISOString()}
-                          disabled={isDisabled}
-                          onClick={() => handleDateSelect(day)}
-                          className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                          key={entry.date}
+                          onClick={() => { setDate(entry.date); setMessage(null); }}
+                          className={`flex shrink-0 flex-col items-center rounded-xl border-2 px-4 py-2.5 transition-all ${
                             isSelected
-                              ? 'bg-[#252a67] text-white shadow-md'
-                              : isDisabled
-                                ? 'cursor-not-allowed text-slate-300 dark:text-slate-700'
-                                : 'text-slate-700 hover:scale-105 hover:bg-[#252a67]/10 dark:text-slate-300'
-                          } ${isToday && !isSelected ? 'ring-1 ring-[#14B8A6]/50' : ''}`}
+                              ? 'border-[#252a67] bg-[#252a67]/5 dark:border-teal-500 dark:bg-teal-500/10'
+                              : 'border-slate-100 hover:border-[#252a67]/30 dark:border-slate-800 dark:hover:border-teal-500/40'
+                          }`}
                         >
-                          {dayDate}
+                          <span className={`text-[10px] font-bold uppercase tracking-wide ${isSelected ? 'text-[#252a67] dark:text-teal-400' : 'text-slate-400'}`}>
+                            {label.top}
+                          </span>
+                          <span className={`mt-0.5 text-sm font-bold ${isSelected ? 'text-[#252a67] dark:text-teal-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            {label.bottom}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Time Slots Section */}
