@@ -1,16 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
 import { useMyAssignedDoctors } from "@/lib/hooks/useReceptionist";
 import { useDoctorQueue } from "@/lib/hooks/useDoctor";
+import { useDoctorSchedules } from "@/lib/hooks/useDoctorSearch";
 import { QueueHeader } from "../../../../doctor/queue/components/QueueHeader";
 import { QueueStatusCard } from "../../../../doctor/queue/components/QueueStatusCard";
 import { CurrentPatientCard } from "../../../../doctor/queue/components/CurrentPatientCard";
 import { QueueActions } from "../../../../doctor/queue/components/QueueActions";
+import { QuickQueueControl } from "../../../../doctor/queue/components/QuickQueueControl";
+import { SessionSelector } from "../../../../doctor/queue/components/SessionSelector";
 import { QueueList } from "../../../../doctor/queue/components/QueueList";
 import { QueueSkeleton } from "../../../../doctor/queue/components/QueueSkeleton";
 import { QueueError } from "../../../../doctor/queue/components/QueueError";
@@ -26,6 +29,24 @@ export default function ReceptionistDoctorQueuePage() {
   const { data: doctors, isLoading: loadingDoctors } = useMyAssignedDoctors();
   const doctor = doctors?.find((d) => d.id === doctorId && d.clinic?.id === clinicId);
 
+  // Same fix as the doctor's own queue page: a session (scheduleId) MUST be
+  // known before we can ask the backend for a queue — the route is
+  // /queue/:doctorId/:clinicId/:date/:scheduleId/... , there's no
+  // "just give me the queue" endpoint without it.
+  const { data: schedules, isLoading: loadingSchedules } = useDoctorSchedules(doctorId, clinicId);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string>("");
+
+  useEffect(() => {
+    const active = (schedules ?? []).filter((s) => s.isActive);
+    if (active.length > 0 && !active.some((s) => s.id === selectedScheduleId)) {
+      setSelectedScheduleId(active[0].id);
+    }
+    if (active.length === 0) {
+      setSelectedScheduleId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedules]);
+
   const {
     data: queue,
     isLoading: loadingQueue,
@@ -33,15 +54,28 @@ export default function ReceptionistDoctorQueuePage() {
     isError: isErrorQueue,
     error: queueError,
     refetch: refetchQueue,
-  } = useDoctorQueue(doctorId, clinicId, selectedDate);
+  } = useDoctorQueue(doctorId, clinicId, selectedDate, selectedScheduleId);
 
-  if (loadingDoctors || loadingQueue) {
+  if (loadingDoctors || loadingSchedules || loadingQueue) {
     return <QueueSkeleton />;
   }
 
   if (isErrorQueue) {
     const errorMsg = queueError instanceof Error ? queueError.message : undefined;
     return <QueueError onRetry={() => refetchQueue()} message={errorMsg} />;
+  }
+
+  if (!selectedScheduleId) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-12 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
+          <Building2 className="h-6 w-6" />
+        </div>
+        <h2 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
+          No session set up for this doctor at this clinic
+        </h2>
+      </div>
+    );
   }
 
   const currentPatientToken = queue?.tokens?.find((t) => t.token === queue.currentToken);
@@ -82,6 +116,25 @@ export default function ReceptionistDoctorQueuePage() {
         onRefresh={() => refetchQueue()}
       />
 
+      <SessionSelector
+        schedules={schedules ?? []}
+        selectedScheduleId={selectedScheduleId}
+        onSelect={setSelectedScheduleId}
+      />
+
+      {/* The big, simple Next/Previous control — this is what most
+          receptionists will tap dozens of times a day, so it sits right at
+          the top and is sized for a phone screen. */}
+      <QuickQueueControl
+        doctorId={doctorId}
+        clinicId={clinicId}
+        date={selectedDate}
+        scheduleId={selectedScheduleId}
+        currentToken={queue?.currentToken}
+        lastTokenIssued={queue?.lastTokenIssued}
+        queueStatus={queue?.status}
+      />
+
       <QueueStatusCard queue={queue} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -96,6 +149,7 @@ export default function ReceptionistDoctorQueuePage() {
             doctorId={doctorId}
             clinicId={clinicId}
             date={selectedDate}
+            scheduleId={selectedScheduleId}
             queueStatus={queue?.status}
             waitingTokens={waitingTokens}
           />

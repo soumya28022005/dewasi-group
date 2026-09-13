@@ -188,6 +188,7 @@ export type DoctorQueue = {
   doctorId: string;
   clinicId: string;
   date: string;
+  scheduleId?: string;
   currentToken: number;
   lastTokenIssued: number;
   status: string;

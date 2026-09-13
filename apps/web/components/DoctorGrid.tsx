@@ -5,15 +5,12 @@ import {
   Calendar,
   Star,
   Heart,
-  Clock,
   BadgeCheck,
   Stethoscope,
   Loader2,
-  Building2,
   Radio,
   Search,
   MapPin,
-  ChevronDown,
   Sparkles,
 } from "lucide-react";
 
@@ -22,11 +19,7 @@ import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, Link } from "@/i18n/routing";
 
-import {
-  useDoctorSearch,
-  useDoctorSchedules,
-  useBookAppointment,
-} from "@/lib/hooks/useDoctorSearch";
+import { useDoctorSearch } from "@/lib/hooks/useDoctorSearch";
 
 import { ExtendedDoctor } from "@/types/doctor";
 import DoctorClinicInfo from "@/components/DoctorClinicInfo";
@@ -34,10 +27,6 @@ import DoctorClinicInfo from "@/components/DoctorClinicInfo";
 /* =========================================================
    HELPERS
 ========================================================= */
-
-function scheduleLabel(startTime: string, endTime: string) {
-  return `${startTime} – ${endTime}`;
-}
 
 function initials(name?: string) {
   if (!name) return "DR";
@@ -386,99 +375,19 @@ function DoctorCard({ doctor }: { doctor: ExtendedDoctor }) {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [showBooking, setShowBooking] = useState(false);
-  const [date, setDate] = useState("");
-  const [scheduleId, setScheduleId] = useState("");
-
-  const defaultClinicId =
-    doctor.allClinics?.[0]?.id || (doctor as any).clinicId;
-
-  const [selectedClinicId, setSelectedClinicId] =
-    useState(defaultClinicId);
-
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-
-  const bookMutation = useBookAppointment();
-
-  const { data: schedules, isLoading: schedulesLoading } = useDoctorSchedules(
-    showBooking ? doctor.id : undefined,
-    showBooking ? selectedClinicId : undefined
-  );
-
-  const bookableSchedules = (schedules ?? []).filter(
-    (schedule) =>
-      schedule.isActive && schedule.onlineBookingEnabled !== false
-  );
-
-  /* BOOK BUTTON */
+  /* BOOK BUTTON — Part: booking must always go through the doctor's
+     profile page, never book directly from the search-result card. This
+     used to expand an inline mini booking form right here; that's been
+     removed so there's exactly one booking flow (on the profile page). */
 
   function handleBookClick() {
     if (!user) {
-      router.push("/login?redirect=/doctors");
+      router.push(`/login?redirect=/doctors/${doctor.id}`);
       return;
     }
-
-    setMessage(null);
-    setShowBooking((value) => !value);
-
-    if (!showBooking) {
-      setDate("");
-      setScheduleId("");
-    }
-  }
-
-  /* CONFIRM BOOKING */
-
-  function handleConfirmBooking() {
-    if (!date || !scheduleId) {
-      setMessage({
-        type: "error",
-        text:
-          t("pleaseSelectSchedule") || "Please select a session and date",
-      });
-
-      return;
-    }
-
-    bookMutation.mutate(
-      {
-        doctorId: doctor.id,
-        clinicId: selectedClinicId,
-        scheduleId,
-        date,
-      },
-      {
-        onSuccess: (appointment) => {
-          setMessage({
-            type: "success",
-            text: `${t("bookSuccess")} #${appointment.token}`,
-          });
-
-          setDate("");
-          setScheduleId("");
-
-          setTimeout(() => {
-            setShowBooking(false);
-            setMessage(null);
-          }, 5000);
-        },
-
-        onError: (error: any) => {
-          setMessage({
-            type: "error",
-            text:
-              error?.response?.data?.message ||
-              error?.message ||
-              t("bookError"),
-          });
-        },
-      }
-    );
+    router.push(`/doctors/${doctor.id}`);
   }
 
   /* DOCTOR DATA */
@@ -968,309 +877,10 @@ function DoctorCard({ doctor }: { doctor: ExtendedDoctor }) {
               "
             >
               <Calendar className="h-3.5 w-3.5" />
-              {showBooking ? "Close" : "Book appointment"}
+              Book appointment
             </button>
           </div>
         </div>
-
-        {/* =================================================
-            BOOKING PANEL
-        ================================================= */}
-
-        {showBooking && user && (
-          <div
-            className="
-              mt-3
-              overflow-hidden
-              rounded-2xl
-              border
-              border-slate-200
-              bg-slate-50
-              p-3
-              animate-in
-              slide-in-from-top-2
-              fade-in
-              duration-200
-
-              dark:border-slate-800
-              dark:bg-slate-900/70
-            "
-          >
-            {/* Booking heading */}
-
-            <div className="mb-3 flex items-center gap-2">
-              <div
-                className="
-                  flex
-                  h-7
-                  w-7
-                  items-center
-                  justify-center
-                  rounded-lg
-                  bg-[#252a67]/10
-                  text-[#252a67]
-                  dark:bg-blue-950/50
-                  dark:text-blue-400
-                "
-              >
-                <Calendar className="h-3.5 w-3.5" />
-              </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                  Book appointment
-                </p>
-
-                <p className="text-[9px] text-slate-400">
-                  Select your preferred clinic and time
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {/* CLINIC SELECT */}
-
-              {doctor.allClinics && doctor.allClinics.length > 0 && (
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-2
-                    rounded-xl
-                    border
-                    border-slate-200
-                    bg-white
-                    px-3
-                    py-2.5
-                    dark:border-slate-800
-                    dark:bg-slate-950
-                  "
-                >
-                  <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-
-                  <select
-                    value={selectedClinicId}
-                    onChange={(e) => setSelectedClinicId(e.target.value)}
-                    className="
-                      min-w-0
-                      flex-1
-                      cursor-pointer
-                      bg-transparent
-                      text-[10px]
-                      font-semibold
-                      text-slate-700
-                      outline-none
-                      dark:text-slate-200
-                    "
-                  >
-                    {doctor.allClinics.map((clinic) => (
-                      <option key={clinic.id} value={clinic.id}>
-                        {clinic.clinicName} - ₹
-                        {clinic.associationDetails?.fee || doctor.fee}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown className="h-3 w-3 text-slate-400" />
-                </div>
-              )}
-
-              {/* SESSION */}
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  rounded-xl
-                  border
-                  border-slate-200
-                  bg-white
-                  px-3
-                  py-2.5
-                  dark:border-slate-800
-                  dark:bg-slate-950
-                "
-              >
-                <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-
-                {schedulesLoading ? (
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-2
-                      text-[10px]
-                      font-medium
-                      text-slate-400
-                    "
-                  >
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Loading sessions...
-                  </div>
-                ) : bookableSchedules.length === 0 ? (
-                  <span className="text-[10px] font-medium text-slate-400">
-                    No sessions available
-                  </span>
-                ) : (
-                  <>
-                    <select
-                      value={scheduleId}
-                      onChange={(e) => {
-                        setScheduleId(e.target.value);
-                        setMessage(null);
-                      }}
-                      className="
-                        min-w-0
-                        flex-1
-                        cursor-pointer
-                        bg-transparent
-                        text-[10px]
-                        font-semibold
-                        text-slate-700
-                        outline-none
-                        dark:text-slate-200
-                      "
-                    >
-                      <option value="">Select session</option>
-
-                      {bookableSchedules.map((schedule) => (
-                        <option key={schedule.id} value={schedule.id}>
-                          {scheduleLabel(schedule.startTime, schedule.endTime)}
-                        </option>
-                      ))}
-                    </select>
-
-                    <ChevronDown className="h-3 w-3 text-slate-400" />
-                  </>
-                )}
-              </div>
-
-              {/* DATE */}
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  rounded-xl
-                  border
-                  border-slate-200
-                  bg-white
-                  px-3
-                  py-2.5
-                  dark:border-slate-800
-                  dark:bg-slate-950
-                "
-              >
-                <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => {
-                    setDate(e.target.value);
-                    setMessage(null);
-                  }}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="
-                    min-w-0
-                    flex-1
-                    bg-transparent
-                    text-[10px]
-                    font-semibold
-                    text-slate-700
-                    outline-none
-                    dark:text-slate-200
-                  "
-                />
-              </div>
-            </div>
-
-            {/* CONFIRM */}
-
-            <button
-              type="button"
-              onClick={handleConfirmBooking}
-              disabled={!date || !scheduleId || bookMutation.isPending}
-              className="
-                mt-3
-                flex
-                h-10
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-[#14B8A6]
-                text-[11px]
-                font-bold
-                text-white
-
-                shadow-[0_6px_18px_rgba(20,184,166,0.18)]
-
-                transition-all
-                duration-200
-
-                hover:bg-[#0f9688]
-
-                disabled:cursor-not-allowed
-                disabled:opacity-40
-              "
-            >
-              {bookMutation.isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Confirming...
-                </>
-              ) : (
-                <>
-                  <Calendar className="h-3.5 w-3.5" />
-                  Confirm appointment
-                </>
-              )}
-            </button>
-
-            {/* MESSAGE */}
-
-            {message && (
-              <div
-                className={`
-                  mt-2.5
-                  rounded-xl
-                  border
-                  px-3
-                  py-2
-                  text-[10px]
-                  font-semibold
-                  leading-4
-
-                  ${
-                    message.type === "success"
-                      ? `
-                        border-emerald-100
-                        bg-emerald-50
-                        text-emerald-700
-                        dark:border-emerald-950
-                        dark:bg-emerald-950/30
-                        dark:text-emerald-400
-                      `
-                      : `
-                        border-red-100
-                        bg-red-50
-                        text-red-600
-                        dark:border-red-950
-                        dark:bg-red-950/30
-                        dark:text-red-400
-                      `
-                  }
-                `}
-              >
-                {message.text}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </GradientBorderCard>
   );

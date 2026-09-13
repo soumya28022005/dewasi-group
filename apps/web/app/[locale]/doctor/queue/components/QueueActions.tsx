@@ -34,6 +34,7 @@ interface QueueActionsProps {
   doctorId: string;
   clinicId: string;
   date: string;
+  scheduleId: string;
   queueStatus?: string;
   waitingTokens?: QueueToken[];
 }
@@ -42,6 +43,7 @@ export function QueueActions({
   doctorId,
   clinicId,
   date,
+  scheduleId,
   queueStatus,
   waitingTokens = [],
 }: QueueActionsProps) {
@@ -86,6 +88,7 @@ export function QueueActions({
         doctorId,
         clinicId,
         date,
+        scheduleId,
         ...extraBody,
       });
       toast.success(successMsg);

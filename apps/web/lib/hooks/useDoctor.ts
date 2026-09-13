@@ -367,15 +367,26 @@ export function useNotifyDoctorDelay() {
 // QUEUE API HOOKS (SECTION 11)
 // ============================================================
 
-// GET /queue/:doctorId/:clinicId/:date
-export function useDoctorQueue(doctorId: string, clinicId: string, date: string) {
+// GET /queue/:doctorId/:clinicId/:date/:scheduleId
+// scheduleId identifies WHICH session (Doctor+Clinic can have several
+// sessions/day, e.g. morning + evening) — the backend route requires it.
+// Passing an empty/undefined scheduleId disables the query entirely rather
+// than silently hitting a wrong URL.
+export function useDoctorQueue(
+  doctorId: string,
+  clinicId: string,
+  date: string,
+  scheduleId?: string
+) {
   const queryClient = useQueryClient();
-  const queryKey = ["doctor", "queue", doctorId, clinicId, date];
+  const queryKey = ["doctor", "queue", doctorId, clinicId, date, scheduleId];
 
   // Live updates — no polling. The backend broadcasts queueUpdate/
   // tokenCalled/appointmentCompleted/doctorDelay to room
   // queue:{doctorId}:{clinicId} on every queue-changing action; we just
-  // refetch this exact query when any of them fire.
+  // refetch this exact query when any of them fire. The payload always
+  // includes scheduleId/date, but we simply refetch rather than trying to
+  // filter client-side — the backend GET remains the source of truth.
   useEffect(() => {
     if (!doctorId || !clinicId) return;
 
@@ -410,38 +421,32 @@ export function useDoctorQueue(doctorId: string, clinicId: string, date: string)
       socket.off("doctorDelay", refetch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [doctorId, clinicId, date]);
+  }, [doctorId, clinicId, date, scheduleId]);
 
   return useQuery<DoctorQueue>({
     queryKey,
+    enabled: Boolean(doctorId && clinicId && date && scheduleId),
+    // No try/catch swallowing errors here on purpose — a failed request
+    // (wrong scheduleId, auth issue, network error) should surface as
+    // isError so the page can show QueueError and a retry button, instead
+    // of silently rendering a fake empty/CLOSED queue that looks like
+    // nothing is happening.
     queryFn: async () => {
-      try {
-        const res = await api.get(`/queue/${doctorId}/${clinicId}/${date}`);
-        return (
-          res.data?.data?.queue ??
-          res.data?.data ?? {
-            doctorId,
-            clinicId,
-            date,
-            currentToken: 0,
-            lastTokenIssued: 0,
-            status: "CLOSED",
-            tokens: [],
-          }
-        );
-      } catch {
-        return {
+      const res = await api.get(`/queue/${doctorId}/${clinicId}/${date}/${scheduleId}`);
+      return (
+        res.data?.data?.queue ??
+        res.data?.data ?? {
           doctorId,
           clinicId,
           date,
+          scheduleId,
           currentToken: 0,
           lastTokenIssued: 0,
-          status: "CLOSED",
+          status: "OPEN",
           tokens: [],
-        };
-      }
+        }
+      );
     },
-    enabled: Boolean(doctorId && clinicId && date),
   });
 }
 
@@ -453,14 +458,16 @@ function useQueueAction(actionPath: string) {
       doctorId,
       clinicId,
       date,
+      scheduleId,
       body,
     }: {
       doctorId: string;
       clinicId: string;
       date: string;
+      scheduleId: string;
       body?: Record<string, unknown>;
     }) => {
-      const url = `/queue/${doctorId}/${clinicId}/${date}/${actionPath}`;
+      const url = `/queue/${doctorId}/${clinicId}/${date}/${scheduleId}/${actionPath}`;
       const res =
         actionPath === "emergency"
           ? await api.post(url, body ?? {})
@@ -475,6 +482,7 @@ function useQueueAction(actionPath: string) {
           variables.doctorId,
           variables.clinicId,
           variables.date,
+          variables.scheduleId,
         ],
       });
     },

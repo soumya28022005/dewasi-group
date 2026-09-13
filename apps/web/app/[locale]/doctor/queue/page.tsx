@@ -6,11 +6,14 @@ import {
   useDoctorSentRequests,
   useDoctorQueue,
 } from "@/lib/hooks/useDoctor";
+import { useDoctorSchedules } from "@/lib/hooks/useDoctorSearch";
 import { useAuth } from "@/lib/auth-context";
 import { QueueHeader } from "./components/QueueHeader";
 import { QueueStatusCard } from "./components/QueueStatusCard";
 import { CurrentPatientCard } from "./components/CurrentPatientCard";
 import { QueueActions } from "./components/QueueActions";
+import { QuickQueueControl } from "./components/QuickQueueControl";
+import { SessionSelector } from "./components/SessionSelector";
 import { QueueList } from "./components/QueueList";
 import { QueueSkeleton } from "./components/QueueSkeleton";
 import { QueueError } from "./components/QueueError";
@@ -78,6 +81,25 @@ export default function DoctorQueuePage() {
   const activeClinic = clinicsInfo.find((c) => c.id === selectedClinicId);
   const doctorId = activeClinic?.doctorId || "";
 
+  // A doctor can run more than one session/day at the same clinic (e.g.
+  // morning + evening) — the queue is scoped per session, so we need to
+  // know WHICH session before we can even ask the backend for its queue.
+  const { data: schedules, isLoading: loadingSchedules } = useDoctorSchedules(doctorId || undefined, selectedClinicId || undefined);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string>("");
+
+  useEffect(() => {
+    const active = (schedules ?? []).filter((s) => s.isActive);
+    // Auto-pick the only session, or the first one, whenever the clinic
+    // changes and nothing valid is currently selected.
+    if (active.length > 0 && !active.some((s) => s.id === selectedScheduleId)) {
+      setSelectedScheduleId(active[0].id);
+    }
+    if (active.length === 0) {
+      setSelectedScheduleId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedules, selectedClinicId]);
+
   // Fetch live queue data using existing hook
   const {
     data: queue,
@@ -86,12 +108,12 @@ export default function DoctorQueuePage() {
     isError: isErrorQueue,
     error: queueError,
     refetch: refetchQueue,
-  } = useDoctorQueue(doctorId, selectedClinicId, selectedDate);
+  } = useDoctorQueue(doctorId, selectedClinicId, selectedDate, selectedScheduleId);
 
   const isRequestsLoading = loadingReceived || loadingSent;
 
   // Initial loading state
-  if (isRequestsLoading || (Boolean(selectedClinicId) && loadingQueue)) {
+  if (isRequestsLoading || (Boolean(selectedClinicId) && (loadingSchedules || loadingQueue))) {
     return <QueueSkeleton />;
   }
 
@@ -131,6 +153,23 @@ export default function DoctorQueuePage() {
     return <QueueError onRetry={() => refetchQueue()} message={errorMsg} />;
   }
 
+  // No session defined for this clinic yet — nothing to show a queue for.
+  if (selectedClinicId && !selectedScheduleId) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-12 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
+          <Building2 className="h-6 w-6" />
+        </div>
+        <h2 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
+          No session set up at this clinic
+        </h2>
+        <p className="mt-1 max-w-md text-xs text-slate-500 dark:text-slate-400">
+          Add a session (e.g. 10 AM – 2 PM) under Schedule before you can manage a live queue here.
+        </p>
+      </div>
+    );
+  }
+
   const currentPatientToken = queue?.tokens?.find(
     (t) => t.token === queue.currentToken
   );
@@ -153,6 +192,25 @@ export default function DoctorQueuePage() {
         onRefresh={() => refetchQueue()}
       />
 
+      {/* Session picker — only renders if this doctor has more than one
+          session at this clinic */}
+      <SessionSelector
+        schedules={schedules ?? []}
+        selectedScheduleId={selectedScheduleId}
+        onSelect={setSelectedScheduleId}
+      />
+
+      {/* Big, simple Next/Previous — the everyday control */}
+      <QuickQueueControl
+        doctorId={doctorId}
+        clinicId={selectedClinicId}
+        date={selectedDate}
+        scheduleId={selectedScheduleId}
+        currentToken={queue?.currentToken}
+        lastTokenIssued={queue?.lastTokenIssued}
+        queueStatus={queue?.status}
+      />
+
       {/* 2. Key Operational Metric Cards */}
       <QueueStatusCard queue={queue} />
 
@@ -169,6 +227,7 @@ export default function DoctorQueuePage() {
             doctorId={doctorId}
             clinicId={selectedClinicId}
             date={selectedDate}
+            scheduleId={selectedScheduleId}
             queueStatus={queue?.status}
             waitingTokens={waitingTokens}
           />
